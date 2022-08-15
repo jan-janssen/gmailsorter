@@ -15,6 +15,7 @@ class EmailContent(Base):
     email_content = Column(String)
     email_deleted = Column(Boolean)
     email_date = Column(DateTime)
+    user_id = Column(Integer)
 
 
 class Threads(Base):

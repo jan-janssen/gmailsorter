@@ -27,9 +27,10 @@ jobs:
     - name: Test
       shell: bash -l {0}
       run: |
-        coverage run --omit pygmailsorter/_version.py -a -m unittest discover tests
-        coverage combine
+        coverage run -a -m unittest discover tests
     - name: Coverage
       shell: bash -l {0}
+      env: 
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         coveralls

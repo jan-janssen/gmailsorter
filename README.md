@@ -3,23 +3,39 @@
 [![Coverage Status](https://coveralls.io/repos/github/jan-janssen/pygmailsorter/badge.svg?branch=main)](https://coveralls.io/github/jan-janssen/pygmailsorter?branch=main)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-The `pygmailsorter` is a python module to automate the filtering of emails on Gmail using the Gmail API. It assigns 
+The `pygmailsorter` is a python module to automate the filtering of emails on the Google mail service using the their API. It assigns 
 labels to emails based on their similarity to other emails assigned to the same label.
+
+# Motivation 
+Many people struggle with the increasing email volume leading to hundreds of unread emails. As the capabilities of even the best search engine are limited when it comes to large numbers of emails, the only way to keep an overview is filing emails into folders. The manual work of filing emails into folders is tedious, still most people are too lazy to create email filters and keep their email filters up to date. Finally, in the age of mobile computing when most people access their emails from their smartphone, the challenge of sorting emails is more relevant than ever. 
+
+The solution to this challenge is to automatically filter emails depending on their similarity to existing emails in a given folder. This solution was already proposed in a couple of research papers ranging from the filtering of spam emails [1] to the specific case of sorting emails into folders [2]. Even a couple of open source prototypes were available like [3] and [4]. 
+
+This is basically a similar approach specific to the Google Mail API. It is a python script, which can be executed periodically for example with a cron task to sort the emails for the user. 
+
+[1]: https://doi.org/10.1016/j.heliyon.2019.e01802
+[2]: https://people.cs.umass.edu/~mccallum/papers/foldering-tr05.pdf
+[3]: https://github.com/anthdm/ml-email-clustering
+[4]: https://github.com/andreykurenkov/emailinsight
+
+# Installation 
+The `pygmailsorter` is available on the conda-forge or pypi repositories and can be installed using either:
+```
+conda install -c conda-forge pygmailsorter
+```
+or alternatively: 
+```
+pip install pygmailsorter
+```
+After the installation the user has to create a Google Mail API credentials file `credentials.json` following the [Google Mail API documentation](https://support.google.com/googleapi/answer/6158862). This file is then stored in the configuration directory `~/.pygmailsorter/credentials.json`.
 
 # Configuration 
 The `pygmailsorter` stores the configuration files in the users home directory `~/.pygmailsorter`. This folder contains: 
 
-- `credentials.json` the authentication credentials for the Google API, which requires access to Gmail. 
-- `token_files` the token directory is used to store the active token for accessing the APIs, these are created 
+- `~/.pygmailsorter/credentials.json` the authentication credentials for the Google API, which requires access to Gmail. 
+- `~/.pygmailsorter/token_files` the token directory is used to store the active token for accessing the APIs, these are created 
   automatically, there should be no need for the user to modify these. 
-- `email.db` a local SQLite database to store the emails and machine learning models to accelerate the sorting. 
-
-# Installation 
-Install the package from github using `pip`: 
-```
-pip install git+https://github.com/jan-janssen/pygmailsorter.git
-```
-Finally, setup the `credentials.json` in your Google Apps and store it in `~/.pygmailsorter/credentials.json`.
+- `~/.pygmailsorter/email.db` a local SQLite database to store the emails and machine learning models to accelerate the sorting. 
 
 # Python interface 
 Import the `pygmailsorter` module 

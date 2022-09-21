@@ -4,7 +4,7 @@ dependencies:
 - coverage
 - coveralls
 - google-api-python-client =2.61.0
-- google-auth =2.11.0
+- google-auth =2.11.1
 - google-auth-oauthlib =0.5.3
 - numpy =1.23.3
 - pandas =1.5.0

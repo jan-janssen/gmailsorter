@@ -21,7 +21,7 @@ setup(
         "google-api-python-client==2.64.0",
         "google-auth==2.13.0",
         "google-auth-oauthlib==0.5.3",
-        "numpy==1.23.3",
+        "numpy==1.23.4",
         "tqdm==4.64.1",
         "pandas==1.5.0",
         "scikit-learn==1.1.2",

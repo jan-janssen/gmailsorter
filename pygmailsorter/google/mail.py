@@ -69,8 +69,7 @@ class GoogleMailBase:
             recommendation_ratio=recommendation_ratio,
         )
         self._move_emails(
-            move_email_dict=model_recommendation_dict,
-            label_to_ignore=label
+            move_email_dict=model_recommendation_dict, label_to_ignore=label
         )
 
     def update_database(self, quick=False, label_lst=[], format="full"):

@@ -69,7 +69,9 @@ class GoogleMailBase:
             recommendation_ratio=recommendation_ratio,
         )
         label_existing = self._label_dict[label]
-        for message_id, label_add in model_recommendation_dict.items():
+        for message_id, label_add in tqdm(
+            iterable=model_recommendation_dict.items(), desc="Move emails"
+        ):
             if label_add is not None and label_add != label_existing:
                 self._modify_message_labels(
                     message_id=message_id,

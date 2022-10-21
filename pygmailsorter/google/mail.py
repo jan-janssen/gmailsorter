@@ -68,16 +68,9 @@ class GoogleMailBase:
             include_deleted=include_deleted,
             recommendation_ratio=recommendation_ratio,
         )
-        label_existing = self._label_dict[label]
-        for message_id, label_add in tqdm(
-            iterable=model_recommendation_dict.items(), desc="Move emails"
-        ):
-            if label_add is not None and label_add != label_existing:
-                self._modify_message_labels(
-                    message_id=message_id,
-                    label_id_remove_lst=[label_existing],
-                    label_id_add_lst=[label_add],
-                )
+        self._move_emails(
+            move_email_dict=model_recommendation_dict, label_to_ignore=label
+        )
 
     def update_database(self, quick=False, label_lst=[], format="full"):
         """
@@ -346,6 +339,47 @@ class GoogleMailBase:
         else:
             return {}
 
+    def _get_label_translate_dict(self):
+        results = self._service.users().labels().list(userId=self._userid).execute()
+        labels = results.get("labels", [])
+        return {label["name"]: label["id"] for label in labels}
+
+    def _get_messages_page(self, label_ids, query_string, next_page_token=None):
+        message_list_response = (
+            self._service.users()
+            .messages()
+            .list(
+                userId=self._userid,
+                labelIds=label_ids,
+                q=query_string,
+                pageToken=next_page_token,
+            )
+            .execute()
+        )
+
+        return [
+            message_list_response.get("messages"),
+            message_list_response.get("nextPageToken"),
+        ]
+
+    def _get_messages(self, query_string="", label_ids=[]):
+        message_items_lst, next_page_token = self._get_messages_page(
+            label_ids=label_ids, query_string=query_string, next_page_token=None
+        )
+
+        while next_page_token:
+            message_items, next_page_token = self._get_messages_page(
+                label_ids=label_ids,
+                query_string=query_string,
+                next_page_token=next_page_token,
+            )
+            message_items_lst.extend(message_items)
+
+        if message_items_lst is None:
+            return []
+        else:
+            return message_items_lst
+
     def _get_message_detail(self, message_id, format="metadata", metadata_headers=[]):
         return (
             self._service.users()
@@ -402,46 +436,17 @@ class GoogleMailBase:
                 userId=self._userid, id=message_id, body=body_dict
             ).execute()
 
-    def _get_label_translate_dict(self):
-        results = self._service.users().labels().list(userId=self._userid).execute()
-        labels = results.get("labels", [])
-        return {label["name"]: label["id"] for label in labels}
-
-    def _get_messages_page(self, label_ids, query_string, next_page_token=None):
-        message_list_response = (
-            self._service.users()
-            .messages()
-            .list(
-                userId=self._userid,
-                labelIds=label_ids,
-                q=query_string,
-                pageToken=next_page_token,
-            )
-            .execute()
-        )
-
-        return [
-            message_list_response.get("messages"),
-            message_list_response.get("nextPageToken"),
-        ]
-
-    def _get_messages(self, query_string="", label_ids=[]):
-        message_items_lst, next_page_token = self._get_messages_page(
-            label_ids=label_ids, query_string=query_string, next_page_token=None
-        )
-
-        while next_page_token:
-            message_items, next_page_token = self._get_messages_page(
-                label_ids=label_ids,
-                query_string=query_string,
-                next_page_token=next_page_token,
-            )
-            message_items_lst.extend(message_items)
-
-        if message_items_lst is None:
-            return []
-        else:
-            return message_items_lst
+    def _move_emails(self, move_email_dict, label_to_ignore):
+        label_existing = self._label_dict[label_to_ignore]
+        for message_id, label_add in tqdm(
+            iterable=move_email_dict.items(), desc="Move emails"
+        ):
+            if label_add is not None and label_add != label_existing:
+                self._modify_message_labels(
+                    message_id=message_id,
+                    label_id_remove_lst=[label_existing],
+                    label_id_add_lst=[label_add],
+                )
 
     def _store_emails_in_database(self, message_id_lst, format="full"):
         df = self.download_messages_to_dataframe(

@@ -175,7 +175,9 @@ class DatabaseInterface(DatabaseTemplate):
                 .all()
             ]
         return self._create_dataframe(
-            email_collect_lst=email_collect_lst, user_id=user_id
+            email_collect_lst=email_collect_lst,
+            user_id=user_id,
+            desc="Create dataframe from database",
         )
 
     def get_emails_by_label(self, label_id, include_deleted=False, user_id=1):
@@ -189,6 +191,7 @@ class DatabaseInterface(DatabaseTemplate):
             ],
             include_deleted=include_deleted,
             user_id=user_id,
+            desc="Create dataframe from emails by label",
         )
 
     def get_emails_by_from(self, email_from, include_deleted=False, user_id=1):
@@ -202,6 +205,7 @@ class DatabaseInterface(DatabaseTemplate):
             ],
             include_deleted=include_deleted,
             user_id=user_id,
+            desc="Create dataframe from emails by from",
         )
 
     def get_emails_by_to(self, email_to, include_deleted=False, user_id=1):
@@ -215,6 +219,7 @@ class DatabaseInterface(DatabaseTemplate):
             ],
             include_deleted=include_deleted,
             user_id=user_id,
+            desc="Create dataframe from emails by to",
         )
 
     def get_emails_by_cc(self, email_cc, include_deleted=False, user_id=1):
@@ -228,6 +233,7 @@ class DatabaseInterface(DatabaseTemplate):
             ],
             include_deleted=include_deleted,
             user_id=user_id,
+            desc="Create dataframe from emails by cc",
         )
 
     def get_emails_by_thread(self, thread_id, include_deleted=False, user_id=1):
@@ -241,9 +247,16 @@ class DatabaseInterface(DatabaseTemplate):
             ],
             include_deleted=include_deleted,
             user_id=user_id,
+            desc="Create dataframe from emails by thread",
         )
 
-    def _get_email_collection(self, email_id_lst, include_deleted=False, user_id=1):
+    def _get_email_collection(
+        self,
+        email_id_lst,
+        include_deleted=False,
+        user_id=1,
+        desc="Create dataframe from email collection",
+    ):
         if include_deleted:
             email_collect_lst = [
                 [
@@ -272,7 +285,7 @@ class DatabaseInterface(DatabaseTemplate):
                 .all()
             ]
         return self._create_dataframe(
-            email_collect_lst=email_collect_lst, user_id=user_id
+            email_collect_lst=email_collect_lst, user_id=user_id, desc=desc
         )
 
     def _commit_thread_table(self, df, user_id=1):
@@ -341,7 +354,9 @@ class DatabaseInterface(DatabaseTemplate):
         )
         self._session.commit()
 
-    def _create_dataframe(self, email_collect_lst, user_id=1):
+    def _create_dataframe(
+        self, email_collect_lst, user_id=1, desc="Create dataframe from email list"
+    ):
         (
             email_id_lst,
             email_subject_lst,
@@ -354,7 +369,7 @@ class DatabaseInterface(DatabaseTemplate):
             email_date_lst,
         ) = ([], [], [], [], [], [], [], [], [])
         for email_id, email_subject, email_content, email_date in tqdm(
-            iterable=email_collect_lst, desc="Create DataFrame from database"
+            iterable=email_collect_lst, desc=desc
         ):
             email_from = [
                 email_from.email_from

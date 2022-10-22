@@ -133,11 +133,14 @@ class MachineLearningDatabase(DatabaseTemplate):
         ]
 
     def get_features(self, user_id=1):
-        return (
-            self._session.query(MachineLearningFeatures)
-            .filter(MachineLearningFeatures.user_id == user_id)
-            .all()
-        )
+        return [
+            feature_obj.feature
+            for feature_obj in (
+                self._session.query(MachineLearningFeatures)
+                .filter(MachineLearningFeatures.user_id == user_id)
+                .all()
+            )
+        ]
 
     def _train_model(
         self,
@@ -348,17 +351,26 @@ def one_hot_encoding(df, feature_lst, label_lst=[]):
         + _get_lst_without_none(lst=thread_red_lst, column="threads")
         + _get_lst_without_none(lst=to_red_lst, column="to")
     )
-    if len(feature_lst) > 0:
-        all_labels = [feature for feature in all_labels not in feature_lst]
     if len(label_lst) == 0:
         df_new = pandas.DataFrame(all_binary_values, columns=all_labels)
     else:
         labels_to_drop = [label for label in all_labels if label not in label_lst]
         labels_to_add = [label for label in label_lst if label not in all_labels]
-        df_new = pandas.DataFrame(
-            np.hstack((all_binary_values, np.zeros((len(df), len(labels_to_add))))),
-            columns=all_labels + labels_to_add,
+        data_stack = np.hstack(
+            (all_binary_values, np.zeros((len(df), len(labels_to_add))))
         )
+        columns = np.array(all_labels + labels_to_add)
+        if len(feature_lst) > 0:
+            ind = columns.isin(feature_lst)
+            df_new = pandas.DataFrame(
+                data_stack[ind],
+                columns=columns[ind],
+            )
+        else:
+            df_new = pandas.DataFrame(
+                data_stack,
+                columns=columns,
+            )
         df_new.drop(labels_to_drop, inplace=True, axis=1)
     df_new["email_id"] = df.id.values
     return df_new.sort_index(axis=1)

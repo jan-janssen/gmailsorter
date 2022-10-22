@@ -19,13 +19,31 @@ class MachineLearningLabels(Base):
     user_id = Column(Integer)
 
 
+class MachineLearningFeatures(Base):
+    __tablename__ = "ml_features"
+    id = Column(Integer, primary_key=True)
+    feature = Column(String)
+    user_id = Column(Integer)
+
+
 class MachineLearningDatabase(DatabaseTemplate):
-    def store_models(self, model_dict, user_id=1, commit=True):
-        label_lst = self._get_labels(user_id=user_id)
-        model_dict_new = {k: v for k, v in model_dict.items() if k not in label_lst}
-        model_dict_update = {k: v for k, v in model_dict.items() if k in label_lst}
+    def store_models(self, model_dict, feature_lst, user_id=1, commit=True):
+        label_stored_lst = self._get_labels(user_id=user_id)
+        feature_stored_lst = self.get_features(user_id=user_id)
+        model_dict_new = {
+            k: v for k, v in model_dict.items() if k not in label_stored_lst
+        }
+        model_dict_update = {
+            k: v for k, v in model_dict.items() if k in label_stored_lst
+        }
         model_delete_lst = [
-            label for label in label_lst if label not in model_dict.keys()
+            label for label in label_stored_lst if label not in model_dict.keys()
+        ]
+        feature_new_lst = [
+            feature for feature in feature_lst if feature not in feature_stored_lst
+        ]
+        feature_remove_lst = [
+            feature for feature in feature_stored_lst if feature not in feature_lst
         ]
         if len(model_dict_new) > 0:
             self._session.add_all(
@@ -34,6 +52,13 @@ class MachineLearningDatabase(DatabaseTemplate):
                         label_id=k, random_forest=pickle.dumps(v), user_id=user_id
                     )
                     for k, v in model_dict_new.items()
+                ]
+            )
+        if len(feature_new_lst) > 0:
+            self._session.add_all(
+                [
+                    MachineLearningFeatures(feature=feature, user_id=user_id)
+                    for feature in feature_new_lst
                 ]
             )
         if len(model_dict_update) > 0:
@@ -53,6 +78,10 @@ class MachineLearningDatabase(DatabaseTemplate):
             self._session.query(MachineLearningLabels).filter(
                 MachineLearningLabels.user_id == user_id
             ).filter(MachineLearningLabels.label_id.in_(model_delete_lst)).delete()
+        if len(feature_remove_lst) > 0:
+            self._session.query(MachineLearningFeatures).filter(
+                MachineLearningFeatures.user_id == user_id
+            ).filter(MachineLearningFeatures.feature.in_(feature_remove_lst)).delete()
         if commit:
             self._session.commit()
 
@@ -62,10 +91,11 @@ class MachineLearningDatabase(DatabaseTemplate):
             .filter(MachineLearningLabels.user_id == user_id)
             .all()
         )
+        feature_lst = self.get_features(user_id=user_id)
         return {
             label_obj.label_id: pickle.loads(label_obj.random_forest)
             for label_obj in label_obj_lst
-        }
+        }, feature_lst
 
     def get_models(
         self,
@@ -102,6 +132,13 @@ class MachineLearningDatabase(DatabaseTemplate):
             .all()
         ]
 
+    def get_features(self, user_id=1):
+        return (
+            self._session.query(MachineLearningFeatures)
+            .filter(MachineLearningFeatures.user_id == user_id)
+            .all()
+        )
+
     def _train_model(
         self,
         df,
@@ -120,8 +157,11 @@ class MachineLearningDatabase(DatabaseTemplate):
             random_state=random_state,
             bootstrap=bootstrap,
         )
-        self.store_models(model_dict=model_dict, user_id=user_id)
-        return model_dict
+        feature_lst = df.columns.values
+        self.store_models(
+            model_dict=model_dict, feature_lst=feature_lst, user_id=user_id
+        )
+        return model_dict, feature_lst
 
 
 def _build_red_lst(df_column):
@@ -216,10 +256,10 @@ def train_model(
 
 
 def get_machine_learning_recommendations(
-    models, df_select, df_all_encode, recommendation_ratio=0.9
+    models, df_select, df_all_encode, feature_lst, recommendation_ratio=0.9
 ):
     df_select_hot = one_hot_encoding(
-        df=df_select, label_lst=df_all_encode.columns.values
+        df=df_select, label_lst=df_all_encode.columns.values, feature_lst=feature_lst
     )
     df_select_red = _get_training_input(df=df_select_hot)
 
@@ -238,19 +278,22 @@ def get_machine_learning_recommendations(
     }
 
 
-def gather_data_for_machine_learning(df_all, labels_dict, labels_to_exclude_lst=[]):
+def gather_data_for_machine_learning(
+    df_all, labels_dict, feature_lst, labels_to_exclude_lst=[]
+):
     """
     Internal function to gather dataframe for training machine learning models
 
     Args:
         df_all (pandas.DataFrame): Dataframe with all emails
         labels_dict (dict): Dictionary with translation for labels
+        feature_lst (list): list of features to train machine learning models on
         labels_to_exclude_lst (list): list of email labels which are excluded from the fitting process
 
     Returns:
         pandas.DataFrame: With all emails and their encoded labels
     """
-    df_all_encode = one_hot_encoding(df=df_all)
+    df_all_encode = one_hot_encoding(df=df_all, feature_lst=feature_lst)
     df_columns_to_drop_lst = [
         "labels_" + labels_dict[label]
         for label in labels_to_exclude_lst
@@ -270,7 +313,7 @@ def gather_data_for_machine_learning(df_all, labels_dict, labels_to_exclude_lst=
         return df_all_encode
 
 
-def one_hot_encoding(df, label_lst=[]):
+def one_hot_encoding(df, feature_lst, label_lst=[]):
     labels_red_lst = _build_red_lst(df_column=df.labels.values)
     cc_red_lst = _build_red_lst(df_column=df.cc.values)
     thread_red_lst = df["threads"].unique()
@@ -305,6 +348,8 @@ def one_hot_encoding(df, label_lst=[]):
         + _get_lst_without_none(lst=thread_red_lst, column="threads")
         + _get_lst_without_none(lst=to_red_lst, column="to")
     )
+    if len(feature_lst) > 0:
+        all_labels = [feature for feature in all_labels not in feature_lst]
     if len(label_lst) == 0:
         df_new = pandas.DataFrame(all_binary_values, columns=all_labels)
     else:

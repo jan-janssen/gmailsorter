@@ -248,6 +248,7 @@ class GoogleMailBase:
         df_all_encode_red = gather_data_for_machine_learning(
             df_all=self.get_all_emails_in_database(include_deleted=include_deleted),
             labels_dict=self._label_dict,
+            feature_lst=[],
             labels_to_exclude_lst=labels_to_exclude_lst,
         )
         model_dict = train_model(
@@ -368,12 +369,22 @@ class GoogleMailBase:
             dict: Email IDs and the corresponding label ID.
         """
         if len(df) > 0:
-            df_all_encode = gather_data_for_machine_learning(
-                df_all=self.get_all_emails_in_database(include_deleted=include_deleted),
-                labels_dict=self._label_dict,
-                labels_to_exclude_lst=[label],
-            )
-            models = self._db_ml.get_models(
+            df_all = self.get_all_emails_in_database(include_deleted=include_deleted)
+            if not recalculate:
+                df_all_encode = gather_data_for_machine_learning(
+                    df_all=df_all,
+                    labels_dict=self._label_dict,
+                    feature_lst=self._db_ml.get_features(),
+                    labels_to_exclude_lst=[label],
+                )
+            else:
+                df_all_encode = gather_data_for_machine_learning(
+                    df_all=df_all,
+                    labels_dict=self._label_dict,
+                    feature_lst=[],
+                    labels_to_exclude_lst=[label],
+                )
+            models, feature_lst = self._db_ml.get_models(
                 df=df_all_encode,
                 n_estimators=n_estimators,
                 max_features=max_features,
@@ -386,6 +397,7 @@ class GoogleMailBase:
                 models=models,
                 df_select=df,
                 df_all_encode=df_all_encode,
+                feature_lst=feature_lst,
                 recommendation_ratio=recommendation_ratio,
             )
         else:

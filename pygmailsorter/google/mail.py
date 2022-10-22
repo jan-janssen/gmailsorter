@@ -123,6 +123,20 @@ class GoogleMailBase:
                 move_email_dict=model_recommendation_dict, label_to_ignore=label
             )
 
+    def download_emails_for_label(self, label):
+        """
+        Download emails for a specific label
+
+        Args:
+            label (str): label to download emails for
+
+        Returns:
+            pandas.DataFrame: Email content for the downloaded emails
+        """
+        return self.download_messages_to_dataframe(
+            message_id_lst=self.search_email(label_lst=[label], only_message_ids=True)
+        )
+
     def update_database(self, quick=False, label_lst=[], format="full"):
         """
         Update local email database

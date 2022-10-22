@@ -52,10 +52,14 @@ class MachineLearningDatabase(DatabaseTemplate):
             label for label in label_stored_lst if label not in model_dict.keys()
         ]
         feature_new_lst = [
-            feature for feature in feature_filtered_lst if feature not in feature_stored_lst
+            feature
+            for feature in feature_filtered_lst
+            if feature not in feature_stored_lst
         ]
         feature_remove_lst = [
-            feature for feature in feature_stored_lst if feature not in feature_filtered_lst
+            feature
+            for feature in feature_stored_lst
+            if feature not in feature_filtered_lst
         ]
         if len(model_dict_new) > 0:
             self._session.add_all(

@@ -59,7 +59,7 @@ class GoogleMailBase:
             recommendation_ratio (float): Only accept recommendation above this ratio (0<r<1)
         """
         message_id_lst = self.search_email(label_lst=[label], only_message_ids=True)
-        df = self._db_email._get_email_collection(
+        df = self._db_email.get_email_collection(
             email_id_lst=message_id_lst,
             include_deleted=False,
             user_id=1,

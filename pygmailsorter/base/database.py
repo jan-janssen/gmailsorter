@@ -181,7 +181,7 @@ class DatabaseInterface(DatabaseTemplate):
         )
 
     def get_emails_by_label(self, label_id, include_deleted=False, user_id=1):
-        return self._get_email_collection(
+        return self.get_email_collection(
             email_id_lst=[
                 email_id
                 for email_id, in self._session.query(Labels.email_id)
@@ -195,7 +195,7 @@ class DatabaseInterface(DatabaseTemplate):
         )
 
     def get_emails_by_from(self, email_from, include_deleted=False, user_id=1):
-        return self._get_email_collection(
+        return self.get_email_collection(
             email_id_lst=[
                 email_id
                 for email_id, in self._session.query(EmailFrom.email_id)
@@ -209,7 +209,7 @@ class DatabaseInterface(DatabaseTemplate):
         )
 
     def get_emails_by_to(self, email_to, include_deleted=False, user_id=1):
-        return self._get_email_collection(
+        return self.get_email_collection(
             email_id_lst=[
                 email_id
                 for email_id, in self._session.query(EmailTo.email_id)
@@ -223,7 +223,7 @@ class DatabaseInterface(DatabaseTemplate):
         )
 
     def get_emails_by_cc(self, email_cc, include_deleted=False, user_id=1):
-        return self._get_email_collection(
+        return self.get_email_collection(
             email_id_lst=[
                 email_id
                 for email_id, in self._session.query(EmailTo.email_id)
@@ -237,7 +237,7 @@ class DatabaseInterface(DatabaseTemplate):
         )
 
     def get_emails_by_thread(self, thread_id, include_deleted=False, user_id=1):
-        return self._get_email_collection(
+        return self.get_email_collection(
             email_id_lst=[
                 email_id
                 for email_id, in self._session.query(Threads.email_id)
@@ -250,7 +250,7 @@ class DatabaseInterface(DatabaseTemplate):
             desc="Create dataframe from emails by thread",
         )
 
-    def _get_email_collection(
+    def get_email_collection(
         self,
         email_id_lst,
         include_deleted=False,

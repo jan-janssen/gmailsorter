@@ -42,9 +42,7 @@ def command_line_parser():
         )
     elif args.gmailfilterlabel:
         gmail.update_database(quick=True, label_lst=[args.gmailfilterlabel])
-        gmail.filter_only_new_messages(
-            label=args.gmailfilterlabel, recalculate=True
-        )
+        gmail.filter_only_new_messages(label=args.gmailfilterlabel, recalculate=True)
     else:
         parser.print_help()
 

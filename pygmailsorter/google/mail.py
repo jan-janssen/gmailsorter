@@ -42,7 +42,7 @@ class GoogleMailBase:
         bootstrap=True,
         recalculate=False,
         include_deleted=False,
-        recommendation_ratio=0.9
+        recommendation_ratio=0.9,
     ):
         """
         Filter new emails based on machine learning model recommendations.
@@ -58,9 +58,7 @@ class GoogleMailBase:
             include_deleted (boolean): Include deleted emails in training
             recommendation_ratio (float): Only accept recommendation above this ratio (0<r<1)
         """
-        message_id_lst = self.search_email(
-            label_lst=[label], only_message_ids=True
-        )
+        message_id_lst = self.search_email(label_lst=[label], only_message_ids=True)
         df = self._db_email._get_email_collection(
             email_id_lst=message_id_lst,
             include_deleted=False,
@@ -108,10 +106,7 @@ class GoogleMailBase:
             include_deleted (boolean): Include deleted emails in training
             recommendation_ratio (float): Only accept recommendation above this ratio (0<r<1)
         """
-        df = self.get_emails_by_label(
-            label=label,
-            include_deleted=False
-        )
+        df = self.get_emails_by_label(label=label, include_deleted=False)
         if len(df) > 0:
             model_recommendation_dict = self._get_machine_learning_recommendations(
                 df=df,

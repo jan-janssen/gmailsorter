@@ -68,7 +68,7 @@ class GoogleMailBase:
             desc="Create dataframe from email id list",
         )
         if len(df) > 0:
-            model_recommendation_dict = self._get_machine_learning_recommendations_for_dataframe(
+            model_recommendation_dict = self._get_machine_learning_recommendations(
                 df=df,
                 label=label,
                 n_estimators=n_estimators,
@@ -113,7 +113,7 @@ class GoogleMailBase:
             include_deleted=False
         )
         if len(df) > 0:
-            model_recommendation_dict = self._get_machine_learning_recommendations_for_dataframe(
+            model_recommendation_dict = self._get_machine_learning_recommendations(
                 df=df,
                 label=label,
                 n_estimators=n_estimators,
@@ -342,7 +342,7 @@ class GoogleMailBase:
             message=self._get_message_detail(message_id=message_id, format=format)
         )
 
-    def _get_machine_learning_recommendations_for_dataframe(
+    def _get_machine_learning_recommendations(
         self,
         df,
         label,

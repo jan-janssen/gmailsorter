@@ -2,6 +2,44 @@ import pandas
 import numpy as np
 
 
+def encode_df_for_machine_learning(df, feature_lst=[], label_lst=[], return_labels=False):
+    """
+    Encode a given dataframe for machine learning. Either based on a list of existing features and labels or by
+    generating the features and labels from the dataframe. By default, only the dataframe with features is returned
+    optionally also the dataframe with labels can be returned.
+
+    Args:
+        df (pandas.DataFrame): DataFrame with emails
+        feature_lst (list): list of features to encode, if no list is provided the features are generated from the
+                            Dataframe
+        label_lst (list): list of labels to encode, if no list is provided the labels are generated from the Dataframe
+        return_labels (boolean): optional flag to return the dataframe with labels
+
+    Returns:
+        pandas.DataFrame/ list: Dataframe with features and optionally also the dataframe with labels
+    """
+    if isinstance(feature_lst, np.ndarray):
+        feature_lst = feature_lst.tolist()
+    if isinstance(label_lst, np.ndarray):
+        label_lst = label_lst.tolist()
+    df_all_encode = one_hot_encoding(df=df, feature_lst=feature_lst + label_lst)
+    if len(feature_lst) == 0:
+        feature_lst = [
+            feature for feature in df_all_encode.columns.values
+            if "labels_" not in feature
+        ]
+    df_all_features = df_all_encode[feature_lst]
+    if not return_labels:
+        return df_all_features
+    else:
+        if len(label_lst) == 0:
+            label_lst = [
+                label for label in df_all_encode.columns.values
+                if "labels_Label_" in label
+            ]
+        return df_all_features, df_all_encode[label_lst]
+
+
 def one_hot_encoding(df, feature_lst=[]):
     """
     Binary one hot encoding of features in a pandas DataFrame

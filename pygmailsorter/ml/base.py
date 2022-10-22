@@ -361,9 +361,9 @@ def one_hot_encoding(df, feature_lst, label_lst=[]):
         )
         columns = np.array(all_labels + labels_to_add)
         if len(feature_lst) > 0:
-            ind = columns.isin(feature_lst)
+            ind = np.isin(columns, feature_lst)
             df_new = pandas.DataFrame(
-                data_stack[ind],
+                data_stack[:, ind],
                 columns=columns[ind],
             )
         else:

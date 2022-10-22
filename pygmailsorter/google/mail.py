@@ -338,6 +338,58 @@ class GoogleMailBase:
             message=self._get_message_detail(message_id=message_id, format=format)
         )
 
+    def train_machine_learning_models(
+        self,
+        label,
+        n_estimators=100,
+        max_features=400,
+        random_state=42,
+        bootstrap=True,
+        recalculate=False,
+        include_deleted=False,
+    ):
+        """
+        Train internal machine learning models to predict email sorting.
+
+        Args:
+            label (str): Email label to filter for
+            n_estimators (int): Number of estimators
+            max_features (int): Number of features
+            random_state (int): Random state
+            bootstrap (boolean): Whether bootstrap samples are used when building trees. If False, the whole dataset is
+                                 used to build each tree. (default: true)
+            recalculate (boolean): Train the model again
+            include_deleted (boolean): Include deleted emails in training
+
+        Returns:
+            dict: Email IDs and the corresponding label ID.
+        """
+        df_all = self.get_all_emails_in_database(include_deleted=include_deleted)
+        if not recalculate:
+            df_all_encode = gather_data_for_machine_learning(
+                df_all=df_all,
+                labels_dict=self._label_dict,
+                feature_lst=self._db_ml.get_features(),
+                labels_to_exclude_lst=[label],
+            )
+        else:
+            df_all_encode = gather_data_for_machine_learning(
+                df_all=df_all,
+                labels_dict=self._label_dict,
+                feature_lst=[],
+                labels_to_exclude_lst=[label],
+            )
+        models, feature_lst = self._db_ml.get_models(
+            df=df_all_encode,
+            n_estimators=n_estimators,
+            max_features=max_features,
+            random_state=random_state,
+            bootstrap=bootstrap,
+            user_id=self._db_user_id,
+            recalculate=recalculate,
+        )
+        return models, feature_lst, df_all_encode
+
     def _get_machine_learning_recommendations(
         self,
         df,
@@ -369,29 +421,14 @@ class GoogleMailBase:
             dict: Email IDs and the corresponding label ID.
         """
         if len(df) > 0:
-            df_all = self.get_all_emails_in_database(include_deleted=include_deleted)
-            if not recalculate:
-                df_all_encode = gather_data_for_machine_learning(
-                    df_all=df_all,
-                    labels_dict=self._label_dict,
-                    feature_lst=self._db_ml.get_features(),
-                    labels_to_exclude_lst=[label],
-                )
-            else:
-                df_all_encode = gather_data_for_machine_learning(
-                    df_all=df_all,
-                    labels_dict=self._label_dict,
-                    feature_lst=[],
-                    labels_to_exclude_lst=[label],
-                )
-            models, feature_lst = self._db_ml.get_models(
-                df=df_all_encode,
+            models, feature_lst, df_all_encode = self.train_machine_learning_models(
+                label=label,
                 n_estimators=n_estimators,
                 max_features=max_features,
                 random_state=random_state,
                 bootstrap=bootstrap,
-                user_id=self._db_user_id,
                 recalculate=recalculate,
+                include_deleted=include_deleted,
             )
             return get_machine_learning_recommendations(
                 models=models,

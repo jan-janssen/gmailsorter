@@ -28,6 +28,15 @@ class MachineLearningFeatures(Base):
 
 class MachineLearningDatabase(DatabaseTemplate):
     def store_models(self, model_dict, feature_lst, user_id=1, commit=True):
+        """
+        Store machine learning models in database
+
+        Args:
+            model_dict (dict): dictionary containing the machine learning models
+            feature_lst (list): list of features the machine learning models were trained on
+            user_id (int): database user id
+            commit (boolean): boolean flag to write to the database
+        """
         label_stored_lst = self._get_labels(user_id=user_id)
         feature_stored_lst = self.get_features(user_id=user_id)
         model_dict_new = {
@@ -86,6 +95,15 @@ class MachineLearningDatabase(DatabaseTemplate):
             self._session.commit()
 
     def load_models(self, user_id=1):
+        """
+        Load models from database
+
+        Args:
+            user_id (int): database user id
+
+        Returns:
+            dict, list: machine learning model dictionary and feature list
+        """
         label_obj_lst = (
             self._session.query(MachineLearningLabels)
             .filter(MachineLearningLabels.user_id == user_id)
@@ -107,6 +125,21 @@ class MachineLearningDatabase(DatabaseTemplate):
         bootstrap=True,
         recalculate=False,
     ):
+        """
+        Get machine learning models, either from database or by retraining them
+
+        Args:
+            df (pandas.DataFrame): binary encoded features stored in a pandas dataframe
+            user_id (int): database user id
+            n_estimators (int): number of estimators of the machine learning models
+            max_features (int): maximum number of features of the machine learning models
+            random_state (int): random state for initialization of the machine learning models
+            bootstrap (boolean): bootstrap of the machine learning models
+            recalculate (boolean): boolean flag to enforce retraining of machine learning models
+
+        Returns:
+            dict, list: machine learning model dictionary and feature list
+        """
         labels_to_learn = [c for c in df.columns.values if "labels_Label_" in c]
         label_name_lst = [to_learn.split("labels_")[-1] for to_learn in labels_to_learn]
         if not recalculate and sorted(label_name_lst) == sorted(
@@ -242,6 +275,21 @@ def train_model(
     random_state=42,
     bootstrap=True,
 ):
+    """
+    Train machine learning models
+
+    Args:
+        df (pandas.DataFrame): binary encoded features stored in a pandas dataframe
+        labels_to_learn (None/list): list of labels to train on, resulting in keys for the machine learning
+                                     model dictionary.
+        n_estimators (int): number of estimators of the machine learning models
+        max_features (int): maximum number of features of the machine learning models
+        random_state (int): random state for initialization of the machine learning models
+        bootstrap (boolean): bootstrap of the machine learning models
+
+    Returns:
+        dict: dictionary with machine learning models with labels as keys
+    """
     if labels_to_learn is None:
         labels_to_learn = [c for c in df.columns.values if "labels_Label_" in c]
     df_in = _get_training_input(df=df)
@@ -261,6 +309,19 @@ def train_model(
 def get_machine_learning_recommendations(
     models, df_select, df_all_encode, feature_lst, recommendation_ratio=0.9
 ):
+    """
+    Get recommendations from machine learning models
+
+    Args:
+        models (dict): dictionary with machine learning models with labels as keys
+        df_select (pandas.DataFrame): dataframe of emails to be sorted
+        df_all_encode (pandas.DataFrame): binary encoded features in a pandas dataframe
+        feature_lst (list): list of features the machine learning models were trained on
+        recommendation_ratio (float): recommendation cutoff ratio
+
+    Returns:
+        dict: email id as keys and the corresponding newly assigned label as value
+    """
     df_select_hot = one_hot_encoding(
         df=df_select, label_lst=df_all_encode.columns.values, feature_lst=feature_lst
     )
@@ -317,6 +378,17 @@ def gather_data_for_machine_learning(
 
 
 def one_hot_encoding(df, feature_lst, label_lst=[]):
+    """
+    Binary one hot encoding of features in a pandas DataFrame
+
+    Args:
+        df (pandas.DataFrame): DataFrame with emails
+        feature_lst (list): list of features the machine learning models were trained on
+        label_lst (list): list of labels
+
+    Returns:
+        pandas.DataFrame: hot encoding of features in a pandas DataFrame
+    """
     labels_red_lst = _build_red_lst(df_column=df.labels.values)
     cc_red_lst = _build_red_lst(df_column=df.cc.values)
     thread_red_lst = df["threads"].unique()

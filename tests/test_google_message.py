@@ -60,8 +60,8 @@ class MessageTest(TestCase):
                 'date': datetime.strptime("Fri, 11 Feb 2022 18:08:46 +0100", "%a, %d %b %Y %H:%M:%S %z"),
                 'from': 'sender@server.net',
                 'id': 'myid123',
-                'label_ids': ['important', 'Label_123'],
+                'labels': ['important', 'Label_123'],
                 'subject': 'Test Email Subject',
-                'thread_id': 'abc123',
+                'threads': 'abc123',
                 'to': ['me@mail.com', 'friend@provider.org']
             })

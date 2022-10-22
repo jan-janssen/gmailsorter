@@ -22,7 +22,11 @@ def encode_df_for_machine_learning(df, feature_lst=[], label_lst=[], return_labe
         feature_lst = feature_lst.tolist()
     if isinstance(label_lst, np.ndarray):
         label_lst = label_lst.tolist()
-    df_all_encode = one_hot_encoding(df=df, feature_lst=feature_lst + label_lst)
+    combined_lst = [
+        feature for feature in feature_lst + label_lst
+        if feature != "email_id"
+    ]
+    df_all_encode = one_hot_encoding(df=df, feature_lst=combined_lst)
     if len(feature_lst) == 0:
         feature_lst = [
             feature for feature in df_all_encode.columns.values

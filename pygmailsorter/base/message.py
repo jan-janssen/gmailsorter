@@ -62,8 +62,8 @@ class AbstractMessage(ABC):
     def to_dict(self):
         return {
             "id": self.get_email_id(),
-            "thread_id": self.get_thread_id(),
-            "label_ids": self.get_label_ids(),
+            "threads": self.get_thread_id(),
+            "labels": self.get_label_ids(),
             "to": self.get_to(),
             "from": self.get_from(),
             "cc": self.get_cc(),

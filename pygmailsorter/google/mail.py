@@ -33,6 +33,56 @@ class GoogleMailBase:
     def labels(self):
         return list(self._label_dict.keys())
 
+    def filter_only_new_messages(
+        self,
+        label,
+        n_estimators=100,
+        max_features=400,
+        random_state=42,
+        bootstrap=True,
+        recalculate=False,
+        include_deleted=False,
+        recommendation_ratio=0.9
+    ):
+        """
+        Filter new emails based on machine learning model recommendations.
+
+        Args:
+            label (str): Email label to filter for
+            n_estimators (int): Number of estimators
+            max_features (int): Number of features
+            random_state (int): Random state
+            bootstrap (boolean): Whether bootstrap samples are used when building trees. If False, the whole dataset is
+                                 used to build each tree. (default: true)
+            recalculate (boolean): Train the model again
+            include_deleted (boolean): Include deleted emails in training
+            recommendation_ratio (float): Only accept recommendation above this ratio (0<r<1)
+        """
+        message_id_lst = self.search_email(
+            label_lst=[label], only_message_ids=True
+        )
+        df = self._db_email._get_email_collection(
+            email_id_lst=message_id_lst,
+            include_deleted=False,
+            user_id=1,
+            desc="Create dataframe from email id list",
+        )
+        if len(df) > 0:
+            model_recommendation_dict = self._get_machine_learning_recommendations_for_dataframe(
+                df=df,
+                label=label,
+                n_estimators=n_estimators,
+                max_features=max_features,
+                random_state=random_state,
+                bootstrap=bootstrap,
+                recalculate=recalculate,
+                include_deleted=include_deleted,
+                recommendation_ratio=recommendation_ratio,
+            )
+            self._move_emails(
+                move_email_dict=model_recommendation_dict, label_to_ignore=label
+            )
+
     def filter_label_by_machine_learning(
         self,
         label,
@@ -58,19 +108,25 @@ class GoogleMailBase:
             include_deleted (boolean): Include deleted emails in training
             recommendation_ratio (float): Only accept recommendation above this ratio (0<r<1)
         """
-        model_recommendation_dict = self._get_machine_learning_recommendations(
+        df = self.get_emails_by_label(
             label=label,
-            n_estimators=n_estimators,
-            random_state=random_state,
-            max_features=max_features,
-            recalculate=recalculate,
-            bootstrap=bootstrap,
-            include_deleted=include_deleted,
-            recommendation_ratio=recommendation_ratio,
+            include_deleted=False
         )
-        self._move_emails(
-            move_email_dict=model_recommendation_dict, label_to_ignore=label
-        )
+        if len(df) > 0:
+            model_recommendation_dict = self._get_machine_learning_recommendations_for_dataframe(
+                df=df,
+                label=label,
+                n_estimators=n_estimators,
+                max_features=max_features,
+                random_state=random_state,
+                bootstrap=bootstrap,
+                recalculate=recalculate,
+                include_deleted=include_deleted,
+                recommendation_ratio=recommendation_ratio,
+            )
+            self._move_emails(
+                move_email_dict=model_recommendation_dict, label_to_ignore=label
+            )
 
     def update_database(self, quick=False, label_lst=[], format="full"):
         """
@@ -286,8 +342,9 @@ class GoogleMailBase:
             message=self._get_message_detail(message_id=message_id, format=format)
         )
 
-    def _get_machine_learning_recommendations(
+    def _get_machine_learning_recommendations_for_dataframe(
         self,
+        df,
         label,
         n_estimators=100,
         max_features=400,
@@ -301,6 +358,7 @@ class GoogleMailBase:
         Train internal machine learning models to predict email sorting.
 
         Args:
+            df (pandas.DataFrame): Dataframe with emails to be sorted
             label (str): Email label to filter for
             n_estimators (int): Number of estimators
             max_features (int): Number of features
@@ -314,8 +372,7 @@ class GoogleMailBase:
         Returns:
             dict: Email IDs and the corresponding label ID.
         """
-        df_select = self.get_emails_by_label(label=label, include_deleted=False)
-        if len(df_select) > 0:
+        if len(df) > 0:
             df_all_encode = gather_data_for_machine_learning(
                 df_all=self.get_all_emails_in_database(include_deleted=include_deleted),
                 labels_dict=self._label_dict,
@@ -332,7 +389,7 @@ class GoogleMailBase:
             )
             return get_machine_learning_recommendations(
                 models=models,
-                df_select=df_select,
+                df_select=df,
                 df_all_encode=df_all_encode,
                 recommendation_ratio=recommendation_ratio,
             )

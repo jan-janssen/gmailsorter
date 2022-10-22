@@ -37,6 +37,9 @@ class MachineLearningDatabase(DatabaseTemplate):
             user_id (int): database user id
             commit (boolean): boolean flag to write to the database
         """
+        feature_filtered_lst = [
+            feature for feature in feature_lst if "labels_" not in feature
+        ]
         label_stored_lst = self._get_labels(user_id=user_id)
         feature_stored_lst = self.get_features(user_id=user_id)
         model_dict_new = {
@@ -49,10 +52,10 @@ class MachineLearningDatabase(DatabaseTemplate):
             label for label in label_stored_lst if label not in model_dict.keys()
         ]
         feature_new_lst = [
-            feature for feature in feature_lst if feature not in feature_stored_lst
+            feature for feature in feature_filtered_lst if feature not in feature_stored_lst
         ]
         feature_remove_lst = [
-            feature for feature in feature_stored_lst if feature not in feature_lst
+            feature for feature in feature_stored_lst if feature not in feature_filtered_lst
         ]
         if len(model_dict_new) > 0:
             self._session.add_all(
@@ -377,14 +380,13 @@ def gather_data_for_machine_learning(
         return df_all_encode
 
 
-def one_hot_encoding(df, feature_lst, label_lst=[]):
+def one_hot_encoding(df, feature_lst=[]):
     """
     Binary one hot encoding of features in a pandas DataFrame
 
     Args:
         df (pandas.DataFrame): DataFrame with emails
-        feature_lst (list): list of features the machine learning models were trained on
-        label_lst (list): list of labels
+        feature_lst (list): list of features to encode
 
     Returns:
         pandas.DataFrame: hot encoding of features in a pandas DataFrame
@@ -423,26 +425,19 @@ def one_hot_encoding(df, feature_lst, label_lst=[]):
         + _get_lst_without_none(lst=thread_red_lst, column="threads")
         + _get_lst_without_none(lst=to_red_lst, column="to")
     )
-    if len(label_lst) == 0:
+    if len(feature_lst) == 0:
         df_new = pandas.DataFrame(all_binary_values, columns=all_labels)
     else:
-        labels_to_drop = [label for label in all_labels if label not in label_lst]
-        labels_to_add = [label for label in label_lst if label not in all_labels]
+        labels_to_drop = [label for label in all_labels if label not in feature_lst]
+        labels_to_add = [label for label in feature_lst if label not in all_labels]
         data_stack = np.hstack(
             (all_binary_values, np.zeros((len(df), len(labels_to_add))))
         )
         columns = np.array(all_labels + labels_to_add)
-        if len(feature_lst) > 0:
-            ind = np.isin(columns, feature_lst)
-            df_new = pandas.DataFrame(
-                data_stack[:, ind],
-                columns=columns[ind],
-            )
-        else:
-            df_new = pandas.DataFrame(
-                data_stack,
-                columns=columns,
-            )
+        df_new = pandas.DataFrame(
+            data_stack,
+            columns=columns,
+        )
         df_new.drop(labels_to_drop, inplace=True, axis=1)
     df_new["email_id"] = df.id.values
     return df_new.sort_index(axis=1)

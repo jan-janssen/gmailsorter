@@ -133,7 +133,7 @@ class GoogleMailBase:
         Returns:
             pandas.DataFrame: Email content for the downloaded emails
         """
-        return self.download_messages_to_dataframe(
+        return self._download_messages_to_dataframe(
             message_id_lst=self.search_email(label_lst=[label], only_message_ids=True)
         )
 
@@ -163,7 +163,7 @@ class GoogleMailBase:
                 )
                 self._db_email.update_labels(
                     message_id_lst=message_label_updates_lst,
-                    message_meta_lst=self.get_labels_for_emails(
+                    message_meta_lst=self._get_labels_for_emails(
                         message_id_lst=message_label_updates_lst
                     ),
                     user_id=self._db_user_id,
@@ -172,7 +172,7 @@ class GoogleMailBase:
                 message_id_lst=new_messages_lst, format=format
             )
 
-    def get_labels_for_email(self, message_id):
+    def _get_labels_for_email(self, message_id):
         """
         Get labels for email
 
@@ -190,7 +190,7 @@ class GoogleMailBase:
         else:
             return []
 
-    def get_labels_for_emails(self, message_id_lst):
+    def _get_labels_for_emails(self, message_id_lst):
         """
         Get labels for a list of emails
 
@@ -201,7 +201,7 @@ class GoogleMailBase:
             list: Nested list of email labels for each email
         """
         return [
-            self.get_labels_for_email(message_id=message_id)
+            self._get_labels_for_email(message_id=message_id)
             for message_id in tqdm(
                 iterable=message_id_lst, desc="Get labels for emails"
             )
@@ -276,82 +276,6 @@ class GoogleMailBase:
         self._db_ml.store_models(model_dict=model_dict, user_id=self._db_user_id)
         return model_dict
 
-    def search_email(self, query_string="", label_lst=[], only_message_ids=False):
-        """
-        Search emails either by a specific query or optionally limit your search to a list of labels
-
-        Args:
-            query_string (str): query string to search for
-            label_lst (list): list of labels to be searched
-            only_message_ids (bool): return only the email IDs not the thread IDs - default: false
-
-        Returns:
-            list: list with email IDs and thread IDs of the messages which match the search
-        """
-        label_ids = [self._label_dict[label] for label in label_lst]
-        message_id_lst = self._get_messages(
-            query_string=query_string, label_ids=label_ids
-        )
-        if not only_message_ids:
-            return message_id_lst
-        else:
-            return [d["id"] for d in message_id_lst]
-
-    def remove_labels_from_emails(self, label_lst):
-        """
-        Remove a list of labels from all emails in Gmail. A typical application is removing the Gmail smart labels:
-            label_lst=["CATEGORY_FORUMS", "CATEGORY_UPDATES", "CATEGORY_PROMOTIONS", "CATEGORY_SOCIAL"]
-
-        Args:
-            label_lst (list): list of labels
-        """
-        label_convert_lst = [self._label_dict[label] for label in label_lst]
-        for label in tqdm(iterable=label_convert_lst, desc="Remove labels from Emails"):
-            message_list_response = self._get_messages(
-                query_string="", label_ids=[label]
-            )
-            for message_id in tqdm(
-                iterable=self._get_message_ids(message_lst=message_list_response)
-            ):
-                self._modify_message_labels(
-                    message_id=message_id, label_id_remove_lst=[label]
-                )
-
-    def download_messages_to_dataframe(self, message_id_lst, format="full"):
-        """
-        Download a list of messages based on their email IDs and store the content in a pandas.DataFrame.
-
-        Args:
-            message_id_lst (list): list of emails IDs
-            format (str): Email format to download - default: "full"
-
-        Returns:
-            pandas.DataFrame: pandas.DataFrame which contains the rendered emails
-        """
-        return pandas.DataFrame(
-            [
-                self.get_email_dict(message_id=message_id, format=format)
-                for message_id in tqdm(
-                    iterable=message_id_lst, desc="Download messagees to DataFrame"
-                )
-            ]
-        )
-
-    def get_email_dict(self, message_id, format="full"):
-        """
-        Get the content of a given message as dictionary
-
-        Args:
-            message_id (str): Email id
-            format (str): Email format to download - default: "full"
-
-        Returns:
-            dict: Dictionary with the message content
-        """
-        return get_email_dict(
-            message=self._get_message_detail(message_id=message_id, format=format)
-        )
-
     def train_machine_learning_models(
         self,
         label,
@@ -403,6 +327,69 @@ class GoogleMailBase:
             recalculate=recalculate,
         )
         return models, feature_lst, df_all_encode
+
+    def search_email(self, query_string="", label_lst=[], only_message_ids=False):
+        """
+        Search emails either by a specific query or optionally limit your search to a list of labels
+
+        Args:
+            query_string (str): query string to search for
+            label_lst (list): list of labels to be searched
+            only_message_ids (bool): return only the email IDs not the thread IDs - default: false
+
+        Returns:
+            list: list with email IDs and thread IDs of the messages which match the search
+        """
+        label_ids = [self._label_dict[label] for label in label_lst]
+        message_id_lst = self._get_messages(
+            query_string=query_string, label_ids=label_ids
+        )
+        if not only_message_ids:
+            return message_id_lst
+        else:
+            return [d["id"] for d in message_id_lst]
+
+    def remove_labels_from_emails(self, label_lst):
+        """
+        Remove a list of labels from all emails in Gmail. A typical application is removing the Gmail smart labels:
+            label_lst=["CATEGORY_FORUMS", "CATEGORY_UPDATES", "CATEGORY_PROMOTIONS", "CATEGORY_SOCIAL"]
+
+        Args:
+            label_lst (list): list of labels
+        """
+        label_convert_lst = [self._label_dict[label] for label in label_lst]
+        for label in tqdm(iterable=label_convert_lst, desc="Remove labels from Emails"):
+            message_list_response = self._get_messages(
+                query_string="", label_ids=[label]
+            )
+            for message_id in tqdm(
+                iterable=self._get_message_ids(message_lst=message_list_response)
+            ):
+                self._modify_message_labels(
+                    message_id=message_id, label_id_remove_lst=[label]
+                )
+
+    def _download_messages_to_dataframe(self, message_id_lst, format="full"):
+        """
+        Download a list of messages based on their email IDs and store the content in a pandas.DataFrame.
+
+        Args:
+            message_id_lst (list): list of emails IDs
+            format (str): Email format to download - default: "full"
+
+        Returns:
+            pandas.DataFrame: pandas.DataFrame which contains the rendered emails
+        """
+        return pandas.DataFrame(
+            [
+                get_email_dict(
+                    message=self._get_message_detail(message_id=message_id, format=format)
+                )
+                for message_id in tqdm(
+                    iterable=message_id_lst, desc="Download messagees to DataFrame"
+                )
+            ]
+        )
 
     def _get_machine_learning_recommendations(
         self,
@@ -564,7 +551,7 @@ class GoogleMailBase:
                 )
 
     def _store_emails_in_database(self, message_id_lst, format="full"):
-        df = self.download_messages_to_dataframe(
+        df = self._download_messages_to_dataframe(
             message_id_lst=message_id_lst, format=format
         )
         if len(df) > 0:

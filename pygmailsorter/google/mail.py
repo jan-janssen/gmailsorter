@@ -383,7 +383,9 @@ class GoogleMailBase:
         return pandas.DataFrame(
             [
                 get_email_dict(
-                    message=self._get_message_detail(message_id=message_id, format=format)
+                    message=self._get_message_detail(
+                        message_id=message_id, format=format
+                    )
                 )
                 for message_id in tqdm(
                     iterable=message_id_lst, desc="Download messagees to DataFrame"

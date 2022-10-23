@@ -10,45 +10,38 @@ def command_line_parser():
     parser.add_argument(
         "-c",
         "--config",
-        help="Configuration Folder e.g. ~/.pygmailsorter",
+        help="Configuration Folder e.g. ~/.pygmailsorter .",
     )
     parser.add_argument(
-        "-d",
-        "--database",
+        "-u",
+        "--update",
         action="store_true",
-        help="Update local database.",
+        help="Update local database and retrain machine learning model.",
     )
     parser.add_argument(
         "-l",
         "--label",
-        help="Email label to be filtered with machine learning",
-    )
-    parser.add_argument(
-        "-m",
-        "--machinelearning",
-        action="store_true",
-        help="Train machine learning models. (requires -l/ --label)",
-    )
-    parser.add_argument(
-        "-p",
-        "--prediction",
-        action="store_true",
-        help="Sort emails based on prediction of machine learning models. (requires -l/ --label)",
+        help="Email label to be filtered with machine learning.",
     )
     args = parser.parse_args()
     if args.config:
         gmail = Gmail(config_folder=args.config)
     else:
         gmail = Gmail()
-    if args.database:
+    if args.update:
         gmail.update_database(quick=False)
-    if args.label:
-        if args.machinelearning:
-            _ = gmail.train_machine_learning_models(label=args.label, recalculate=True)
-        elif args.prediction:
-            gmail.filter_only_new_messages(label=args.label, recalculate=False)
-        else:
-            parser.print_help()
+        gmail.fit_machine_learning_model_to_database(
+            n_estimators=100,
+            max_features=400,
+            random_state=42,
+            bootstrap=True,
+            include_deleted=False
+        )
+    elif args.label:
+        gmail.filter_messages_from_server(
+            label=args.label,
+            recommendation_ratio=0.9
+        )
     else:
         parser.print_help()
 

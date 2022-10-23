@@ -34,6 +34,7 @@ def encode_df_for_machine_learning(
             for feature in df_all_encode.columns.values
             if "labels_" not in feature
         ]
+    feature_lst += ["email_id"]
     df_all_features = df_all_encode[feature_lst]
     if not return_labels:
         return df_all_features

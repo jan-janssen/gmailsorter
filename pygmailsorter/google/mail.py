@@ -98,7 +98,7 @@ class GoogleMailBase:
         self._db_ml.store_models(
             model_dict=model_dict,
             feature_lst=df_all_features.columns.values.tolist(),
-            user_id=self._userid,
+            user_id=self._db_user_id,
             commit=True,
         )
 

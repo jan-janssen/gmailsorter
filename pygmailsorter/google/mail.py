@@ -2,13 +2,13 @@ import pandas
 from tqdm import tqdm
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from pygmailsorter.base import get_email_database
 from pygmailsorter.google.message import Message, get_email_dict
-from pygmailsorter.base.database import get_email_database
-from pygmailsorter.ml.base import (
+from pygmailsorter.ml import (
+    encode_df_for_machine_learning,
     get_machine_learning_database,
-    gather_data_for_machine_learning,
-    train_model,
-    get_machine_learning_recommendations,
+    fit_machine_learning_models,
+    get_predictions_from_machine_learning_models
 )
 
 
@@ -33,15 +33,9 @@ class GoogleMailBase:
     def labels(self):
         return list(self._label_dict.keys())
 
-    def filter_only_new_messages(
+    def filter_messages_from_server(
         self,
         label,
-        n_estimators=100,
-        max_features=400,
-        random_state=42,
-        bootstrap=True,
-        recalculate=False,
-        include_deleted=False,
         recommendation_ratio=0.9,
     ):
         """
@@ -49,79 +43,67 @@ class GoogleMailBase:
 
         Args:
             label (str): Email label to filter for
-            n_estimators (int): Number of estimators
-            max_features (int): Number of features
-            random_state (int): Random state
-            bootstrap (boolean): Whether bootstrap samples are used when building trees. If False, the whole dataset is
-                                 used to build each tree. (default: true)
-            recalculate (boolean): Train the model again
-            include_deleted (boolean): Include deleted emails in training
             recommendation_ratio (float): Only accept recommendation above this ratio (0<r<1)
         """
-        message_id_lst = self.search_email(label_lst=[label], only_message_ids=True)
-        df = self._db_email.get_email_collection(
-            email_id_lst=message_id_lst,
-            include_deleted=False,
-            user_id=1,
-            desc="Create dataframe from email id list",
-        )
-        if len(df) > 0:
-            model_recommendation_dict = self._get_machine_learning_recommendations(
-                df=df,
-                label=label,
-                n_estimators=n_estimators,
-                max_features=max_features,
-                random_state=random_state,
-                bootstrap=bootstrap,
-                recalculate=recalculate,
-                include_deleted=include_deleted,
-                recommendation_ratio=recommendation_ratio,
+        df_partial = self.download_emails_for_label(label=label)
+        if len(df_partial) > 0:
+            model_reload_dict, feature_reload_lst = self._db_ml.load_models()
+            df_partial_features = encode_df_for_machine_learning(
+                df=df_partial,
+                feature_lst=feature_reload_lst,
+                label_lst=list(model_reload_dict.keys()),
+                return_labels=False
+            )
+            model_recommendation_dict = get_predictions_from_machine_learning_models(
+                df_features=df_partial_features,
+                model_dict=model_reload_dict,
+                recommendation_ratio=recommendation_ratio
             )
             self._move_emails(
                 move_email_dict=model_recommendation_dict, label_to_ignore=label
             )
 
-    def filter_label_by_machine_learning(
+    def fit_machine_learning_model_to_database(
         self,
-        label,
         n_estimators=100,
         max_features=400,
         random_state=42,
         bootstrap=True,
-        recalculate=False,
         include_deleted=False,
-        recommendation_ratio=0.9,
     ):
         """
-        Filter emails based on machine learning model recommendations.
+        Fit machine learning models to emails stored in database and afterwards store machine learning models in
+        database.
 
         Args:
-            label (str): Email label to filter for
             n_estimators (int): Number of estimators
             max_features (int): Number of features
             random_state (int): Random state
             bootstrap (boolean): Whether bootstrap samples are used when building trees. If False, the whole dataset is
                                  used to build each tree. (default: true)
-            recalculate (boolean): Train the model again
-            include_deleted (boolean): Include deleted emails in training
-            recommendation_ratio (float): Only accept recommendation above this ratio (0<r<1)
+            include_deleted (bool): Flag to include deleted emails - default False
         """
-        df = self.get_emails_by_label(label=label, include_deleted=False)
-        if len(df) > 0:
-            model_recommendation_dict = self._get_machine_learning_recommendations(
-                df=df,
-                label=label,
-                n_estimators=n_estimators,
-                max_features=max_features,
-                random_state=random_state,
-                bootstrap=bootstrap,
-                recalculate=recalculate,
-                include_deleted=include_deleted,
-                recommendation_ratio=recommendation_ratio,
-            )
-            self._move_emails(
-                move_email_dict=model_recommendation_dict, label_to_ignore=label
-            )
+        df_all = self.get_all_emails_in_database(include_deleted=include_deleted)
+        df_all_features, df_all_labels = encode_df_for_machine_learning(
+            df=df_all,
+            feature_lst=[],
+            label_lst=[],
+            return_labels=True
+        )
+        model_dict = fit_machine_learning_models(
+            df_all_features=df_all_features,
+            df_all_labels=df_all_labels,
+            n_estimators=n_estimators,
+            max_features=max_features,
+            random_state=random_state,
+            bootstrap=bootstrap
+        )
+        self._db_ml.store_models(
+            model_dict=model_dict,
+            feature_lst=df_all_features.columns.values.tolist(),
+            user_id=self._userid,
+            commit=True
+        )
 
     def download_emails_for_label(self, label):
         """
@@ -221,113 +203,6 @@ class GoogleMailBase:
             include_deleted=include_deleted, user_id=self._db_user_id
         )
 
-    def get_emails_by_label(self, label, include_deleted=False):
-        """
-        Get all emails stored in the local database for a specific label
-
-        Args:
-            label (str): Email label to filter for
-            include_deleted (bool): Flag to include deleted emails - default False
-
-        Returns:
-            pandas.DataFrame: With all emails and the corresponding information
-        """
-        return self._db_email.get_emails_by_label(
-            label_id=self._label_dict[label],
-            include_deleted=include_deleted,
-            user_id=self._db_user_id,
-        )
-
-    def train_machine_learning_model(
-        self,
-        n_estimators=100,
-        max_features=400,
-        random_state=42,
-        bootstrap=True,
-        include_deleted=False,
-        labels_to_exclude_lst=[],
-    ):
-        """
-        Train internal machine learning models
-
-        Args:
-            n_estimators (int): Number of estimators
-            max_features (int): Number of features
-            random_state (int): Random state
-            bootstrap (boolean): Whether bootstrap samples are used when building trees. If False, the whole dataset is
-                                 used to build each tree. (default: true)
-            include_deleted (boolean): Include deleted emails in training
-            labels_to_exclude_lst (list): list of email labels which are excluded from the fitting process
-        """
-        df_all_encode_red = gather_data_for_machine_learning(
-            df_all=self.get_all_emails_in_database(include_deleted=include_deleted),
-            labels_dict=self._label_dict,
-            feature_lst=[],
-            labels_to_exclude_lst=labels_to_exclude_lst,
-        )
-        model_dict = train_model(
-            df=df_all_encode_red,
-            labels_to_learn=None,
-            n_estimators=n_estimators,
-            max_features=max_features,
-            random_state=random_state,
-            bootstrap=bootstrap,
-        )
-        self._db_ml.store_models(model_dict=model_dict, user_id=self._db_user_id)
-        return model_dict
-
-    def train_machine_learning_models(
-        self,
-        label,
-        n_estimators=100,
-        max_features=400,
-        random_state=42,
-        bootstrap=True,
-        recalculate=False,
-        include_deleted=False,
-    ):
-        """
-        Train internal machine learning models to predict email sorting.
-
-        Args:
-            label (str): Email label to filter for
-            n_estimators (int): Number of estimators
-            max_features (int): Number of features
-            random_state (int): Random state
-            bootstrap (boolean): Whether bootstrap samples are used when building trees. If False, the whole dataset is
-                                 used to build each tree. (default: true)
-            recalculate (boolean): Train the model again
-            include_deleted (boolean): Include deleted emails in training
-
-        Returns:
-            dict: Email IDs and the corresponding label ID.
-        """
-        df_all = self.get_all_emails_in_database(include_deleted=include_deleted)
-        if not recalculate:
-            df_all_encode = gather_data_for_machine_learning(
-                df_all=df_all,
-                labels_dict=self._label_dict,
-                feature_lst=self._db_ml.get_features(),
-                labels_to_exclude_lst=[label],
-            )
-        else:
-            df_all_encode = gather_data_for_machine_learning(
-                df_all=df_all,
-                labels_dict=self._label_dict,
-                feature_lst=[],
-                labels_to_exclude_lst=[label],
-            )
-        models, feature_lst = self._db_ml.get_models(
-            df=df_all_encode,
-            n_estimators=n_estimators,
-            max_features=max_features,
-            random_state=random_state,
-            bootstrap=bootstrap,
-            user_id=self._db_user_id,
-            recalculate=recalculate,
-        )
-        return models, feature_lst, df_all_encode
-
     def search_email(self, query_string="", label_lst=[], only_message_ids=False):
         """
         Search emails either by a specific query or optionally limit your search to a list of labels
@@ -392,56 +267,6 @@ class GoogleMailBase:
                 )
             ]
         )
-
-    def _get_machine_learning_recommendations(
-        self,
-        df,
-        label,
-        n_estimators=100,
-        max_features=400,
-        random_state=42,
-        bootstrap=True,
-        recalculate=False,
-        include_deleted=False,
-        recommendation_ratio=0.9,
-    ):
-        """
-        Train internal machine learning models to predict email sorting.
-
-        Args:
-            df (pandas.DataFrame): Dataframe with emails to be sorted
-            label (str): Email label to filter for
-            n_estimators (int): Number of estimators
-            max_features (int): Number of features
-            random_state (int): Random state
-            bootstrap (boolean): Whether bootstrap samples are used when building trees. If False, the whole dataset is
-                                 used to build each tree. (default: true)
-            recalculate (boolean): Train the model again
-            include_deleted (boolean): Include deleted emails in training
-            recommendation_ratio (float): Only accept recommendation above this ratio (0<r<1)
-
-        Returns:
-            dict: Email IDs and the corresponding label ID.
-        """
-        if len(df) > 0:
-            models, feature_lst, df_all_encode = self.train_machine_learning_models(
-                label=label,
-                n_estimators=n_estimators,
-                max_features=max_features,
-                random_state=random_state,
-                bootstrap=bootstrap,
-                recalculate=recalculate,
-                include_deleted=include_deleted,
-            )
-            return get_machine_learning_recommendations(
-                models=models,
-                df_select=df,
-                df_all_encode=df_all_encode,
-                feature_lst=feature_lst,
-                recommendation_ratio=recommendation_ratio,
-            )
-        else:
-            return {}
 
     def _get_label_translate_dict(self):
         results = self._service.users().labels().list(userId=self._userid).execute()

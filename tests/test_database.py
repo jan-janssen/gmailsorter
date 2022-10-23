@@ -15,9 +15,9 @@ class DatabaseTest(TestCase):
             'from': 'sender@server.net',
             'id': 'myid123',
             'cc': 'your@friend.com',
-            'label_ids': ['important', 'Label_123'],
+            'labels': ['important', 'Label_123'],
             'subject': 'Test Email Subject',
-            'thread_id': 'abc123',
+            'threads': 'abc123',
             'to': ['me@mail.com', 'friend@provider.org']
         }])
         engine = create_engine('sqlite:///:memory:', echo=True)

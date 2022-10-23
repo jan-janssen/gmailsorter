@@ -49,42 +49,47 @@ Create a `gmail` object from the `Gmail()` class
 gmail = Gmail()
 ```
 For testing purposes you can use the optimal `client_service_file` parameter to specify the location of the 
-authentication credentials in case they are not stored in `~/.pygmailsorter/credentials.json`.
+authentication credentials in case they are not stored in `~/.pygmailsorter/credentials.json`. Or alternatively, you 
+can provide the path to the configuration directory `config_folder`, in case this is not located at `~/.pygmailsorter`.
 
-## Download messages to pandas Dataframe
-For offline processing it is helpful to download messages in bulk to pandas dataframes:  
-```
-gmail.download_messages_to_dataframe(message_id_lst)
-```
-The `message_id_lst` is a list of message ids, this can be obtained from `gmail.search_email()`. 
-
-## Get email content as dictionary 
-The content of the email rendered as python dictionary for further postprocessing: 
-```
-gmail.get_email_dict(message_id)
-```
-The `message_id` can be derived from a function like `gmail.search_email()`. 
-
-## Update database
-Update local database stored in `~/.pygmailsorter/email.db`:
+## Sync local database with email account
+To reduce the communication overhead, the emails are stored locally in an SQLite database.
 ```
 gmail.update_database(quick=False)
 ```
-By setting `quick` to `True` only new emails are downloaded, with `quick` set to `False` all emails are downloaded.
+By setting the optional flag `quick` to `True` only new emails are downloaded while changes to existing emails are 
+ignored.
+
+## Generate pandas dataframe for emails
+Load all emails from the local SQLite database and combine them in a pandas DataFrame for further postprocessing: 
+```
+df = gmail.get_all_emails_in_database()
+```
+
+## Download specific label from email server
+Download emails with the label `"MyLabel"` from the email server:
+```
+df = gmail.download_emails_for_label(label="MyLabel")
+```
+In this case the emails are not stored in the local SQLite database. 
 
 ## Filter emails using machine learning
 Assign new email labels to the emails with the label `"MyLabel"`:
 ```
-gmail.filter_label_by_machine_learning(
-    label="MyLabel", recalculate=True
+gmail.filter_messages_from_server
+    label="MyLabel",
+    recommendation_ratio=0.9,
 )
 ```
-By setting the optional parameter `recalculate` to `True` the machine learning models are fitted again to be up to date.
+This functionality is based on the `download_emails_for_label()` function above. It checks the server for new emails for
+a selected label `"MyLabel"`. Then reloads the machine learning model from the local SQLite database and trys to predict
+the correct labels for these emails. The `recommendation_ratio` defines the level of certainty required to actually move
+the email, with `0.9` equalling a certainty of 90%. 
 
 # Command Line interface 
 The command line interface is currently rather limited, it supports the following options: 
 
 - `pygmailsorter -c/--config=~/.pygmailsorter` the configuration directory can be specified manually.   
-- `pygmailsorter -d/--database` update the local email database.  
-- `pygmailsorter -m/--machinelearning=MyLabel` assign new labels to the emails with label `MyLabel`.
+- `pygmailsorter -u/--update` update the local email database and retrain the machine learning model.  
+- `pygmailsorter -l/--label=MyLabel` assign new labels to the emails with label `MyLabel`.
 

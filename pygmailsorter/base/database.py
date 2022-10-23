@@ -292,7 +292,7 @@ class DatabaseInterface(DatabaseTemplate):
         self._session.add_all(
             [
                 Threads(email_id=email_id, thread_id=thread_id, user_id=user_id)
-                for email_id, thread_id in zip(df["id"], df["thread_id"])
+                for email_id, thread_id in zip(df["id"], df["threads"])
             ]
         )
         self._session.commit()
@@ -308,7 +308,7 @@ class DatabaseInterface(DatabaseTemplate):
 
     def _commit_label_table(self, df, user_id=1):
         label_lst = []
-        for email_id, lid_lst in zip(df["id"], df["label_ids"]):
+        for email_id, lid_lst in zip(df["id"], df["labels"]):
             for label_id in lid_lst:
                 label_lst.append(
                     Labels(email_id=email_id, label_id=label_id, user_id=user_id)

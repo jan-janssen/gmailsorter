@@ -2,7 +2,9 @@ import pandas
 import numpy as np
 
 
-def encode_df_for_machine_learning(df, feature_lst=[], label_lst=[], return_labels=False):
+def encode_df_for_machine_learning(
+    df, feature_lst=[], label_lst=[], return_labels=False
+):
     """
     Encode a given dataframe for machine learning. Either based on a list of existing features and labels or by
     generating the features and labels from the dataframe. By default, only the dataframe with features is returned
@@ -23,13 +25,13 @@ def encode_df_for_machine_learning(df, feature_lst=[], label_lst=[], return_labe
     if isinstance(label_lst, np.ndarray):
         label_lst = label_lst.tolist()
     combined_lst = [
-        feature for feature in feature_lst + label_lst
-        if feature != "email_id"
+        feature for feature in feature_lst + label_lst if feature != "email_id"
     ]
     df_all_encode = one_hot_encoding(df=df, feature_lst=combined_lst)
     if len(feature_lst) == 0:
         feature_lst = [
-            feature for feature in df_all_encode.columns.values
+            feature
+            for feature in df_all_encode.columns.values
             if "labels_" not in feature
         ]
     df_all_features = df_all_encode[feature_lst]
@@ -38,7 +40,8 @@ def encode_df_for_machine_learning(df, feature_lst=[], label_lst=[], return_labe
     else:
         if len(label_lst) == 0:
             label_lst = [
-                label for label in df_all_encode.columns.values
+                label
+                for label in df_all_encode.columns.values
                 if "labels_Label_" in label
             ]
         return df_all_features, df_all_encode[label_lst]

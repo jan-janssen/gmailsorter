@@ -35,13 +35,10 @@ def command_line_parser():
             max_features=400,
             random_state=42,
             bootstrap=True,
-            include_deleted=False
+            include_deleted=False,
         )
     elif args.label:
-        gmail.filter_messages_from_server(
-            label=args.label,
-            recommendation_ratio=0.9
-        )
+        gmail.filter_messages_from_server(label=args.label, recommendation_ratio=0.9)
     else:
         parser.print_help()
 

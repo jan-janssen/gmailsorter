@@ -8,7 +8,7 @@ from pygmailsorter.ml import (
     encode_df_for_machine_learning,
     get_machine_learning_database,
     fit_machine_learning_models,
-    get_predictions_from_machine_learning_models
+    get_predictions_from_machine_learning_models,
 )
 
 
@@ -52,12 +52,12 @@ class GoogleMailBase:
                 df=df_partial,
                 feature_lst=feature_reload_lst,
                 label_lst=list(model_reload_dict.keys()),
-                return_labels=False
+                return_labels=False,
             )
             model_recommendation_dict = get_predictions_from_machine_learning_models(
                 df_features=df_partial_features,
                 model_dict=model_reload_dict,
-                recommendation_ratio=recommendation_ratio
+                recommendation_ratio=recommendation_ratio,
             )
             self._move_emails(
                 move_email_dict=model_recommendation_dict, label_to_ignore=label
@@ -85,10 +85,7 @@ class GoogleMailBase:
         """
         df_all = self.get_all_emails_in_database(include_deleted=include_deleted)
         df_all_features, df_all_labels = encode_df_for_machine_learning(
-            df=df_all,
-            feature_lst=[],
-            label_lst=[],
-            return_labels=True
+            df=df_all, feature_lst=[], label_lst=[], return_labels=True
         )
         model_dict = fit_machine_learning_models(
             df_all_features=df_all_features,
@@ -96,13 +93,13 @@ class GoogleMailBase:
             n_estimators=n_estimators,
             max_features=max_features,
             random_state=random_state,
-            bootstrap=bootstrap
+            bootstrap=bootstrap,
         )
         self._db_ml.store_models(
             model_dict=model_dict,
             feature_lst=df_all_features.columns.values.tolist(),
             user_id=self._userid,
-            commit=True
+            commit=True,
         )
 
     def download_emails_for_label(self, label):

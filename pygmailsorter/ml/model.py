@@ -10,7 +10,7 @@ def fit_machine_learning_models(
     n_estimators=100,
     max_features=400,
     random_state=42,
-    bootstrap=True
+    bootstrap=True,
 ):
     """
     Train machine learning models
@@ -41,9 +41,7 @@ def fit_machine_learning_models(
 
 
 def get_predictions_from_machine_learning_models(
-    df_features,
-    model_dict,
-    recommendation_ratio=0.9
+    df_features, model_dict, recommendation_ratio=0.9
 ):
     """
     Get recommendations from machine learning models

@@ -54,6 +54,9 @@ class GoogleMailBase:
                 label_lst=list(model_reload_dict.keys()),
                 return_labels=False,
             )
+            df_partial_features = df_partial_features.reindex(
+                sorted(df_partial_features.columns), axis=1
+            )
             model_recommendation_dict = get_predictions_from_machine_learning_models(
                 df_features=df_partial_features,
                 model_dict=model_reload_dict,
@@ -86,6 +89,9 @@ class GoogleMailBase:
         df_all = self.get_all_emails_in_database(include_deleted=include_deleted)
         df_all_features, df_all_labels = encode_df_for_machine_learning(
             df=df_all, feature_lst=[], label_lst=[], return_labels=True
+        )
+        df_all_features = df_all_features.reindex(
+            sorted(df_all_features.columns), axis=1
         )
         model_dict = fit_machine_learning_models(
             df_all_features=df_all_features,

@@ -1,6 +1,6 @@
 import argparse
 import os
-from pygmailsorter import GmailDatabase, load_client_secrets_file
+from pygmailsorter import Gmail, load_client_secrets_file
 
 
 def command_line_parser():
@@ -46,16 +46,12 @@ def command_line_parser():
         credentials = os.path.abspath("credentials.json")
     else:
         print("Please provide a credentials file, -c/--credentials credentials.json")
-    if args.database:
-        database = args.database
-    elif "email.db" in os.listdir("."):
-        database = "sqlite:///email.db"
-    else:
-        print(
-            'Please provide a connection string for the SQL database, -d/--database "sqlite:///email.db"'
-        )
-    if credentials and database:
-        gmail = GmailDatabase(
+    if credentials:
+        if args.database:
+            database = args.database
+        else:
+            database = "sqlite:///email.db"
+        gmail = Gmail(
             client_config=load_client_secrets_file(client_secrets_file=credentials),
             connection_str=database,
             user_id="me",

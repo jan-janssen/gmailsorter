@@ -1,10 +1,8 @@
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
-from pygmailsorter.google.mail import GoogleMailBase
-from pygmailsorter.google.token import validate_token
+import json
+from pygmailsorter.google import GoogleMailBase, create_service
 
 
-class GmailDatabase(GoogleMailBase):
+class Gmail(GoogleMailBase):
     def __init__(
         self,
         client_config,
@@ -39,7 +37,7 @@ class GmailDatabase(GoogleMailBase):
         )
 
         # Initialise service
-        google_mail_service = _create_service(
+        google_mail_service = create_service(
             client_config=self._client_config,
             api_name=connect_dict["api_name"],
             api_version=connect_dict["api_version"],
@@ -59,39 +57,6 @@ class GmailDatabase(GoogleMailBase):
         )
 
 
-def _create_service(
-    client_config,
-    api_name,
-    api_version,
-    scopes,
-    database,
-    database_user_id,
-    port=8080,
-):
-    cred = None
-
-    token = database.get_token(user_id=database_user_id)
-    if token.token is not None:
-        cred = Credentials(
-            token=token.token,
-            refresh_token=token.refresh_token,
-            id_token=None,
-            token_uri=token.token_uri,
-            client_id=token.client_id,
-            client_secret=token.client_secret,
-            scopes=["https://mail.google.com/"],
-            default_scopes=None,
-            quota_project_id=None,
-            expiry=token.expiry,
-            rapt_token=None,
-            refresh_handler=None,
-            enable_reauth_refresh=False,
-        )
-
-    if not cred or not cred.valid:
-        cred = validate_token(
-            cred=cred, client_config=client_config, scopes=scopes, port=port
-        )
-        database.update_token_with_dict(token=token, credentials=cred, commit=True)
-
-    return build(api_name, api_version, credentials=cred)
+def load_client_secrets_file(client_secrets_file):
+    with open(client_secrets_file, "r") as json_file:
+        return json.load(json_file)

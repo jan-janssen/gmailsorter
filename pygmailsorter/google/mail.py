@@ -93,6 +93,7 @@ class GoogleMailBase:
         df_all_features, df_all_labels = encode_df_for_machine_learning(
             df=df_all, feature_lst=[], label_lst=[], return_labels=True
         )
+        df_all_features = df_all_features.loc[:, ~df_all_features.columns.duplicated()].copy()
         df_all_features = df_all_features.reindex(
             sorted(df_all_features.columns), axis=1
         )

@@ -40,7 +40,7 @@ The `pygmailsorter` stores the configuration files in the users home directory `
 # Python interface 
 Import the `pygmailsorter` module 
 ```
-from pygmailsorter import Gmail
+from pygmailsorter import GmailFile as Gmail
 ```
 
 ## Initialize pygmailsorter
@@ -89,7 +89,9 @@ the email, with `0.9` equalling a certainty of 90%.
 # Command Line interface 
 The command line interface is currently rather limited, it supports the following options: 
 
-- `pygmailsorter -c/--config=~/.pygmailsorter` the configuration directory can be specified manually.   
+- `pygmailsorter -c/--credentials` path to credentials file provided by Google e.g. `credentials.json` .  
+- `pygmailsorter -d/--database` connection string to connect to database e.g. `sqlite:///email.db` .
 - `pygmailsorter -u/--update` update the local email database and retrain the machine learning model.  
 - `pygmailsorter -l/--label=MyLabel` assign new labels to the emails with label `MyLabel`.
+- `pygmailsorter -p/--port` port for authentication webserver to run e.g. `8080` .
 

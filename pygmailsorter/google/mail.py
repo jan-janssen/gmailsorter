@@ -3,6 +3,7 @@ from tqdm import tqdm
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from pygmailsorter.base import get_email_database
+from pygmailsorter.google.database import get_token_database
 from pygmailsorter.google.message import Message, get_email_dict
 from pygmailsorter.ml import (
     encode_df_for_machine_learning,
@@ -18,12 +19,14 @@ class GoogleMailBase:
         google_mail_service,
         database_email=None,
         database_ml=None,
+        database_token=None,
         user_id="me",
         db_user_id=1,
     ):
         self._service = google_mail_service
         self._db_email = database_email
         self._db_ml = database_ml
+        self._db_token = database_token
         self._db_user_id = db_user_id
         self._userid = user_id
         self._label_dict = self._get_label_translate_dict()
@@ -397,4 +400,5 @@ class GoogleMailBase:
         session = sessionmaker(bind=engine)()
         db_email = get_email_database(engine=engine, session=session)
         db_ml = get_machine_learning_database(engine=engine, session=session)
-        return db_email, db_ml
+        db_token = get_token_database(engine=engine, session=session)
+        return db_email, db_ml, db_token

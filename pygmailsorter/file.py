@@ -1,13 +1,12 @@
 import os
-from google.auth.transport.requests import Request
-from google.auth.exceptions import RefreshError
+import json
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
 from pygmailsorter.google.mail import GoogleMailBase
+from pygmailsorter.google.token import validate_token
 
 
-class Gmail(GoogleMailBase):
+class GmailFile(GoogleMailBase):
     def __init__(
         self,
         client_service_file=None,
@@ -52,7 +51,7 @@ class Gmail(GoogleMailBase):
         )
 
         # Initialize database
-        database_email, database_ml = self.create_database(
+        database_email, database_ml, database_token = self.create_database(
             connection_str=self._connection_str
         )
 
@@ -60,6 +59,7 @@ class Gmail(GoogleMailBase):
             google_mail_service=google_mail_service,
             database_email=database_email,
             database_ml=database_ml,
+            database_token=database_token,
             user_id=user_id,
             db_user_id=db_user_id,
         )
@@ -86,18 +86,14 @@ def _create_service(
         cred = Credentials.from_authorized_user_file(token_file, scopes)
 
     if not cred or not cred.valid:
-        token_valid = False
-        if cred and cred.expired and cred.refresh_token:
-            try:
-                cred.refresh(Request())
-            except RefreshError:
-                pass
-            else:
-                token_valid = True
-
-        if not token_valid:
-            flow = InstalledAppFlow.from_client_secrets_file(client_secret_file, scopes)
-            cred = flow.run_local_server(open_browser=False, port=port)
+        cred = validate_token(
+            cred=cred,
+            client_config=load_client_secrets_file(
+                client_secrets_file=client_secret_file
+            ),
+            scopes=scopes,
+            port=port
+        )
 
         with open(os.path.join(working_dir, token_dir, json_file), "w") as token:
             token.write(cred.to_json())
@@ -109,3 +105,8 @@ def _create_config_folder(config_folder="~/.pygmailsorter"):
     config_path = os.path.abspath(os.path.expanduser(config_folder))
     os.makedirs(config_path, exist_ok=True)
     return config_path
+
+
+def load_client_secrets_file(client_secrets_file):
+    with open(client_secrets_file, "r") as json_file:
+        return json.load(json_file)

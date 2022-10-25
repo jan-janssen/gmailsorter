@@ -46,13 +46,13 @@ class DatabaseInterface(DatabaseTemplate):
     @staticmethod
     def token_to_dict(token):
         return {
-            'token': token.token,
-            'refresh_token': token.refresh_token,
-            'token_uri': token.token_uri,
-            'client_id': token.client_id,
-            'client_secret': token.client_secret,
-            'scopes': ['https://mail.google.com/'],
-            'expiry': token.expiry
+            "token": token.token,
+            "refresh_token": token.refresh_token,
+            "token_uri": token.token_uri,
+            "client_id": token.client_id,
+            "client_secret": token.client_secret,
+            "scopes": ["https://mail.google.com/"],
+            "expiry": token.expiry,
         }
 
 

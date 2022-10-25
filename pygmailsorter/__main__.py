@@ -51,16 +51,16 @@ def command_line_parser():
     elif "email.db" in os.listdir("."):
         database = "sqlite:///email.db"
     else:
-        print("Please provide a connection string for the SQL database, -d/--database \"sqlite:///email.db\"")
+        print(
+            'Please provide a connection string for the SQL database, -d/--database "sqlite:///email.db"'
+        )
     if credentials and database:
         gmail = GmailDatabase(
-            client_config=load_client_secrets_file(
-                client_secrets_file=credentials
-            ),
+            client_config=load_client_secrets_file(client_secrets_file=credentials),
             connection_str=database,
             user_id="me",
             db_user_id=1,
-            port=port
+            port=port,
         )
         if args.update:
             gmail.update_database(quick=False)
@@ -72,7 +72,9 @@ def command_line_parser():
                 include_deleted=False,
             )
         elif args.label:
-            gmail.filter_messages_from_server(label=args.label, recommendation_ratio=0.9)
+            gmail.filter_messages_from_server(
+                label=args.label, recommendation_ratio=0.9
+            )
         else:
             parser.print_help()
 

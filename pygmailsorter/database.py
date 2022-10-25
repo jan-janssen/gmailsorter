@@ -79,7 +79,7 @@ def _create_service(
             token_uri=token.token_uri,
             client_id=token.client_id,
             client_secret=token.client_secret,
-            scopes=['https://mail.google.com/'],
+            scopes=["https://mail.google.com/"],
             default_scopes=None,
             quota_project_id=None,
             expiry=token.expiry,
@@ -90,15 +90,8 @@ def _create_service(
 
     if not cred or not cred.valid:
         cred = validate_token(
-            cred=cred,
-            client_config=client_config,
-            scopes=scopes,
-            port=port
+            cred=cred, client_config=client_config, scopes=scopes, port=port
         )
-        database.update_token_with_dict(
-            token=token,
-            credentials=cred,
-            commit=True
-        )
+        database.update_token_with_dict(token=token, credentials=cred, commit=True)
 
     return build(api_name, api_version, credentials=cred)

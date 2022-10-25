@@ -31,6 +31,11 @@ def command_line_parser():
         help="Port for authentication webserver to run e.g. 8080 .",
     )
     parser.add_argument(
+        "-i",
+        "--identification",
+        help="User ID of the database user e.g. 1 .",
+    )
+    parser.add_argument(
         "-l",
         "--label",
         help="Email label to be filtered with machine learning.",
@@ -40,6 +45,10 @@ def command_line_parser():
         port = args.port
     else:
         port = 8080
+    if args.identification:
+        db_user_id = int(args.identification)
+    else:
+        db_user_id = 1
     if args.credentials:
         credentials = args.credentials
     elif "credentials.json" in os.listdir("."):
@@ -55,7 +64,7 @@ def command_line_parser():
             client_config=load_client_secrets_file(client_secrets_file=credentials),
             connection_str=database,
             user_id="me",
-            db_user_id=1,
+            db_user_id=db_user_id,
             port=port,
         )
         if args.update:

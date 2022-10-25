@@ -27,30 +27,36 @@ or alternatively:
 ```
 pip install pygmailsorter
 ```
-After the installation the user has to create a Google Mail API credentials file `credentials.json` following the [Google Mail API documentation](https://support.google.com/googleapi/answer/6158862). This file is then stored in the configuration directory `~/.pygmailsorter/credentials.json`.
 
 # Configuration 
-The `pygmailsorter` stores the configuration files in the users home directory `~/.pygmailsorter`. This folder contains: 
-
-- `~/.pygmailsorter/credentials.json` the authentication credentials for the Google API, which requires access to Gmail. 
-- `~/.pygmailsorter/token_files` the token directory is used to store the active token for accessing the APIs, these are created 
-  automatically, there should be no need for the user to modify these. 
-- `~/.pygmailsorter/email.db` a local SQLite database to store the emails and machine learning models to accelerate the sorting. 
+The `pygmailsorter` requires two steps of configuration:
+* The user has to create a Google Mail API credentials file `credentials.json` following the 
+  [Google Mail API documentation](https://support.google.com/googleapi/answer/6158862). 
+* Access to an SQL database, this can be provided as `connection string`, alternatively `pygmailsorter` is going to use
+  a local SQLite database named `email.db` located in the current directory. This results in the following 
+  `connection string`: `sqlite:///email.db`
 
 # Python interface 
-Import the `pygmailsorter` module 
+Import the `Gmail` class and the function `load_client_secrets_file` from the `pygmailsorter` module 
 ```
-from pygmailsorter import GmailFile as Gmail
+from pygmailsorter import Gmail, load_client_secrets_file
 ```
 
 ## Initialize pygmailsorter
-Create a `gmail` object from the `Gmail()` class
+Create a `gmail` object from the `Gmail()` class:
 ```
-gmail = Gmail()
+gmail = Gmail(
+    client_config=load_client_secrets_file(
+        client_secrets_file="/absolute/path/to/credentials.json"
+    ),
+    connection_str="sqlite:////absolute/path/to/email.db",
+)
 ```
-For testing purposes you can use the optimal `client_service_file` parameter to specify the location of the 
-authentication credentials in case they are not stored in `~/.pygmailsorter/credentials.json`. Or alternatively, you 
-can provide the path to the configuration directory `config_folder`, in case this is not located at `~/.pygmailsorter`.
+Based on the configuration from the previous section, the function `load_client_secrets_file` is used to load the
+`credentials.json` file and provide its content as python dictionary to the `client_config` parameter of the `Gmail()`
+class. In addition to the `client_config` parameter the `Gmail()` class also requires a connection to an SQL database
+which is provided as `connection_str`. Finally, as optional parameter the `port` can be specified which is used to
+authenticate the Google Mail API via a web browser, by default this `8080`.  
 
 ## Sync local database with email account
 To reduce the communication overhead, the emails are stored locally in an SQLite database.
@@ -87,7 +93,7 @@ the correct labels for these emails. The `recommendation_ratio` defines the leve
 the email, with `0.9` equalling a certainty of 90%. 
 
 # Command Line interface 
-The command line interface is currently rather limited, it supports the following options: 
+The command line interface implements the same functionality as the Python interface, it supports the following options: 
 
 - `pygmailsorter -c/--credentials` path to credentials file provided by Google e.g. `credentials.json` .  
 - `pygmailsorter -d/--database` connection string to connect to database e.g. `sqlite:///email.db` .

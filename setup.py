@@ -20,7 +20,7 @@ setup(
     install_requires=[
         "google-api-python-client==2.65.0",
         "google-auth==2.13.0",
-        "google-auth-oauthlib==0.6.0",
+        "google-auth-oauthlib==0.7.0",
         "numpy==1.23.4",
         "tqdm==4.64.1",
         "pandas==1.5.1",

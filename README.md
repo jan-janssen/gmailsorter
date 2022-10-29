@@ -55,8 +55,10 @@ gmail = Gmail(
 Based on the configuration from the previous section, the function `load_client_secrets_file` is used to load the
 `credentials.json` file and provide its content as python dictionary to the `client_config` parameter of the `Gmail()`
 class. In addition to the `client_config` parameter the `Gmail()` class also requires a connection to an SQL database
-which is provided as `connection_str`. Finally, as optional parameter the `port` can be specified which is used to
-authenticate the Google Mail API via a web browser, by default this `8080`.  
+which is provided as `connection_str`. In addition the `email_download_format` can be specified as either `metadata` or 
+`full`, where the primary difference is whether the content of the email is stored or not. Finally, as optional 
+parameter the `port` can be specified which is used to authenticate the Google Mail API via a web browser, by default 
+this `8080`.  
 
 ## Sync local database with email account
 To reduce the communication overhead, the emails are stored locally in an SQLite database.

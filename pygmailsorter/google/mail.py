@@ -267,16 +267,16 @@ class GoogleMailBase:
         self, message_id, user_id, email_format=None, metadata_headers=[]
     ):
         """
-         Get details of a specific email message based on its email ID
+        Get details of a specific email message based on its email ID
 
-         Args:
-             message_id (str): email IDs used by Google Mail to uniquely identify emails
-             email_format (str/None): API response format [raw, minimal, full, metadata]
-             metadata_headers (list): list of meta data headers
+        Args:
+            message_id (str): email IDs used by Google Mail to uniquely identify emails
+            email_format (str/None): API response format [raw, minimal, full, metadata]
+            metadata_headers (list): list of meta data headers
 
-         Returns:
-             dict: details of the email as python dictionary
-         """
+        Returns:
+            dict: details of the email as python dictionary
+        """
         if email_format is None:
             email_format = self._email_download_format
         return (

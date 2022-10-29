@@ -34,7 +34,7 @@ class Gmail(GoogleMailBase):
         self._connection_str = connection_str
 
         # Initialize database
-        database_email, database_ml, database_token = self.create_database(
+        database_email, database_ml, database_token = self._create_databases(
             connection_str=self._connection_str
         )
 

@@ -22,7 +22,7 @@ class GoogleMailBase:
         database_token=None,
         user_id="me",
         db_user_id=1,
-        email_download_format="metadata"
+        email_download_format="metadata",
     ):
         """
         Gmail class to manage Emails via the Gmail API directly from Python

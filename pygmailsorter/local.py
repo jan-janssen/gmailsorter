@@ -56,7 +56,7 @@ class Gmail(GoogleMailBase):
             database_token=database_token,
             user_id=user_id,
             db_user_id=db_user_id,
-            email_download_format=email_download_format
+            email_download_format=email_download_format,
         )
 
 

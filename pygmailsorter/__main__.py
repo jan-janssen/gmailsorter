@@ -66,7 +66,7 @@ def command_line_parser():
             user_id="me",
             db_user_id=db_user_id,
             port=port,
-            email_download_format="metadata"
+            email_download_format="metadata",
         )
         if args.update:
             gmail.update_database(quick=False)

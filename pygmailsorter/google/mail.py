@@ -47,7 +47,9 @@ class GoogleMailBase:
             pandas.DataFrame: Email content for the downloaded emails
         """
         return self._download_messages_to_dataframe(
-            message_id_lst=self._search_email_on_server(label_lst=[label], only_message_ids=True)
+            message_id_lst=self._search_email_on_server(
+                label_lst=[label], only_message_ids=True
+            )
         )
 
     def filter_messages_from_server(
@@ -220,7 +222,7 @@ class GoogleMailBase:
             message_id=message_id,
             user_id=self._userid,
             format="metadata",
-            metadata_headers=["labelIds"]
+            metadata_headers=["labelIds"],
         )
         if "labelIds" in message_dict.keys():
             return message_dict["labelIds"]
@@ -310,7 +312,9 @@ class GoogleMailBase:
                     label_id_add_lst=[label_add],
                 )
 
-    def _search_email_on_server(self, query_string="", label_lst=[], only_message_ids=False):
+    def _search_email_on_server(
+        self, query_string="", label_lst=[], only_message_ids=False
+    ):
         """
         Search emails either by a specific query or optionally limit your search to a list of labels
 
@@ -348,7 +352,9 @@ class GoogleMailBase:
         return db_email, db_ml, db_token
 
     @staticmethod
-    def _get_message_detail(service, message_id, user_id, format="metadata", metadata_headers=[]):
+    def _get_message_detail(
+        service, message_id, user_id, format="metadata", metadata_headers=[]
+    ):
         return (
             service.users()
             .messages()

@@ -261,9 +261,7 @@ class GoogleMailBase:
         labels = results.get("labels", [])
         return {label["name"]: label["id"] for label in labels}
 
-    def _get_message_detail(
-        self, message_id, email_format=None, metadata_headers=[]
-    ):
+    def _get_message_detail(self, message_id, email_format=None, metadata_headers=[]):
         """
         Get details of a specific email message based on its email ID
 

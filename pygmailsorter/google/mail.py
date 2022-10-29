@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from pygmailsorter.base import get_email_database
 from pygmailsorter.google.database import get_token_database
-from pygmailsorter.google.message import Message, get_email_dict
+from pygmailsorter.google.message import get_email_dict
 from pygmailsorter.ml import (
     encode_df_for_machine_learning,
     get_machine_learning_database,
@@ -193,7 +193,7 @@ class GoogleMailBase:
                 message_id_lst=new_messages_lst, email_format=email_format
             )
 
-    def _download_messages_to_dataframe(self, message_id_lst, email_format="full"):
+    def _download_messages_to_dataframe(self, message_id_lst, email_format=None):
         """
         Download a list of messages based on their email IDs and store the content in a pandas.DataFrame.
 
@@ -209,9 +209,8 @@ class GoogleMailBase:
                 get_email_dict(
                     message=self._get_message_detail(
                         message_id=message_id,
-                        user_id=self._userid,
                         email_format=email_format,
-                        metadata_headers=["labelIds"],
+                        metadata_headers=[],
                     )
                 )
                 for message_id in tqdm(
@@ -232,7 +231,6 @@ class GoogleMailBase:
         """
         message_dict = self._get_message_detail(
             message_id=message_id,
-            user_id=self._userid,
             email_format="metadata",
             metadata_headers=["labelIds"],
         )
@@ -264,7 +262,7 @@ class GoogleMailBase:
         return {label["name"]: label["id"] for label in labels}
 
     def _get_message_detail(
-        self, message_id, user_id, email_format=None, metadata_headers=[]
+        self, message_id, email_format=None, metadata_headers=[]
     ):
         """
         Get details of a specific email message based on its email ID
@@ -283,7 +281,7 @@ class GoogleMailBase:
             self._service.users()
             .messages()
             .get(
-                userId=user_id,
+                userId=self._userid,
                 id=message_id,
                 format=email_format,
                 metadataHeaders=metadata_headers,

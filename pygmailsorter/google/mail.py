@@ -158,14 +158,14 @@ class GoogleMailBase:
             include_deleted=include_deleted, user_id=self._db_user_id
         )
 
-    def update_database(self, quick=False, label_lst=[], format=None):
+    def update_database(self, quick=False, label_lst=[], email_format=None):
         """
         Update local email database
 
         Args:
             quick (boolean): Only add new emails, do not update existing labels - by default: False
             label_lst (list): list of labels to be searched
-            format (str/None): Email format to download
+            email_format (str/None): Email format to download
         """
         if self._db_email is not None:
             message_id_lst = self._search_email_on_server(
@@ -190,16 +190,16 @@ class GoogleMailBase:
                     user_id=self._db_user_id,
                 )
             self._store_emails_in_database(
-                message_id_lst=new_messages_lst, format=format
+                message_id_lst=new_messages_lst, email_format=email_format
             )
 
-    def _download_messages_to_dataframe(self, message_id_lst, format="full"):
+    def _download_messages_to_dataframe(self, message_id_lst, email_format="full"):
         """
         Download a list of messages based on their email IDs and store the content in a pandas.DataFrame.
 
         Args:
             message_id_lst (list): list of emails IDs
-            format (str): Email format to download - default: "full"
+            email_format (str): Email format to download - default: "full"
 
         Returns:
             pandas.DataFrame: pandas.DataFrame which contains the rendered emails
@@ -208,10 +208,9 @@ class GoogleMailBase:
             [
                 get_email_dict(
                     message=self._get_message_detail(
-                        service=self._service,
                         message_id=message_id,
                         user_id=self._userid,
-                        format=format,
+                        email_format=email_format,
                         metadata_headers=["labelIds"],
                     )
                 )
@@ -232,10 +231,9 @@ class GoogleMailBase:
             list: List of email labels
         """
         message_dict = self._get_message_detail(
-            service=self._service,
             message_id=message_id,
             user_id=self._userid,
-            format="metadata",
+            email_format="metadata",
             metadata_headers=["labelIds"],
         )
         if "labelIds" in message_dict.keys():
@@ -264,6 +262,34 @@ class GoogleMailBase:
         results = self._service.users().labels().list(userId=self._userid).execute()
         labels = results.get("labels", [])
         return {label["name"]: label["id"] for label in labels}
+
+    def _get_message_detail(
+        self, message_id, user_id, email_format=None, metadata_headers=[]
+    ):
+        """
+         Get details of a specific email message based on its email ID
+
+         Args:
+             message_id (str): email IDs used by Google Mail to uniquely identify emails
+             email_format (str/None): API response format [raw, minimal, full, metadata]
+             metadata_headers (list): list of meta data headers
+
+         Returns:
+             dict: details of the email as python dictionary
+         """
+        if email_format is None:
+            email_format = self._email_download_format
+        return (
+            self._service.users()
+            .messages()
+            .get(
+                userId=user_id,
+                id=message_id,
+                format=email_format,
+                metadataHeaders=metadata_headers,
+            )
+            .execute()
+        )
 
     def _get_messages_page(self, label_ids, query_string, next_page_token=None):
         message_list_response = (
@@ -349,9 +375,9 @@ class GoogleMailBase:
         else:
             return [d["id"] for d in message_id_lst]
 
-    def _store_emails_in_database(self, message_id_lst, format="full"):
+    def _store_emails_in_database(self, message_id_lst, email_format=None):
         df = self._download_messages_to_dataframe(
-            message_id_lst=message_id_lst, format=format
+            message_id_lst=message_id_lst, email_format=email_format
         )
         if len(df) > 0:
             self._db_email.store_dataframe(df=df, user_id=self._db_user_id)
@@ -364,22 +390,6 @@ class GoogleMailBase:
         db_ml = get_machine_learning_database(engine=engine, session=session)
         db_token = get_token_database(engine=engine, session=session)
         return db_email, db_ml, db_token
-
-    @staticmethod
-    def _get_message_detail(
-        service, message_id, user_id, format="metadata", metadata_headers=[]
-    ):
-        return (
-            service.users()
-            .messages()
-            .get(
-                userId=user_id,
-                id=message_id,
-                format=format,
-                metadataHeaders=metadata_headers,
-            )
-            .execute()
-        )
 
     @staticmethod
     def _get_message_ids(message_lst):

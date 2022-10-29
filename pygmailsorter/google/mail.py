@@ -22,13 +22,27 @@ class GoogleMailBase:
         database_token=None,
         user_id="me",
         db_user_id=1,
+        email_download_format="metadata"
     ):
+        """
+        Gmail class to manage Emails via the Gmail API directly from Python
+
+        Args:
+            google_mail_service: A Resource object with methods for interacting with the service.
+            database_email (pygmailsorter.base.database.DatabaseInterface): SQLalchemy interface for email database
+            database_ml (pygmailsorter.ml.database.DatabaseInterface): SQLalchemy interface for machine learning database
+            database_token (pygmailsorter.google.database.DatabaseInterface): SQLalchemy interface for google database
+            user_id (str): in most cases this should be simply "me"
+            db_user_id (int): Default 1 - set a user id when sharing a database with multiple users
+            email_download_format (str): API response format [full, metadata]
+        """
         self._service = google_mail_service
         self._db_email = database_email
         self._db_ml = database_ml
         self._db_token = database_token
         self._db_user_id = db_user_id
         self._userid = user_id
+        self._email_download_format = email_download_format
         self._label_dict = self._get_label_translate_dict()
         self._label_dict_inverse = {v: k for k, v in self._label_dict.items()}
 
@@ -128,14 +142,14 @@ class GoogleMailBase:
             message_id_lst=self.search_email(label_lst=[label], only_message_ids=True)
         )
 
-    def update_database(self, quick=False, label_lst=[], format="full"):
+    def update_database(self, quick=False, label_lst=[], format=None):
         """
         Update local email database
 
         Args:
             quick (boolean): Only add new emails, do not update existing labels - by default: False
             label_lst (list): list of labels to be searched
-            format (str): Email format to download - default: "full"
+            format (str/None): Email format to download
         """
         if self._db_email is not None:
             message_id_lst = self.search_email(
@@ -253,13 +267,13 @@ class GoogleMailBase:
                     message_id=message_id, label_id_remove_lst=[label]
                 )
 
-    def _download_messages_to_dataframe(self, message_id_lst, format="full"):
+    def _download_messages_to_dataframe(self, message_id_lst, format=None):
         """
         Download a list of messages based on their email IDs and store the content in a pandas.DataFrame.
 
         Args:
             message_id_lst (list): list of emails IDs
-            format (str): Email format to download - default: "full"
+            format (str/ None): Email format to download
 
         Returns:
             pandas.DataFrame: pandas.DataFrame which contains the rendered emails
@@ -318,7 +332,20 @@ class GoogleMailBase:
         else:
             return message_items_lst
 
-    def _get_message_detail(self, message_id, format="metadata", metadata_headers=[]):
+    def _get_message_detail(self, message_id, format=None, metadata_headers=[]):
+        """
+        Get details of a specific email message based on its email ID
+
+        Args:
+            message_id (str): email IDs used by Google Mail to uniquely identify emails
+            format (str/None): API response format [raw, minimal, full, metadata]
+            metadata_headers (list): list of meta data headers
+
+        Returns:
+            dict: details of the email as python dictionary
+        """
+        if format is None:
+            format = self._email_download_format
         return (
             self._service.users()
             .messages()
@@ -386,7 +413,7 @@ class GoogleMailBase:
                     label_id_add_lst=[label_add],
                 )
 
-    def _store_emails_in_database(self, message_id_lst, format="full"):
+    def _store_emails_in_database(self, message_id_lst, format=None):
         df = self._download_messages_to_dataframe(
             message_id_lst=message_id_lst, format=format
         )

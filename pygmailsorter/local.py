@@ -10,6 +10,7 @@ class Gmail(GoogleMailBase):
         user_id="me",
         db_user_id=1,
         port=8080,
+        email_download_format="metadata",
     ):
         """
         Gmail class to manage Emails via the Gmail API directly from Python
@@ -20,6 +21,7 @@ class Gmail(GoogleMailBase):
             user_id (str): in most cases this should be simply "me"
             db_user_id (int): Default 1 - set a user id when sharing a database with multiple users
             port (int): system communication port to start authentication webserver
+            email_download_format (str): API response format [full, metadata]
         """
         connect_dict = {
             "api_name": "gmail",
@@ -54,6 +56,7 @@ class Gmail(GoogleMailBase):
             database_token=database_token,
             user_id=user_id,
             db_user_id=db_user_id,
+            email_download_format=email_download_format
         )
 
 

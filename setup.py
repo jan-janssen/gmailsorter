@@ -25,7 +25,7 @@ setup(
         "tqdm==4.64.1",
         "pandas==1.5.1",
         "scikit-learn==1.1.3",
-        "sqlalchemy==1.4.42",
+        "sqlalchemy==1.4.43",
     ],
     cmdclass=versioneer.get_cmdclass(),
 )

@@ -1,6 +1,6 @@
 # Sort your emails automatically 
-[![Python package](https://github.com/jan-janssen/pygmailsorter/actions/workflows/unittest.yml/badge.svg?branch=main)](https://github.com/jan-janssen/pygmailsorter/actions/workflows/unittest.yml)
-[![Coverage Status](https://coveralls.io/repos/github/jan-janssen/pygmailsorter/badge.svg?branch=main)](https://coveralls.io/github/jan-janssen/pygmailsorter?branch=main)
+[![Python package](https://github.com/mailsort/pygmailsorter/actions/workflows/unittest.yml/badge.svg?branch=main)](https://github.com/mailsort/pygmailsorter/actions/workflows/unittest.yml)
+[![Coverage Status](https://coveralls.io/repos/github/mailsort/pygmailsorter/badge.svg?branch=main)](https://coveralls.io/github/mailsort/pygmailsorter?branch=main)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 The `pygmailsorter` is a python module to automate the filtering of emails on the Google mail service using the their API. It assigns 

@@ -12,7 +12,7 @@ setup(
     description="Assign labels to emails in Google Mail based on their similarity to other emails assigned to the same label.",
     long_description=Path("README.md").read_text(),
     long_description_content_type="text/markdown",
-    url="https://github.com/jan-janssen/pygmailsorter",
+    url="https://github.com/mailsort/pygmailsorter",
     author="Jan Janssen",
     author_email="jan.janssen@outlook.com",
     license="BSD",

@@ -18,7 +18,7 @@ setup(
     license="BSD",
     packages=find_packages(exclude=["*tests*"]),
     install_requires=[
-        "google-api-python-client==2.65.0",
+        "google-api-python-client==2.66.0",
         "google-auth==2.14.1",
         "google-auth-oauthlib==0.7.1",
         "numpy==1.23.4",

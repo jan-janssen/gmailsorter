@@ -13,8 +13,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2.2.0
-    - uses: conda-incubator/setup-miniconda@v2
+    - uses: actions/checkout@v2
+    - uses: conda-incubator/setup-miniconda@v2.2.0
       with:
         auto-update-conda: true
         python-version: 3.9

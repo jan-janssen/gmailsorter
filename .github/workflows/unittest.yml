@@ -24,7 +24,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - uses: conda-incubator/setup-miniconda@v2
+    - uses: conda-incubator/setup-miniconda@v2.2.0
       with:
         python-version: ${{ matrix.python-version }}
         mamba-version: "*"
@@ -32,6 +32,7 @@ jobs:
         channel-priority: strict
         auto-update-conda: true
         environment-file: .ci_support/environment.yml
+        miniforge-variant: Mambaforge
     - name: Test
       shell: bash -l {0}
       timeout-minutes: 30

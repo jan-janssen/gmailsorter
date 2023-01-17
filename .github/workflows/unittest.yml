@@ -23,8 +23,8 @@ jobs:
           python-version: 3.9
 
     steps:
-    - uses: actions/checkout@v2.2.0
-    - uses: conda-incubator/setup-miniconda@v2
+    - uses: actions/checkout@v2
+    - uses: conda-incubator/setup-miniconda@v2.2.0
       with:
         python-version: ${{ matrix.python-version }}
         mamba-version: "*"

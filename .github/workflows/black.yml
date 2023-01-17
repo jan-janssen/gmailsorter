@@ -19,6 +19,7 @@ jobs:
         auto-update-conda: true
         python-version: 3.9
         channel-priority: strict
+        miniforge-variant: Mambaforge
     - name: Setup
       shell: bash -l {0}
       run: |

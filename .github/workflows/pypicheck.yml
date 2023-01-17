@@ -23,6 +23,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
         channel-priority: strict
         environment-file: .ci_support/environment.yml
+        miniforge-variant: Mambaforge
     - name: Setup
       shell: bash -l {0}
       run: |

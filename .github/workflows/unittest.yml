@@ -32,6 +32,7 @@ jobs:
         channel-priority: strict
         auto-update-conda: true
         environment-file: .ci_support/environment.yml
+        miniforge-variant: Mambaforge
     - name: Test
       shell: bash -l {0}
       timeout-minutes: 30

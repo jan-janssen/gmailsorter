@@ -18,14 +18,14 @@ setup(
     license="BSD",
     packages=find_packages(exclude=["*tests*"]),
     install_requires=[
-        "google-api-python-client==2.79.0",
+        "google-api-python-client==2.80.0",
         "google-auth==2.16.2",
         "google-auth-oauthlib==1.0.0",
         "numpy==1.24.2",
         "tqdm==4.65.0",
         "pandas==1.5.3",
-        "scikit-learn==1.2.1",
-        "sqlalchemy==2.0.4",
+        "scikit-learn==1.2.2",
+        "sqlalchemy==2.0.5.post1",
     ],
     cmdclass=versioneer.get_cmdclass(),
 )

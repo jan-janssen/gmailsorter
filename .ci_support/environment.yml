@@ -7,7 +7,7 @@ dependencies:
 - google-auth =2.19.0
 - google-auth-oauthlib =1.0.0
 - numpy =1.24.3
-- pandas =2.0.1
+- pandas =2.0.2
 - python
 - scikit-learn =1.2.2
 - sqlalchemy =2.0.15

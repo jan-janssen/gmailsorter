@@ -19,7 +19,7 @@ setup(
     packages=find_packages(exclude=["*tests*"]),
     install_requires=[
         "google-api-python-client==2.89.0",
-        "google-auth==2.19.1",
+        "google-auth==2.20.0",
         "google-auth-oauthlib==1.0.0",
         "numpy==1.24.3",
         "tqdm==4.65.0",

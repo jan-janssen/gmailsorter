@@ -205,8 +205,9 @@ class GoogleMailBase:
             pandas.DataFrame: pandas.DataFrame which contains the rendered emails
         """
         return pandas.DataFrame(
-            [message for message in
-                [
+            [
+                message
+                for message in [
                     get_email_dict(
                         message=self._get_message_detail(
                             message_id=message_id,
@@ -215,11 +216,11 @@ class GoogleMailBase:
                         )
                     )
                     for message_id in tqdm(
-                        iterable=message_id_lst,
-                        desc="Download messages to DataFrame"
+                        iterable=message_id_lst, desc="Download messages to DataFrame"
                     )
                 ]
-             if message is not None]
+                if message is not None
+            ]
         )
 
     def _get_labels_for_email(self, message_id):

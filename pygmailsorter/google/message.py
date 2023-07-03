@@ -21,7 +21,11 @@ class MLStripper(HTMLParser):
 
 
 def get_email_dict(message):
-    return Message(message_dict=message).to_dict()
+    try:
+        return Message(message_dict=message).to_dict()
+    except ValueError as e:
+        print(message, e.message)
+        return None
 
 
 class Message(AbstractMessage):

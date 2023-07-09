@@ -17,6 +17,15 @@ setup(
     author_email="jan.janssen@outlook.com",
     license="BSD",
     packages=find_packages(exclude=["*tests*"]),
+    package_data={
+        'webapp': [
+            'static/css/*.css',
+            'static/fonts/poppins/*.ttf',
+            'static/images/*.jpg',
+            'static/images/icons/*.ico',
+            'templates/*.html'
+        ],
+    },
     install_requires=[
         "google-api-python-client==2.92.0",
         "google-auth==2.21.0",

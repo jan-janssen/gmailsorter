@@ -1,3 +1,8 @@
 include LICENSE
 include versioneer.py
 include pygmailsorter/_version.py
+include pygmailsorter/webapp/static/css/*.css
+include pygmailsorter/webapp/static/fonts/poppins/*.ttf
+include pygmailsorter/webapp/static/images/*.jpg
+include pygmailsorter/webapp/static/images/icons/*.ico
+include pygmailsorter/webapp/templates/*.html

@@ -27,11 +27,15 @@ setup(
         "scikit-learn==1.3.0",
         "sqlalchemy==2.0.18",
     ],
+    extras_require={
+        "webapp": ['gunicorn==20.1.0', "flask==2.3.2", "flask-login==0.6.2"],
+    },
     cmdclass=versioneer.get_cmdclass(),
     entry_points={
             "console_scripts": [
                 'pygmailsorter=pygmailsorter.__main__:command_line_parser',
-                'pygmailsorter-daemon=pygmailsorter.daemon.__main__:command_line_parser'
+                'pygmailsorter-daemon=pygmailsorter.daemon.__main__:command_line_parser',
+                'pygmailsorter-app=pygmailsorter.webapp.app:run_app'
             ]
     }
 )

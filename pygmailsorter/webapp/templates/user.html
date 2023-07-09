@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Gmailsorter.com</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="icon" type="image/png" href="/static/images/icons/favicon.ico"/>
+	<link rel="stylesheet" type="text/css" href="/static/css/util.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/main.css">
+</head>
+<body>
+
+	<div class="limiter">
+		<div class="container-login100" style="background-image: url('/static/images/bg-01.jpg');">
+			<div class="wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54">
+                <span class="login100-form-title p-b-49">
+                    Gmailsorter.com
+                </span>
+                Hello, {{ username }}!<br />
+                <br />
+                Status of your Gmailsorter.com account:
+                <ul>
+                    {% for list_item in item_list %}
+                    <li>{{ list_item |safe }}</li>
+                    {% endfor %}
+                </ul>
+                <br />
+                {% if enable_reset %}
+                <form class="login100-form validate-form" action="/reset">
+                    <div class="container-login100-form-btn">
+						<div class="wrap-login100-form-btn">
+							<div class="login100-form-bgbtn"></div>
+							<button class="login100-form-btn">
+								Reset Status
+							</button>
+						</div>
+					</div>
+                    <br />
+				</form>
+                {% endif %}
+                <form class="login100-form validate-form" action="/logout">
+					<div class="container-login100-form-btn">
+						<div class="wrap-login100-form-btn">
+							<div class="login100-form-bgbtn"></div>
+							<button class="login100-form-btn">
+								Logout
+							</button>
+						</div>
+					</div>
+					<br />
+				</form>
+			</div>
+		</div>
+	</div>
+	
+
+	<div id="dropDownSelect1"></div>
+	
+</body>
+</html>

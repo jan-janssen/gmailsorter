@@ -15,11 +15,11 @@ from flask_login import (
 )
 
 # Internal imports
-from pygmailsorter.daemon import SCOPES, MAILSORT_LABEL
-from pygmailsorter.webapp.config import CLIENT_SECRETS_CONFIG, ENGINE, SECRET_KEY
-from pygmailsorter.webapp.user import get_flask_user
-from pygmailsorter.webapp.render import color_for_status
-from pygmailsorter.webapp.googleapi import (
+from gmailsorter.daemon import SCOPES, MAILSORT_LABEL
+from gmailsorter.webapp.config import CLIENT_SECRETS_CONFIG, ENGINE, SECRET_KEY
+from gmailsorter.webapp.user import get_flask_user
+from gmailsorter.webapp.render import color_for_status
+from gmailsorter.webapp.googleapi import (
     get_authentication_url,
     get_google_credentials,
     get_user_info,

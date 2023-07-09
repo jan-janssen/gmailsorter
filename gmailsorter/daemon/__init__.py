@@ -1,4 +1,4 @@
-from pygmailsorter.daemon.shared import (
+from gmailsorter.daemon.shared import (
     GoogleMail,
     GoogleToken,
     MAILSORT_LABEL,
@@ -9,7 +9,7 @@ from pygmailsorter.daemon.shared import (
     get_token,
     load_config_file,
 )
-from pygmailsorter.daemon.tasks import (
+from gmailsorter.daemon.tasks import (
     create_tasks_for_new_users,
     update_task_status,
 )

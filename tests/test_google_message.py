@@ -1,6 +1,6 @@
 from unittest import TestCase
 from datetime import datetime
-from pygmailsorter.google.message import Message, get_email_dict
+from gmailsorter.google.message import Message, get_email_dict
 
 
 class MessageTest(TestCase):

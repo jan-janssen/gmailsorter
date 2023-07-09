@@ -1,4 +1,4 @@
-from pygmailsorter.webapp.app import app
+from gmailsorter.webapp.app import app
 
 
 if __name__ == "__main__":

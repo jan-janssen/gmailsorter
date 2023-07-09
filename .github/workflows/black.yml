@@ -26,4 +26,4 @@ jobs:
         conda install -c conda-forge black
     - name: Test
       shell: bash -l {0}
-      run: black --check pygmailsorter
+      run: black --check gmailsorter

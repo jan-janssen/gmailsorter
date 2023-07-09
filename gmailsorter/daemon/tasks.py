@@ -1,5 +1,5 @@
 from datetime import datetime
-from pygmailsorter.daemon.shared import Task
+from gmailsorter.daemon.shared import Task
 
 
 def create_tasks_for_new_users(session, user_id):

@@ -4,7 +4,7 @@ import googleapiclient.discovery
 import google.oauth2.credentials
 from google.auth.exceptions import RefreshError
 from googleapiclient.errors import HttpError
-from pygmailsorter.daemon import (
+from gmailsorter.daemon import (
     GoogleMail,
     create_tasks_for_new_users,
     update_task_status,

@@ -1,7 +1,7 @@
 import argparse
 import os
-from pygmailsorter.daemon.daemon import update
-from pygmailsorter.daemon.shared import get_database_engine, load_config_file
+from gmailsorter.daemon.daemon import update
+from gmailsorter.daemon.shared import get_database_engine, load_config_file
 
 
 def command_line_parser():

@@ -28,4 +28,10 @@ setup(
         "sqlalchemy==2.0.17",
     ],
     cmdclass=versioneer.get_cmdclass(),
+    entry_points={
+            "console_scripts": [
+                'pygmailsorter=pygmailsorter.__main__.command_line_parser',
+                'pygmailsorter-daemon=pygmailsorter.__main__.command_line_parser'
+            ]
+    }
 )

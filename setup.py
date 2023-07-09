@@ -18,12 +18,12 @@ setup(
     license="BSD",
     packages=find_packages(exclude=["*tests*"]),
     package_data={
-        'webapp': [
-            'static/css/*.css',
-            'static/fonts/poppins/*.ttf',
-            'static/images/*.jpg',
-            'static/images/icons/*.ico',
-            'templates/*.html'
+        'pygmailsorter': [
+            'webapp/static/css/*.css',
+            'webapp/static/fonts/poppins/*.ttf',
+            'webapp/static/images/*.jpg',
+            'webapp/static/images/icons/*.ico',
+            'webapp/templates/*.html'
         ],
     },
     install_requires=[

@@ -17,6 +17,15 @@ setup(
     author_email="jan.janssen@outlook.com",
     license="BSD",
     packages=find_packages(exclude=["*tests*"]),
+    package_data={
+        'pygmailsorter': [
+            'webapp/static/css/*.css',
+            'webapp/static/fonts/poppins/*.ttf',
+            'webapp/static/images/*.jpg',
+            'webapp/static/images/icons/*.ico',
+            'webapp/templates/*.html'
+        ],
+    },
     install_requires=[
         "google-api-python-client==2.92.0",
         "google-auth==2.21.0",

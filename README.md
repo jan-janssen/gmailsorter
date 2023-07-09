@@ -1,9 +1,9 @@
 # Sort your emails automatically 
-[![Python package](https://github.com/mailsort/pygmailsorter/actions/workflows/unittest.yml/badge.svg?branch=main)](https://github.com/mailsort/pygmailsorter/actions/workflows/unittest.yml)
-[![Coverage Status](https://coveralls.io/repos/github/jan-janssen/pygmailsorter/badge.svg?branch=main)](https://coveralls.io/github/jan-janssen/pygmailsorter?branch=main)
+[![Python package](https://github.com/jan-janssen/gmailsorter/actions/workflows/unittest.yml/badge.svg?branch=main)](https://github.com/jan-janssen/gmailsorter/actions/workflows/unittest.yml)
+[![Coverage Status](https://coveralls.io/repos/github/jan-janssen/gmailsorter/badge.svg?branch=main)](https://coveralls.io/github/jan-janssen/gmailsorter?branch=main)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-The `pygmailsorter` is a python module to automate the filtering of emails on the Google mail service using the their API. It assigns 
+The `gmailsorter` is a python module to automate the filtering of emails on the Google mail service using the their API. It assigns 
 labels to emails based on their similarity to other emails assigned to the same label.
 
 # Motivation 
@@ -19,30 +19,30 @@ This is basically a similar approach specific to the Google Mail API. It is a py
 [4]: https://github.com/andreykurenkov/emailinsight
 
 # Installation 
-The `pygmailsorter` is available on the conda-forge or pypi repositories and can be installed using either:
+The `gmailsorter` is available on the conda-forge or pypi repositories and can be installed using either:
 ```
-conda install -c conda-forge pygmailsorter
+conda install -c conda-forge gmailsorter
 ```
 or alternatively: 
 ```
-pip install pygmailsorter
+pip install gmailsorter
 ```
 
 # Configuration 
-The `pygmailsorter` requires two steps of configuration:
+The `gmailsorter` requires two steps of configuration:
 * The user has to create a Google Mail API credentials file `credentials.json` following the 
   [Google Mail API documentation](https://support.google.com/googleapi/answer/6158862). 
-* Access to an SQL database, this can be provided as `connection string`, alternatively `pygmailsorter` is going to use
+* Access to an SQL database, this can be provided as `connection string`, alternatively `gmailsorter` is going to use
   a local SQLite database named `email.db` located in the current directory. This results in the following 
   `connection string`: `sqlite:///email.db`
 
 # Python interface 
-Import the `Gmail` class and the function `load_client_secrets_file` from the `pygmailsorter` module 
+Import the `Gmail` class and the function `load_client_secrets_file` from the `gmailsorter` module 
 ```
-from pygmailsorter import Gmail, load_client_secrets_file
+from gmailsorter import Gmail, load_client_secrets_file
 ```
 
-## Initialize pygmailsorter
+## Initialize gmailsorter
 Create a `gmail` object from the `Gmail()` class:
 ```
 gmail = Gmail(
@@ -97,9 +97,9 @@ the email, with `0.9` equalling a certainty of 90%.
 # Command Line interface 
 The command line interface implements the same functionality as the Python interface, it supports the following options: 
 
-- `pygmailsorter -c/--credentials` path to credentials file provided by Google e.g. `credentials.json` .  
-- `pygmailsorter -d/--database` connection string to connect to database e.g. `sqlite:///email.db` .
-- `pygmailsorter -u/--update` update the local email database and retrain the machine learning model.  
-- `pygmailsorter -l/--label=MyLabel` assign new labels to the emails with label `MyLabel`.
-- `pygmailsorter -p/--port` port for authentication webserver to run e.g. `8080` .
+- `gmailsorter -c/--credentials` path to credentials file provided by Google e.g. `credentials.json` .  
+- `gmailsorter -d/--database` connection string to connect to database e.g. `sqlite:///email.db` .
+- `gmailsorter -u/--update` update the local email database and retrain the machine learning model.  
+- `gmailsorter -l/--label=MyLabel` assign new labels to the emails with label `MyLabel`.
+- `gmailsorter -p/--port` port for authentication webserver to run e.g. `8080` .
 

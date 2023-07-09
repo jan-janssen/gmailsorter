@@ -3,7 +3,7 @@ from datetime import datetime
 import pandas
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from pygmailsorter.base.database import get_email_database
+from gmailsorter.base.database import get_email_database
 
 
 class DatabaseTest(TestCase):

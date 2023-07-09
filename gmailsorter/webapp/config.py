@@ -1,5 +1,5 @@
 import os
-from pygmailsorter.daemon import load_config_file, get_database_engine
+from gmailsorter.daemon import load_config_file, get_database_engine
 
 # Get environment
 environment = os.environ

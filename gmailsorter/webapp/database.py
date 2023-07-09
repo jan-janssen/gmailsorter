@@ -1,4 +1,4 @@
-from pygmailsorter.daemon import (
+from gmailsorter.daemon import (
     GoogleToken,
     SQLUser,
     get_token,

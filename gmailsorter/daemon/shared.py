@@ -5,10 +5,10 @@ from sqlalchemy.orm import declarative_base
 import googleapiclient.discovery
 import google.oauth2.credentials
 from sqlalchemy.orm import sessionmaker
-from pygmailsorter.google import GoogleMailBase
-from pygmailsorter.base import get_email_database
-from pygmailsorter.google.database import get_token_database
-from pygmailsorter.ml import get_machine_learning_database
+from gmailsorter.google import GoogleMailBase
+from gmailsorter.base import get_email_database
+from gmailsorter.google.database import get_token_database
+from gmailsorter.ml import get_machine_learning_database
 
 # Modifying the labels of emails requires /auth/gmail.modify
 # https://developers.google.com/gmail/api/reference/rest/v1/users.messages/modify

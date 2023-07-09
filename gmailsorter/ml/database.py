@@ -1,7 +1,7 @@
 import pickle
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import declarative_base
-from pygmailsorter.base.database import DatabaseTemplate
+from gmailsorter.base.database import DatabaseTemplate
 
 
 Base = declarative_base()

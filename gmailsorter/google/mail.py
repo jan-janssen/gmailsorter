@@ -2,10 +2,10 @@ import pandas
 from tqdm import tqdm
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from pygmailsorter.base import get_email_database
-from pygmailsorter.google.database import get_token_database
-from pygmailsorter.google.message import get_email_dict
-from pygmailsorter.ml import (
+from gmailsorter.base import get_email_database
+from gmailsorter.google.database import get_token_database
+from gmailsorter.google.message import get_email_dict
+from gmailsorter.ml import (
     encode_df_for_machine_learning,
     get_machine_learning_database,
     fit_machine_learning_models,
@@ -29,9 +29,9 @@ class GoogleMailBase:
 
         Args:
             google_mail_service: A Resource object with methods for interacting with the service.
-            database_email (pygmailsorter.base.database.DatabaseInterface): SQLalchemy interface for email database
-            database_ml (pygmailsorter.ml.database.DatabaseInterface): SQLalchemy interface for machine learning database
-            database_token (pygmailsorter.google.database.DatabaseInterface): SQLalchemy interface for google database
+            database_email (gmailsorter.base.database.DatabaseInterface): SQLalchemy interface for email database
+            database_ml (gmailsorter.ml.database.DatabaseInterface): SQLalchemy interface for machine learning database
+            database_token (gmailsorter.google.database.DatabaseInterface): SQLalchemy interface for google database
             user_id (str): in most cases this should be simply "me"
             db_user_id (int): Default 1 - set a user id when sharing a database with multiple users
             email_download_format (str): API response format [full, metadata]

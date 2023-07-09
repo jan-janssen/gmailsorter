@@ -1,6 +1,6 @@
 import argparse
 import os
-from pygmailsorter import Gmail, load_client_secrets_file
+from gmailsorter import Gmail, load_client_secrets_file
 
 
 def command_line_parser():
@@ -8,7 +8,7 @@ def command_line_parser():
     Main function primarily used for the command line interface
     """
     credentials, database = None, None
-    parser = argparse.ArgumentParser(prog="pygmailsorter")
+    parser = argparse.ArgumentParser(prog="gmailsorter")
     parser.add_argument(
         "-c",
         "--credentials",

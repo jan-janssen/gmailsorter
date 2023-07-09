@@ -1,5 +1,5 @@
 import json
-from pygmailsorter.google import GoogleMailBase, create_service
+from gmailsorter.google import GoogleMailBase, create_service
 
 
 class Gmail(GoogleMailBase):

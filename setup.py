@@ -7,18 +7,18 @@ import versioneer
 
 
 setup(
-    name="pygmailsorter",
+    name="gmailsorter",
     version=versioneer.get_version(),
     description="Assign labels to emails in Google Mail based on their similarity to other emails assigned to the same label.",
     long_description=Path("README.md").read_text(),
     long_description_content_type="text/markdown",
-    url="https://github.com/mailsort/pygmailsorter",
+    url="https://github.com/jan-janssen/gmailsorter",
     author="Jan Janssen",
     author_email="jan.janssen@outlook.com",
     license="BSD",
     packages=find_packages(exclude=["*tests*"]),
     package_data={
-        'pygmailsorter': [
+        'gmailsorter': [
             'webapp/static/css/*.css',
             'webapp/static/fonts/poppins/*.ttf',
             'webapp/static/images/*.jpg',
@@ -42,9 +42,9 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
     entry_points={
             "console_scripts": [
-                'pygmailsorter=pygmailsorter.__main__:command_line_parser',
-                'pygmailsorter-daemon=pygmailsorter.daemon.__main__:command_line_parser',
-                'pygmailsorter-app=pygmailsorter.webapp.app:run_app'
+                'gmailsorter=gmailsorter.__main__:command_line_parser',
+                'gmailsorter-daemon=gmailsorter.daemon.__main__:command_line_parser',
+                'gmailsorter-app=gmailsorter.webapp.app:run_app'
             ]
     }
 )

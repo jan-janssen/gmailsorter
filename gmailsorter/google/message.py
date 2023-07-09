@@ -1,7 +1,7 @@
 import base64
 from html.parser import HTMLParser
 from io import StringIO
-from pygmailsorter.base.message import AbstractMessage, email_date_converter
+from gmailsorter.base.message import AbstractMessage, email_date_converter
 
 
 # https://stackoverflow.com/questions/753052/strip-html-from-strings-in-python

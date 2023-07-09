@@ -1,14 +1,14 @@
 from sqlalchemy.orm import sessionmaker
 from google.auth.exceptions import RefreshError
 from googleapiclient.errors import HttpError
-from pygmailsorter.daemon.shared import (
+from gmailsorter.daemon.shared import (
     GoogleToken,
     GoogleMail,
     SCOPES,
     MAILSORT_LABEL,
     get_task_status_for_user,
 )
-from pygmailsorter.daemon.tasks import (
+from gmailsorter.daemon.tasks import (
     get_all_tasks_to_execute,
     update_task_status,
 )

@@ -31,7 +31,7 @@ setup(
     entry_points={
             "console_scripts": [
                 'pygmailsorter=pygmailsorter.__main__:command_line_parser',
-                'pygmailsorter-daemon=pygmailsorter.__main__:command_line_parser'
+                'pygmailsorter-daemon=pygmailsorter.daemon.__main__:command_line_parser'
             ]
     }
 )

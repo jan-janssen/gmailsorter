@@ -3,27 +3,39 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-gmailsorter - Automatically assign labels to new emails in Google Mail based on their similarity to previous emails assigned to the same label.
-===============================================================================================================================================
+gmailsorter - Similarity based email sorting for Google Mail
+============================================================
+In 2020 there were `306.4 billion e-mails <https://www.statista.com/statistics/456500/daily-number-of-e-mails-worldwide/>`_
+sent and received daily. This number is estimated to increase by 4% yearly, resulting in over 376.4 billion e-mails by
+2025. While email as medium for internal communication in companies is slowly replaced by instant messaging solutions
+and business communication platforms, these solutions fail to address the primary challenge of communication between
+employees from different companies. So addressing the `stress and productivity lost <https://affect.media.mit.edu/pdfs/16.Mark-CHI_Email.pdf>`_
+resulting from interruptions caused by the increase of daily emails is the motivation for the development of gmailsorter.
 
-The gmailsorter is a python module to automate the filtering of emails on the Google mail service using the their API.
-It assigns labels to emails based on their similarity to other emails assigned to the same label.
+As a first step gmailsorter creates a barrier between you and your email. Just like a personal guardian it blocks emails
+from your inbox and filters them into categories, so you can read the emails you care about when you have time and no
+longer have them interrupt your work. Second in contrast to other automated solutions, gmailsorter is designed to
+seamlessly integrate into your existing workflow:
 
-Many people struggle with the increasing email volume leading to hundreds of unread emails. As the capabilities of even
-the best search engine are limited when it comes to large numbers of emails, the only way to keep an overview is filing
-emails into folders. The manual work of filing emails into folders is tedious, still most people are too lazy to create
-email filters and keep their email filters up to date. Finally, in the age of mobile computing when most people access
-their emails from their smartphone, the challenge of sorting emails is more relevant than ever.
+* Gmailsorter is a server-side application, so you can continue using your favorite email client. In addition, the
+  Gmailsorter user interface is minimalistic so you can configure it once and then forget about it.
+* Gmailsorter adopts the email labels you suggest and filters your emails accordingly. It is based on the believe that
+  the structure how you sort your ideas, documents and emails is very personal and you know what works best for you.
+* Gmailsorter learns from your reactions. When you disagree with a suggested email label and modify it, Gmailsorter
+  takes this feedback into account for the next suggestions.
 
-The solution to this challenge is to automatically filter emails depending on their similarity to existing emails in a
-given folder. This solution was already proposed in a couple of research papers ranging from the filtering of spam
-emails `1 <https://doi.org/10.1016/j.heliyon.2019.e01802>`_ to the specific case of sorting emails into folders
-`2 <https://people.cs.umass.edu/~mccallum/papers/foldering-tr05.pdf>`_. Even a couple of open source prototypes were
-available like `3 <https://github.com/anthdm/ml-email-clustering>`_ and
-`4 <https://github.com/andreykurenkov/emailinsight>`_.
+So you can think about gmailsorter like a virtual assistant. It learns how you want your emails to be sorted based on
+their similarity to previous emails you assigned to the same label. All the communication with gmailsorter is handled
+via your Google Mail account. Following there simple steps:
 
-This is basically a similar approach specific to the Google Mail API. It is a python script, which can be executed
-periodically for example with a cron task to sort the emails for the user.
+* Gmailsorter takes your new emails and moves them from your inbox to its inbox.
+* Afterwards Gmailsorter scans the content of your email, calculates the similarity to all existing emails and then based
+  on the email labels you assigned to all your previous emails it predicts the email label for the new email.
+* If you agree with this suggestion you do have to do anything. But if you disagree with the suggestion, you can simply
+  change the email label, on the one hand this overwrites the suggestion from Gmailsorter and on the other hand Gmailsorter
+  takes your modification into account when it retrains its model for making suggestions.
+
+To learn more about Gmailsorter please have a look at the documentation below.
 
 Documentation
 -------------

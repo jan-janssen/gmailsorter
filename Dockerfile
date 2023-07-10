@@ -1,9 +1,6 @@
 FROM condaforge/mambaforge:4.14.0-0
 MAINTAINER Jan Janssen <jan.janssen@outlook.com>
 
-# Copy credentials
-ADD credentials.json /tmp/credentials.json
-
 # Install via conda
 RUN mamba update --all --yes && \
     mamba install --yes gmailsorter && \

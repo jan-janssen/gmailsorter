@@ -11,7 +11,8 @@ RUN mamba update --all --yes && \
 ADD crontab /tmp/crontab
 RUN apt-get update && \
     apt-get -y install cron && \
-    crontab /tmp/crontab
+    crontab /tmp/crontab && \
+    rm /tmp/crontab
 
 # Set environment variables - these optional variables can be overwritten
 ENV MAILSORT_ENV_CREDENTIALS_FILE='/tmp/credentials.json'

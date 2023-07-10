@@ -11,7 +11,9 @@ def email_date_converter(email_date):
         email_date = " ".join(email_date.split()[:-1])
     if email_date[-1].isalpha():
         email_date = email_date[:-1]
-    if email_date[:3].isalpha() and email_date[-3] != ":":
+    if email_date[:3].isalpha() and email_date[-3] != ":" and email_date[-6] == "_":
+        return datetime.strptime(email_date.split(".")[0], "%a, %d %b %Y %H:%M:%S %z")
+    elif email_date[:3].isalpha() and email_date[-3] != ":":
         return datetime.strptime(email_date, "%a, %d %b %Y %H:%M:%S %z")
     elif email_date[-3] == ":":
         return datetime.strptime(email_date, "%a, %d %b %Y %H:%M:%S")

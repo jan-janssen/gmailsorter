@@ -24,7 +24,7 @@ def get_email_dict(message):
     try:
         return Message(message_dict=message).to_dict()
     except ValueError as e:
-        print(message, e.message)
+        print(message, str(e))
         return None
 
 

@@ -21,4 +21,4 @@ ENV MAILSORT_ENV_SECRET_KEY='e0f9eb0f0a16667771fa697ccbfaec952c410c6eaab54868'
 
 ENTRYPOINT ["tini", "--"]
 EXPOSE 8080
-CMD printenv | grep "MAILSORT_ENV" >> /etc/environment && cron && cd /tmp && gunicorn --bind 0.0.0.0:8080 --timeout=120 --workers=3 gmailsorter.webapp.wsgi:app
+CMD printenv | grep "MAILSORT_ENV" >> /etc/environment && cron && cd /tmp && python -m gmailsorter.webapp

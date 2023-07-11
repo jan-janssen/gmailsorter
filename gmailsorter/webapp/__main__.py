@@ -1,4 +1,4 @@
-from gmailsortapp.app import run_app
+from gmailsorter.webapp.app import run_app
 
 
 if __name__ == "__main__":

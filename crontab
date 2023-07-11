@@ -1,0 +1,2 @@
+*/5 * * * * cd /tmp && /opt/conda/bin/gmailsorter-daemon -s -c ${MAILSORT_ENV_CREDENTIALS_FILE} -d ${MAILSORT_ENV_DATABASE_URL} > /tmp/fetch.out 2> /tmp/fetch.err
+0 0 * * * cd /tmp && /opt/conda/bin/gmailsorter-daemon -u -c ${MAILSORT_ENV_CREDENTIALS_FILE} -d ${MAILSORT_ENV_DATABASE_URL} > /tmp/update.out 2> /tmp/update.err

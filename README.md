@@ -4,8 +4,8 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 # Update
-[gmailsorter.com](https://gmailsorter.com) web service launched as private beta. 
-![first login](https://raw.githubusercontent.com/jan-janssen/gmailsorter/main/docs/_static/first_login.gif)
+[gmailsorter.com](https://gmailsorter.com) web service launched as private beta - request access now:
+[![first login](https://raw.githubusercontent.com/jan-janssen/gmailsorter/main/docs/_static/first_login.gif)](https://gmailsorter.com)
 
 # Motivation 
 In 2020 there were [306.4 billion e-mails](https://www.statista.com/statistics/456500/daily-number-of-e-mails-worldwide/)

@@ -5,6 +5,7 @@
 
 # Update
 [gmailsorter.com](https://gmailsorter.com) web service launched as private beta. 
+![first login](https://raw.githubusercontent.com/jan-janssen/gmailsorter/main/docs/_static/first_login.gif)
 
 # Motivation 
 In 2020 there were [306.4 billion e-mails](https://www.statista.com/statistics/456500/daily-number-of-e-mails-worldwide/)

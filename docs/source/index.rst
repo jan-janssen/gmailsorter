@@ -7,9 +7,9 @@ gmailsorter - Similarity based email sorting for Google Mail
 ============================================================
 In 2020 there were `306.4 billion e-mails <https://www.statista.com/statistics/456500/daily-number-of-e-mails-worldwide/>`_
 sent and received daily. This number is estimated to increase by 4% yearly, resulting in over 376.4 billion e-mails by
-2025. While email as medium for internal communication in companies is slowly replaced by instant messaging solutions
-and business communication platforms, these solutions fail to address the primary challenge of communication between
-employees from different companies. So addressing the `stress and productivity lost <https://affect.media.mit.edu/pdfs/16.Mark-CHI_Email.pdf>`_
+2025. While email as medium for internal communication in large enterprises is slowly replaced by instant messaging
+solutions and business communication platforms, these solutions fail to address the primary challenge, namely the
+communication between employees from different companies. So addressing the `stress and productivity lost <https://affect.media.mit.edu/pdfs/16.Mark-CHI_Email.pdf>`_
 resulting from interruptions caused by the increase of daily emails is the motivation for the development of gmailsorter.
 
 As a first step gmailsorter creates a barrier between you and your email. Just like a personal guardian it blocks emails

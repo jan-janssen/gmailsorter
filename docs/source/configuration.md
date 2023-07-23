@@ -19,7 +19,7 @@ The docker container based version is currently recommended for all users.
 
 ### Setup Google Cloud Application 
 The following GIF gives an overview of the required steps, they are explained in more detail below:
-![configure google access token](_static/configure_google_access_token.gif)
+![configure google access token](https://github.com/jan-janssen/gmailsorter/blob/main/docs/_static/configure_google_access_token.gif?raw=true)
 
 * Login to the [Google cloud console](http://console.cloud.google.com).
 * Click on the top menu to open the `select a project` dialog. 
@@ -65,7 +65,7 @@ At this stage the configuration of the Google project is completed and you can e
 
 ### Download and start the docker container
 The following GIF gives an overview of the required steps, they are explained in more detail below:
-![start docker](_static/start_docker.gif)
+![start docker](https://github.com/jan-janssen/gmailsorter/blob/main/docs/_static/start_docker.gif?raw=true)
 
 At the current stage no pre-build docker images are available. So the docker image is build from the git repository 
 directly: 
@@ -94,7 +94,7 @@ unexpected crashes.
 
 ### Link Google account to gmailsorter
 The following GIF gives an overview of the required steps, they are explained in more detail below:
-![first login](_static/first_login.gif)
+![first login](https://github.com/jan-janssen/gmailsorter/blob/main/docs/_static/first_login.gif?raw=true)
 
 The web interface for gmailsorter is designed to be minimalistic.
 * Navigate to the gmailsorter web interface [localhost:8080](http://localhost:8080). 

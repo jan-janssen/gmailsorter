@@ -7,11 +7,11 @@
 [gmailsorter.com](https://gmailsorter.com) web service launched as private beta. 
 
 # Motivation 
-In 2020 there were `306.4 billion e-mails <https://www.statista.com/statistics/456500/daily-number-of-e-mails-worldwide/>`_
+In 2020 there were [306.4 billion e-mails](https://www.statista.com/statistics/456500/daily-number-of-e-mails-worldwide/)
 sent and received daily. This number is estimated to increase by 4% yearly, resulting in over 376.4 billion e-mails by
-2025. While email as medium for internal communication in large enterprises is slowly replaced by instant messaging
+2025 . While email as medium for internal communication in large enterprises is slowly replaced by instant messaging
 solutions and business communication platforms, these solutions fail to address the primary challenge, namely the
-communication between employees from different companies. So addressing the `stress and productivity lost <https://affect.media.mit.edu/pdfs/16.Mark-CHI_Email.pdf>`_
+communication between employees from different companies. So addressing the [stress and productivity lost](https://affect.media.mit.edu/pdfs/16.Mark-CHI_Email.pdf)
 resulting from interruptions caused by the increase of daily emails is the motivation for the development of gmailsorter.
 
 # Features

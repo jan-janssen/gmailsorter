@@ -10,10 +10,10 @@ people access their emails from their smartphone, the challenge of sorting email
 
 The solution to this challenge is to automatically filter emails depending on their similarity to existing emails in a
 given folder. This solution was already proposed in a couple of research papers ranging from the filtering of spam
-emails `E.G. Dada et al. <https://doi.org/10.1016/j.heliyon.2019.e01802>`_ to the specific case of sorting emails into 
-folders `R. Bekkerman et al. <https://people.cs.umass.edu/~mccallum/papers/foldering-tr05.pdf>`_. Even a couple of 
-opensource prototypes are available like `ml-email-clustering <https://github.com/anthdm/ml-email-clustering>`_ and
-`emailinsight <https://github.com/andreykurenkov/emailinsight>`_.
+emails [E.G. Dada et al.](https://doi.org/10.1016/j.heliyon.2019.e01802) to the specific case of sorting emails into 
+folders [R. Bekkerman et al.](https://people.cs.umass.edu/~mccallum/papers/foldering-tr05.pdf). Even a couple of 
+opensource prototypes are available like [ml-email-clustering](https://github.com/anthdm/ml-email-clustering) and
+[emailinsight](https://github.com/andreykurenkov/emailinsight).
 
 Gmailsorter is a similar approach specific to the Google Mail API. Before using `gmailsorter` you first have to sort 
 your emails manually. This step is necessary for `gmailsorter` to learn your preferences. 

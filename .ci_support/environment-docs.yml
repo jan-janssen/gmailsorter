@@ -1,0 +1,15 @@
+channels:
+- conda-forge
+dependencies:
+  - nbsphinx
+  - sphinx
+  - myst-parser
+  - google-api-python-client
+  - google-auth
+  - google-auth-oauthlib
+  - numpy
+  - pandas
+  - python
+  - scikit-learn
+  - sqlalchemy
+  - tqdm

@@ -10,7 +10,7 @@ While the `gmailsorter` package is currently still under development, there are 
 
 At the current stage the docker container based version is recommended.
 
-## Gmailsorter.com - web service 
+## Gmailsorter.com 
 The [gmailsorter.com](https://gmailsorter.com) web service is currently in private beta. If you are interested to try it
 out please email `jan.janssen@outlook.com` and ask for access to the private beta. 
 

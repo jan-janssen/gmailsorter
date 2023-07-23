@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-gmailsorter - Similarity based email sorting for Google Mail
-============================================================
+Similarity based email sorting for Google Mail
+==============================================
 In 2020 there were `306.4 billion e-mails <https://www.statista.com/statistics/456500/daily-number-of-e-mails-worldwide/>`_
 sent and received daily. This number is estimated to increase by 4% yearly, resulting in over 376.4 billion e-mails by
 2025. While email as medium for internal communication in large enterprises is slowly replaced by instant messaging

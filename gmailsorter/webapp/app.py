@@ -84,7 +84,7 @@ def index():
                 ],
                 enable_reset=any(
                     [
-                        "failed" in status_dict.values(),
+                        "fail" in status_dict.values(),
                         "progress" in status_dict.values(),
                     ]
                 )

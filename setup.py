@@ -28,13 +28,13 @@ setup(
     },
     install_requires=[
         "google-api-python-client==2.99.0",
-        "google-auth==2.22.0",
+        "google-auth==2.23.0",
         "google-auth-oauthlib==1.1.0",
-        "numpy==1.25.2",
+        "numpy==1.26.0",
         "tqdm==4.66.1",
         "pandas==2.1.0",
         "scikit-learn==1.3.0",
-        "sqlalchemy==2.0.20",
+        "sqlalchemy==2.0.21",
     ],
     extras_require={
         "webapp": ['gunicorn==21.2.0', "flask==2.3.3", "flask-login==0.6.2"],

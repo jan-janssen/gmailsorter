@@ -30,7 +30,7 @@ setup(
         "google-api-python-client==2.103.0",
         "google-auth==2.23.3",
         "google-auth-oauthlib==1.1.0",
-        "numpy==1.26.0",
+        "numpy==1.26.1",
         "tqdm==4.66.1",
         "pandas==2.1.1",
         "scikit-learn==1.3.1",

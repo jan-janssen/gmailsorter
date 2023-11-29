@@ -27,17 +27,17 @@ setup(
         ],
     },
     install_requires=[
-        "google-api-python-client==2.103.0",
-        "google-auth==2.23.3",
+        "google-api-python-client==2.108.0",
+        "google-auth==2.23.4",
         "google-auth-oauthlib==1.1.0",
         "numpy==1.26.1",
         "tqdm==4.66.1",
-        "pandas==2.1.1",
-        "scikit-learn==1.3.1",
-        "sqlalchemy==2.0.22",
+        "pandas==2.1.3",
+        "scikit-learn==1.3.2",
+        "sqlalchemy==2.0.23",
     ],
     extras_require={
-        "webapp": ['gunicorn==21.2.0', "flask==3.0.0", "flask-login==0.6.2"],
+        "webapp": ['gunicorn==21.2.0', "flask==3.0.0", "flask-login==0.6.3"],
     },
     cmdclass=versioneer.get_cmdclass(),
     entry_points={

@@ -6,6 +6,20 @@ from concurrent.futures import ProcessPoolExecutor
 
 
 def train_random_forest(n_estimators, random_state, bootstrap, max_features, X, y):
+    """
+    Train a random forest classifier
+
+    Args:
+        n_estimators (int): number of estimators of the machine learning models
+        max_features (int): maximum number of features of the machine learning models
+        random_state (int): random state for initialization of the machine learning models
+        bootstrap (boolean): bootstrap of the machine learning models
+        X (pandas.DataFrame): binary encoded features stored in a pandas dataframe
+        y (pandas.Series): boolean encoded label
+
+    Return:
+        RandomForestClassifier: trained model
+    """
     return RandomForestClassifier(
         n_estimators=n_estimators,
         random_state=random_state,

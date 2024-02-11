@@ -106,7 +106,9 @@ class DatabaseInterface(DatabaseTemplate):
 
     def update_labels(self, message_id_lst, message_meta_lst, user_id=1):
         for message_id, message_labels in tqdm(
-            iterable=zip(message_id_lst, message_meta_lst), desc="Update labels"
+            iterable=zip(message_id_lst, message_meta_lst),
+            desc="Update labels",
+            total=len(message_id_lst),
         ):
             message_label_stored = [
                 m

@@ -9,5 +9,5 @@ dependencies:
 - pandas =2.2.0
 - python
 - scikit-learn =1.4.0
-- sqlalchemy =2.0.25
+- sqlalchemy =2.0.26
 - tqdm =4.66.1

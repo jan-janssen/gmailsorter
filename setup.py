@@ -34,7 +34,7 @@ setup(
         "tqdm==4.66.2",
         "pandas==2.2.1",
         "scikit-learn==1.4.1.post1",
-        "sqlalchemy==2.0.27",
+        "sqlalchemy==2.0.28",
     ],
     extras_require={
         "webapp": ['gunicorn==21.2.0', "flask==3.0.2", "flask-login==0.6.3"],

@@ -20,13 +20,10 @@ jobs:
         python-version: 3.9
         channel-priority: strict
         environment-file: .ci_support/environment.yml
-    - name: Setup
-      shell: bash -l {0}
-      run: |
-        pip install --no-deps .
     - name: Test
       shell: bash -l {0}
       run: |
+        pip install --no-deps .
         coverage run -a -m unittest discover tests
         coverage xml
     - name: Coveralls

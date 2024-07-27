@@ -5,7 +5,7 @@ dependencies:
 - google-api-python-client =2.138.0
 - google-auth =2.32.0
 - google-auth-oauthlib =1.2.1
-- numpy =2.0.0
+- numpy =2.0.1
 - pandas =2.2.2
 - python
 - scikit-learn =1.5.1

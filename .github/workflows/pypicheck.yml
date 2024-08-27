@@ -9,21 +9,18 @@ on:
 jobs:
   build:
 
-    runs-on: ${{ matrix.operating-system }}
-    strategy:
-      matrix:
-        operating-system: [ubuntu-latest]
-        python-version: ["3.12"]
-
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - name: Conda config
+      shell: bash -l {0}
+      run: echo -e "channels:\n  - conda-forge\n" > .condarc
     - uses: conda-incubator/setup-miniconda@v3
       with:
-        auto-update-conda: true
-        python-version: ${{ matrix.python-version }}
-        channel-priority: strict
+        python-version: "3.12"
+        miniforge-version: latest
+        condarc-file: .condarc
         environment-file: .ci_support/environment.yml
-        miniforge-variant: Mambaforge
     - name: Setup
       shell: bash -l {0}
       run: |

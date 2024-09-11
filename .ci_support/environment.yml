@@ -8,6 +8,6 @@ dependencies:
 - numpy =2.1.1
 - pandas =2.2.2
 - python
-- scikit-learn =1.5.1
+- scikit-learn =1.5.2
 - sqlalchemy =2.0.34
 - tqdm =4.66.5

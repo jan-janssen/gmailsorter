@@ -10,4 +10,4 @@ dependencies:
 - python
 - scikit-learn =1.5.2
 - sqlalchemy =2.0.36
-- tqdm =4.66.6
+- tqdm =4.67.0

@@ -27,10 +27,10 @@ setup(
         ],
     },
     install_requires=[
-        "google-api-python-client==2.155.0",
+        "google-api-python-client==2.157.0",
         "google-auth==2.37.0",
         "google-auth-oauthlib==1.2.1",
-        "numpy==2.2.0",
+        "numpy==2.2.1",
         "tqdm==4.67.1",
         "pandas==2.2.3",
         "scikit-learn==1.6.0",

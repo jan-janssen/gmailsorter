@@ -3,7 +3,7 @@ MAINTAINER Jan Janssen <jan.janssen@outlook.com>
 
 # Install via conda
 RUN mamba update --all --yes && \
-    mamba install --yes gmailsorter && \
+    mamba install --yes gmailsorter gunicorn=23.0.0 flask=3.1.0 flask-login=0.6.3 && \
     mamba clean --all --force-pkgs-dirs --yes && \
     mamba list
 

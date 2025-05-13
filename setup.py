@@ -37,7 +37,7 @@ setup(
         "sqlalchemy==2.0.40",
     ],
     extras_require={
-        "webapp": ['gunicorn==23.0.0', "flask==3.1.0", "flask-login==0.6.3"],
+        "webapp": ['gunicorn==23.0.0', "flask==3.1.1", "flask-login==0.6.3"],
     },
     cmdclass=versioneer.get_cmdclass(),
     entry_points={

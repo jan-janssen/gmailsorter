@@ -16,6 +16,10 @@ from flask_login import (
 
 # Internal imports
 from gmailsorter.daemon import SCOPES, MAILSORT_LABEL
+from gmailsorter.daemon.shared import (
+    JOB_STATUS_FAIL,
+    JOB_STATUS_PROGRESS,
+)
 from gmailsorter.webapp.config import CLIENT_SECRETS_CONFIG, ENGINE, SECRET_KEY
 from gmailsorter.webapp.user import get_flask_user
 from gmailsorter.webapp.render import color_for_status
@@ -84,8 +88,8 @@ def index():
                 ],
                 enable_reset=any(
                     [
-                        "fail" in status_dict.values(),
-                        "progress" in status_dict.values(),
+                        JOB_STATUS_FAIL in status_dict.values(),
+                        JOB_STATUS_PROGRESS in status_dict.values(),
                     ]
                 ),
             )

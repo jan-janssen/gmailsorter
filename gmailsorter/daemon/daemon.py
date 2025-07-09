@@ -7,6 +7,10 @@ from gmailsorter.daemon.shared import (
     SCOPES,
     MAILSORT_LABEL,
     get_task_status_for_user,
+    JOB_STATUS_FAIL,
+    JOB_STATUS_PROGRESS,
+    JOB_STATUS_INIT,
+    JOB_STATUS_SUCCESS,
 )
 from gmailsorter.daemon.tasks import (
     get_all_tasks_to_execute,
@@ -75,7 +79,7 @@ def iterate_over_users(
                     session=session,
                     user_id=user_database_id,
                     task_name=task_name,
-                    status="fail",
+                    status=JOB_STATUS_FAIL,
                 )
                 for task_name in ["update", "fetch"]
             ]
@@ -88,7 +92,7 @@ def iterate_over_users(
                     session=session,
                     user_id=user_database_id,
                     task_name="update",
-                    status="progress",
+                    status=JOB_STATUS_PROGRESS,
                 )
                 gmail.update_database(quick=False)
                 gmail.fit_machine_learning_model_to_database(
@@ -98,25 +102,25 @@ def iterate_over_users(
                     bootstrap=bootstrap,
                     include_deleted=include_deleted,
                 )
-                if status_start == "init":
+                if status_start == JOB_STATUS_INIT:
                     update_task_status(
                         session=session,
                         user_id=user_database_id,
                         task_name="fetch",
-                        status="init",
+                        status=JOB_STATUS_INIT,
                     )
                 update_task_status(
                     session=session,
                     user_id=user_database_id,
                     task_name="update",
-                    status="success",
+                    status=JOB_STATUS_SUCCESS,
                 )
             elif filter_messages:
                 update_task_status(
                     session=session,
                     user_id=user_database_id,
                     task_name="fetch",
-                    status="progress",
+                    status=JOB_STATUS_PROGRESS,
                 )
                 try:  # Fails when email labels cannot be modified.
                     gmail.filter_messages_from_server(
@@ -128,14 +132,14 @@ def iterate_over_users(
                         session=session,
                         user_id=user_database_id,
                         task_name="fetch",
-                        status="fail",
+                        status=JOB_STATUS_FAIL,
                     )
                 else:
                     update_task_status(
                         session=session,
                         user_id=user_database_id,
                         task_name="fetch",
-                        status="success",
+                        status=JOB_STATUS_SUCCESS,
                     )
             else:
                 raise ValueError(

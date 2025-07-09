@@ -87,8 +87,7 @@ def index():
                         "fail" in status_dict.values(),
                         "progress" in status_dict.values(),
                     ]
-                )
-                and "wait" not in status_dict.values(),
+                ),
             )
         else:
             return flask.render_template(

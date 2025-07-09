@@ -32,7 +32,7 @@ setup(
         "google-auth-oauthlib==1.2.2",
         "numpy==2.2.4",
         "tqdm==4.67.1",
-        "pandas==2.3.0",
+        "pandas==2.3.1",
         "scikit-learn==1.6.1",
         "sqlalchemy==2.0.41",
     ],

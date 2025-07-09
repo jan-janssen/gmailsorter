@@ -75,7 +75,7 @@ def iterate_over_users(
                     session=session,
                     user_id=user_database_id,
                     task_name=task_name,
-                    status="failed",
+                    status="fail",
                 )
                 for task_name in ["update", "fetch"]
             ]

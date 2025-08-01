@@ -48,10 +48,24 @@ gmailsorter = "gmailsorter.__main__:command_line_parser"
 gmailsorter-daemon = "gmailsorter.daemon.__main__:command_line_parser"
 gmailsorter-app = "gmailsorter.webapp.app:run_app"
 
+[tool.hatch.build]
+include = [
+    "gmailsorter"
+]
+
+[tool.hatch.build.hooks.vcs]
+version-file = "gmailsorter/_version.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "gmailsorter"
+]
+
+[tool.hatch.build.targets.wheel]
+packages = [
+    "gmailsorter"
+]
+
 [tool.hatch.version]
 source = "vcs"
-tag_pattern = "gmailsorter-(?P<version>.*)"
-fallback-version = "0.1.0"
-[tool.hatch.build.targets.wheel]
-packages = ["gmailsorter"]
-license-files = ["LICENSE"]
+path = "gmailsorter/_version.py"

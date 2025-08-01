@@ -314,6 +314,8 @@ class GoogleMailBase:
             label_ids=label_ids, query_string=query_string, next_page_token=None
         )
 
+        if message_items_lst is None:
+            message_items_lst = []
         while next_page_token:
             message_items, next_page_token = self._get_messages_page(
                 label_ids=label_ids,

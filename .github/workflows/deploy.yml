@@ -22,7 +22,7 @@ jobs:
     - name: Convert dependencies
       run: |
         sed -i 's/==/>=/g' pyproject.toml; cat pyproject.toml
-        git update-index --assume-unchanged pyproject.toml pyauthenticator/_version.py
+        git update-index --assume-unchanged pyproject.toml gmailsorter/_version.py
     - name: Install Hatch
       run: pip install hatchling hatch-vcs
     - name: Build

@@ -20,8 +20,9 @@ jobs:
       with:
         python-version: "3.13"
     - name: Convert dependencies
-      run: >-
+      run: |
         sed -i 's/==/>=/g' pyproject.toml; cat pyproject.toml
+        git update-index --assume-unchanged pyproject.toml pyauthenticator/_version.py
     - name: Install Hatch
       run: pip install hatchling hatch-vcs
     - name: Build

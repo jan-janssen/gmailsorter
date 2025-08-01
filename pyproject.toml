@@ -1,0 +1,73 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "gmailsorter"
+dynamic = ["version"]
+description = "Assign labels to emails in Google Mail based on their similarity to other emails assigned to the same label."
+readme = "README.md"
+license = "BSD-3-Clause"
+authors = [
+    { name = "Jan Janssen", email = "jan.janssen@outlook.com" },
+]
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "google-api-python-client==2.177.0",
+    "google-auth==2.40.3",
+    "google-auth-oauthlib==1.2.2",
+    "numpy==2.2.4",
+    "tqdm==4.67.1",
+    "pandas==2.3.1",
+    "scikit-learn==1.6.1",
+    "sqlalchemy==2.0.42",
+]
+
+[project.optional-dependencies]
+webapp = [
+    "gunicorn==23.0.0",
+    "flask==3.1.1",
+    "flask-login==0.6.3",
+]
+
+[project.urls]
+Homepage = "https://github.com/jan-janssen/gmailsorter"
+
+[project.scripts]
+gmailsorter = "gmailsorter.__main__:command_line_parser"
+gmailsorter-daemon = "gmailsorter.daemon.__main__:command_line_parser"
+gmailsorter-app = "gmailsorter.webapp.app:run_app"
+
+[tool.hatch.build]
+include = [
+    "gmailsorter"
+]
+
+[tool.hatch.build.hooks.vcs]
+version-file = "gmailsorter/_version.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "gmailsorter"
+]
+
+[tool.hatch.build.targets.wheel]
+packages = [
+    "gmailsorter"
+]
+
+[tool.hatch.version]
+source = "vcs"
+path = "gmailsorter/_version.py"

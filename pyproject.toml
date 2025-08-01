@@ -21,9 +21,11 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-    "google-api-python-client==2.176.0",
+    "google-api-python-client==2.177.0",
     "google-auth==2.40.3",
     "google-auth-oauthlib==1.2.2",
     "numpy==2.2.4",

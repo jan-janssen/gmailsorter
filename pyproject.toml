@@ -28,10 +28,10 @@ dependencies = [
     "google-api-python-client==2.183.0",
     "google-auth==2.40.3",
     "google-auth-oauthlib==1.2.2",
-    "numpy==2.3.2",
+    "numpy==2.3.3",
     "tqdm==4.67.1",
-    "pandas==2.3.2",
-    "scikit-learn==1.6.1",
+    "pandas==2.3.3",
+    "scikit-learn==1.7.2",
     "sqlalchemy==2.0.43",
 ]
 

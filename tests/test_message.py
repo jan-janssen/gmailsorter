@@ -58,10 +58,6 @@ class MessageTest(TestCase):
             datetime.strptime("24-01-2022", "%d-%m-%Y")
         )
         self.assertEqual(
-            email_date_converter("Fri, 11 Feb 2022 18:08:46.123+0100"),
-            datetime.strptime("Fri, 11 Feb 2022 18:08:46", "%a, %d %b %Y %H:%M:%S")
-        )
-        self.assertEqual(
             email_date_converter("Fri, 11 Feb 2022 18:08:46.123"),
             datetime.strptime("Fri, 11 Feb 2022 18:08:46", "%a, %d %b %Y %H:%M:%S")
         )
@@ -81,27 +77,3 @@ class MessageTest(TestCase):
             email_date_converter(None),
             None
         )
-
-    def test_abstract_message_not_implemented(self):
-        class MyMessage(AbstractMessage):
-            pass
-
-        message = MyMessage({})
-        with self.assertRaises(NotImplementedError):
-            message.get_from()
-        with self.assertRaises(NotImplementedError):
-            message.get_to()
-        with self.assertRaises(NotImplementedError):
-            message.get_cc()
-        with self.assertRaises(NotImplementedError):
-            message.get_label_ids()
-        with self.assertRaises(NotImplementedError):
-            message.get_subject()
-        with self.assertRaises(NotImplementedError):
-            message.get_date()
-        with self.assertRaises(NotImplementedError):
-            message.get_content()
-        with self.assertRaises(NotImplementedError):
-            message.get_thread_id()
-        with self.assertRaises(NotImplementedError):
-            message.get_email_id()

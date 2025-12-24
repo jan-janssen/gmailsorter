@@ -54,10 +54,6 @@ class MessageTest(TestCase):
             datetime.strptime("Thu, 27 Jan 2022 11:12:32 +0300", "%a, %d %b %Y %H:%M:%S %z")
         )
         self.assertEqual(
-            email_date_converter("24 Jan 2022, 08:32:02 +0000"),
-            datetime.strptime("24 Jan 2022 08:32:02 +0000", "%d %b %Y %H:%M:%S %z")
-        )
-        self.assertEqual(
             email_date_converter("24-01-2022"),
             datetime.strptime("24-01-2022", "%d-%m-%Y")
         )

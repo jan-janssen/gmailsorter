@@ -436,5 +436,6 @@ class DatabaseInterface(DatabaseTemplate):
 
 
 def get_email_database(engine, session):
+    Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
     return DatabaseInterface(session=session)

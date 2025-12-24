@@ -1,5 +1,6 @@
 from unittest import TestCase
 from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from gmailsorter.google.message import Message, get_email_dict
 
 
@@ -45,7 +46,7 @@ class MessageTest(TestCase):
     def test_get_date(self):
         self.assertEqual(
             self.message.get_date(),
-            datetime.strptime("Fri, 11 Feb 2022 18:08:46 +0100", "%a, %d %b %Y %H:%M:%S %z")
+            datetime.strptime("Fri, 11 Feb 2022 18:08:46 +0100", "%a, %d %b %Y %H:%M:%S %z").astimezone(timezone.utc)
         )
 
     def test_get_content(self):
@@ -57,7 +58,7 @@ class MessageTest(TestCase):
             {
                 'cc': [],
                 'content': None,
-                'date': datetime.strptime("Fri, 11 Feb 2022 18:08:46 +0100", "%a, %d %b %Y %H:%M:%S %z"),
+                'date': datetime.strptime("Fri, 11 Feb 2022 18:08:46 +0100", "%a, %d %b %Y %H:%M:%S %z").astimezone(timezone.utc),
                 'from': 'sender@server.net',
                 'id': 'myid123',
                 'labels': ['important', 'Label_123'],

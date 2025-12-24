@@ -31,32 +31,41 @@ class AbstractMessage(ABC):
     def __init__(self, message_dict):
         self._message_dict = message_dict
 
+    @abstractmethod
     def get_from(self):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def get_to(self):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def get_cc(self):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def get_label_ids(self):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def get_subject(self):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def get_date(self):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def get_content(self):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def get_thread_id(self):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def get_email_id(self):
-        raise NotImplementedError
+        pass
 
     def to_dict(self):
         return {

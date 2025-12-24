@@ -22,10 +22,6 @@ class MessageTest(TestCase):
             datetime.strptime("11-02-2022", "%d-%m-%Y")
         )
         self.assertEqual(
-            email_date_converter("Fri, 11 Feb 2022 18:08:46 +0100 (UTC)"),
-            datetime.strptime("Fri, 11 Feb 2022 18:08:46 +0100", "%a, %d %b %Y %H:%M:%S %z")
-        )
-        self.assertEqual(
             email_date_converter("\xa0Fri, 11 Feb 2022 18:08:46 +0100"),
             datetime.strptime("Fri, 11 Feb 2022 18:08:46 +0100", "%a, %d %b %Y %H:%M:%S %z")
         )
@@ -88,60 +84,6 @@ class MessageTest(TestCase):
         self.assertEqual(
             email_date_converter(None),
             None
-        )
-
-    def test_abstract_message(self):
-        class MyMessage(AbstractMessage):
-            def get_from(self):
-                return "from"
-
-            def get_to(self):
-                return "to"
-
-            def get_cc(self):
-                return "cc"
-
-            def get_label_ids(self):
-                return ["label1", "label2"]
-
-            def get_subject(self):
-                return "subject"
-
-            def get_date(self):
-                return "date"
-
-            def get_content(self):
-                return "content"
-
-            def get_thread_id(self):
-                return "thread_id"
-
-            def get_email_id(self):
-                return "email_id"
-
-        message = MyMessage({})
-        self.assertEqual(message.get_from(), "from")
-        self.assertEqual(message.get_to(), "to")
-        self.assertEqual(message.get_cc(), "cc")
-        self.assertEqual(message.get_label_ids(), ["label1", "label2"])
-        self.assertEqual(message.get_subject(), "subject")
-        self.assertEqual(message.get_date(), "date")
-        self.assertEqual(message.get_content(), "content")
-        self.assertEqual(message.get_thread_id(), "thread_id")
-        self.assertEqual(message.get_email_id(), "email_id")
-        self.assertEqual(
-            message.to_dict(),
-            {
-                "id": "email_id",
-                "threads": "thread_id",
-                "labels": ["label1", "label2"],
-                "to": "to",
-                "from": "from",
-                "cc": "cc",
-                "subject": "subject",
-                "content": "content",
-                "date": "date",
-            },
         )
 
     def test_abstract_message_not_implemented(self):

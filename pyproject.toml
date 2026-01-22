@@ -32,7 +32,7 @@ dependencies = [
     "tqdm==4.67.1",
     "pandas==2.3.3",
     "scikit-learn==1.8.0",
-    "sqlalchemy==2.0.45",
+    "sqlalchemy==2.0.46",
 ]
 
 [project.optional-dependencies]

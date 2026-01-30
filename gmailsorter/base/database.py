@@ -3,7 +3,6 @@ from tqdm import tqdm
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import declarative_base
 
-
 Base = declarative_base()
 
 

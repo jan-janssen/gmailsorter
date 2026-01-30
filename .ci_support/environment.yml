@@ -3,13 +3,13 @@ channels:
 dependencies:
 - coverage
 - google-api-python-client =2.188.0
-- google-auth =2.47.0
+- google-auth =2.48.0
 - google-auth-oauthlib =1.2.4
 - numpy =2.4.0
 - pandas =2.3.3
 - python
 - scikit-learn =1.8.0
-- sqlalchemy =2.0.45
+- sqlalchemy =2.0.46
 - tqdm =4.67.1
 - hatchling
 - hatch-vcs

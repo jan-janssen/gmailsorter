@@ -29,7 +29,7 @@ dependencies = [
     "google-auth==2.48.0",
     "google-auth-oauthlib==1.2.2",
     "numpy==2.4.0",
-    "tqdm==4.67.1",
+    "tqdm==4.67.2",
     "pandas==2.3.3",
     "scikit-learn==1.8.0",
     "sqlalchemy==2.0.46",

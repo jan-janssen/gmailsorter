@@ -2,7 +2,7 @@ channels:
 - conda-forge
 dependencies:
 - coverage
-- google-api-python-client =2.189.0
+- google-api-python-client =2.190.0
 - google-auth =2.48.0
 - google-auth-oauthlib =1.2.2
 - numpy =2.4.0

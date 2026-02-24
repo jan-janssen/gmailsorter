@@ -9,7 +9,7 @@ dependencies:
 - pandas =2.3.3
 - python
 - scikit-learn =1.8.0
-- sqlalchemy =2.0.46
+- sqlalchemy =2.0.47
 - tqdm =4.67.3
 - hatchling
 - hatch-vcs

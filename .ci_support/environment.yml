@@ -3,7 +3,7 @@ channels:
 dependencies:
 - coverage
 - google-api-python-client =2.192.0
-- google-auth =2.48.0
+- google-auth =2.49.1
 - google-auth-oauthlib =1.2.2
 - numpy =2.4.0
 - pandas =2.3.3

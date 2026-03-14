@@ -92,11 +92,11 @@ def get_predictions_from_machine_learning_models(
     predictions = {k: v.predict(df_predict) for k, v in model_dict.items()}
     label_lst = list(predictions.keys())
     prediction_array = np.array(list(predictions.values())).T
+    argmax_indices = np.argmax(prediction_array, axis=1)
+    max_values = prediction_array[np.arange(len(prediction_array)), argmax_indices]
     new_label_lst = [
-        label_lst[email] if np.max(values) > float(recommendation_ratio) else None
-        for email, values in zip(
-            np.argsort(prediction_array, axis=1)[:, -1], prediction_array
-        )
+        label_lst[idx] if max_val > recommendation_ratio else None
+        for idx, max_val in zip(argmax_indices, max_values)
     ]
     return {
         email_id: label

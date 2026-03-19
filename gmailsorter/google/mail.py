@@ -305,7 +305,7 @@ class GoogleMailBase:
         )
 
         return [
-            message_list_response.get("messages"),
+            message_list_response.get("messages", []),
             message_list_response.get("nextPageToken"),
         ]
 
@@ -314,8 +314,6 @@ class GoogleMailBase:
             label_ids=label_ids, query_string=query_string, next_page_token=None
         )
 
-        if message_items_lst is None:
-            message_items_lst = []
         while next_page_token:
             message_items, next_page_token = self._get_messages_page(
                 label_ids=label_ids,
@@ -324,10 +322,7 @@ class GoogleMailBase:
             )
             message_items_lst.extend(message_items)
 
-        if message_items_lst is None:
-            return []
-        else:
-            return message_items_lst
+        return message_items_lst
 
     def _modify_message_labels(
         self, message_id, label_id_remove_lst=[], label_id_add_lst=[]

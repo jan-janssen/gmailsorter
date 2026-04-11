@@ -106,7 +106,7 @@ def index():
 
 @app.route("/authorize")
 def authorize():
-    authorization_url, state = get_authentication_url(
+    authorization_url, state, code_verifier = get_authentication_url(
         client_config=CLIENT_SECRETS_CONFIG,
         scopes=SCOPES,
         redirect_uri=flask.url_for("oauth2callback", _external=True),
@@ -114,6 +114,7 @@ def authorize():
 
     # Store the state so the callback can verify the auth server response.
     flask.session["state"] = state
+    flask.session["code_verifier"] = code_verifier
 
     return flask.redirect(authorization_url)
 
@@ -148,6 +149,7 @@ def oauth2callback():
     # Specify the state when creating the flow in the callback so that it can
     # verified in the authorization server response.
     state = flask.session["state"]
+    code_verifier = flask.session["code_verifier"]
 
     credentials_dict = get_google_credentials(
         client_config=CLIENT_SECRETS_CONFIG,
@@ -155,6 +157,7 @@ def oauth2callback():
         state=state,
         redirect_uri=flask.url_for("oauth2callback", _external=True),
         authorization_response=flask.request.url,
+        code_verifier=code_verifier,
     )
 
     flask.session["credentials"] = credentials_dict

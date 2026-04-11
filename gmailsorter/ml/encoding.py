@@ -68,7 +68,7 @@ def one_hot_encoding(df, feature_lst=[]):
             [
                 "@" + email.split("@")[-1]
                 for email in df["from"].unique()
-                if email is not None and "@" in email
+                if email is not None and isinstance(email, str) and "@" in email
             ]
         )
     )

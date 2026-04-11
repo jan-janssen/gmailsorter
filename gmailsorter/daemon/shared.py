@@ -23,6 +23,13 @@ SCOPES = [
 
 MAILSORT_LABEL = "mailsortinbox"
 
+# Job Status Constants
+JOB_STATUS_SUCCESS = "success"
+JOB_STATUS_FAIL = "fail"
+JOB_STATUS_PROGRESS = "progress"
+JOB_STATUS_WAIT = "wait"
+JOB_STATUS_INIT = "init"
+
 
 Base = declarative_base()
 
@@ -235,17 +242,17 @@ class GoogleMail(GoogleMailBase):
             message_list_visibility="show",
         )
         if isinstance(label_id, str):
-            status_dict["label"] = "success"
+            status_dict["label"] = JOB_STATUS_SUCCESS
         else:
-            status_dict["label"] = "fail"
+            status_dict["label"] = JOB_STATUS_FAIL
         try:
             filter_id = self.create_filter_moving_all_labels(label_name=label_name)
             if isinstance(filter_id, str):
-                status_dict["filter"] = "success"
+                status_dict["filter"] = JOB_STATUS_SUCCESS
             else:
-                status_dict["filter"] = "fail"
+                status_dict["filter"] = JOB_STATUS_FAIL
         except (ValueError, TypeError):
-            status_dict["filter"] = "fail"
+            status_dict["filter"] = JOB_STATUS_FAIL
         return status_dict
 
     def _create_databases(self, engine):

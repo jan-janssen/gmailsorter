@@ -30,17 +30,18 @@ def get_authentication_url(client_config, scopes, redirect_uri):
         # Enable incremental authorization. Recommended as a best practice.
         include_granted_scopes="true",
     )
-    return authorization_url, state
+    return authorization_url, state, flow.code_verifier
 
 
 def get_google_credentials(
-    client_config, scopes, state, redirect_uri, authorization_response
+    client_config, scopes, state, code_verifier, redirect_uri, authorization_response
 ):
     # Create flow instance to manage the OAuth 2.0 Authorization Grant Flow steps.
     flow = google_auth_oauthlib.flow.Flow.from_client_config(
         client_config=client_config, scopes=scopes, state=state
     )
     flow.redirect_uri = redirect_uri
+    flow.code_verifier = code_verifier
 
     # Use the authorization server's response to fetch the OAuth 2.0 tokens.
     flow.fetch_token(authorization_response=authorization_response)

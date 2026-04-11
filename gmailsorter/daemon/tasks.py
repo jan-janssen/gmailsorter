@@ -1,5 +1,10 @@
 from datetime import datetime
-from gmailsorter.daemon.shared import Task
+from gmailsorter.daemon.shared import (
+    Task,
+    JOB_STATUS_INIT,
+    JOB_STATUS_WAIT,
+    JOB_STATUS_SUCCESS,
+)
 
 
 def create_tasks_for_new_users(session, user_id):
@@ -13,7 +18,10 @@ def create_tasks_for_new_users(session, user_id):
     if task_update_from_database is None:
         task_lst.append(
             Task(
-                task_name="update", date=datetime.now(), status="init", user_id=user_id
+                task_name="update",
+                date=datetime.now(),
+                status=JOB_STATUS_INIT,
+                user_id=user_id,
             )
         )
     task_fetch_from_database = (
@@ -24,7 +32,12 @@ def create_tasks_for_new_users(session, user_id):
     )
     if task_fetch_from_database is None:
         task_lst.append(
-            Task(task_name="fetch", date=datetime.now(), status="wait", user_id=user_id)
+            Task(
+                task_name="fetch",
+                date=datetime.now(),
+                status=JOB_STATUS_WAIT,
+                user_id=user_id,
+            )
         )
     if len(task_lst) > 0:
         session.add_all(task_lst)
@@ -48,7 +61,7 @@ def get_all_tasks_to_execute(session, task_name="all"):
         raise ValueError(
             'The task_name parameter has to be one of the following ["all", "update", "fetch", "select"]'
         )
-    tasks_to_execute = ["init", "success"]
+    tasks_to_execute = [JOB_STATUS_INIT, JOB_STATUS_SUCCESS]
     if task_name in ["update", "fetch"]:
         task_dict = {
             task_name: [
@@ -75,7 +88,7 @@ def get_all_tasks_to_execute(session, task_name="all"):
             "update": [
                 task.user_id
                 for task in session.query(Task).filter_by(task_name="update").all()
-                if task.status == "init"
+                if task.status == JOB_STATUS_INIT
             ],
             "fetch": [
                 task.user_id

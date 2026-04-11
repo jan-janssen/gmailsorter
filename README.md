@@ -1,6 +1,6 @@
 # Gmailsorter - Similarity based email sorting for Google Mail
 [![Python package](https://github.com/jan-janssen/gmailsorter/actions/workflows/unittest.yml/badge.svg?branch=main)](https://github.com/jan-janssen/gmailsorter/actions/workflows/unittest.yml)
-[![Coverage Status](https://coveralls.io/repos/github/jan-janssen/gmailsorter/badge.svg?branch=main)](https://coveralls.io/github/jan-janssen/gmailsorter?branch=main)
+[![codecov](https://codecov.io/github/jan-janssen/gmailsorter/graph/badge.svg?token=NWN0UINECM)](https://codecov.io/github/jan-janssen/gmailsorter)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 # Update

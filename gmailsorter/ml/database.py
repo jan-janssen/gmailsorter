@@ -3,7 +3,6 @@ from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import declarative_base
 from gmailsorter.base.database import DatabaseTemplate
 
-
 Base = declarative_base()
 
 

@@ -2,7 +2,6 @@ from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.orm import declarative_base
 from gmailsorter.base.database import DatabaseTemplate
 
-
 Base = declarative_base()
 
 

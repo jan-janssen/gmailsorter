@@ -157,7 +157,7 @@ def oauth2callback():
         state=state,
         redirect_uri=flask.url_for("oauth2callback", _external=True),
         authorization_response=flask.request.url,
-        code_verifier=code_verifier
+        code_verifier=code_verifier,
     )
 
     flask.session["credentials"] = credentials_dict

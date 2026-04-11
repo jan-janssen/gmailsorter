@@ -146,15 +146,9 @@ def _single_entry_email_df(red_lst, value_lst):
     return np.array(
         [
             [
-                (
-                    1
-                    if email is not None
-                    and isinstance(email, str)
-                    and red_entry in email
-                    else 0
-                )
+                1 if email is not None and red_entry in email else 0
                 for red_entry in red_lst
-                if red_entry is not None
+                if not pandas.isna(red_entry)
             ]
             for email in value_lst
         ]

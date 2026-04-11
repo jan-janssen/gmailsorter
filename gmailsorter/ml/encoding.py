@@ -135,7 +135,7 @@ def _single_entry_df(red_lst, value_lst):
             [
                 1 if email == red_entry else 0
                 for red_entry in red_lst
-                if red_entry is not None
+                if not pandas.isna(red_entry)
             ]
             for email in value_lst
         ]

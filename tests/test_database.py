@@ -139,7 +139,7 @@ class DatabaseTest(TestCase):
         }])
         self.database.store_dataframe(df=df)
         self.assertEqual(len(self.database.get_all_emails()), 2)
-        self.assertEqual(self.database.get_all_emails().iloc[1]["from"], pandas.nan)
+        self.assertTrue(pandas.isna(self.database.get_all_emails().iloc[1]["from"]))
         self.assertEqual(len(self.database.get_emails_by_from(email_from=None)), 1)
 
     def test_create_dataframe_no_from_in_db(self):

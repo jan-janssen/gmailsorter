@@ -127,8 +127,8 @@ def _build_red_lst(df_column):
 
 def _get_lst_without_none(lst, column):
     return [
-        column + "_" + entry 
-        for entry in lst 
+        column + "_" + entry
+        for entry in lst
         if entry is not None and isinstance(entry, str)
     ]
 

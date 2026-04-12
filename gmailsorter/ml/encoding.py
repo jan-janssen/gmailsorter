@@ -126,7 +126,11 @@ def _build_red_lst(df_column):
 
 
 def _get_lst_without_none(lst, column):
-    return [column + "_" + entry for entry in lst if entry is not None and isinstance(entry, str)]
+    return [
+        column + "_" + entry 
+        for entry in lst 
+        if entry is not None and isinstance(entry, str)
+    ]
 
 
 def _single_entry_df(red_lst, value_lst):
@@ -146,7 +150,13 @@ def _single_entry_email_df(red_lst, value_lst):
     return np.array(
         [
             [
-                1 if email is not None and isinstance(email, str) and red_entry in email else 0
+                (
+                    1
+                    if email is not None
+                    and isinstance(email, str)
+                    and red_entry in email
+                    else 0
+                )
                 for red_entry in red_lst
                 if not pandas.isna(red_entry)
             ]

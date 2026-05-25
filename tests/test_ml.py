@@ -1,5 +1,6 @@
 import unittest
 import pickle
+import ast
 import pandas as pd
 import numpy as np
 from sqlalchemy import create_engine
@@ -275,3 +276,56 @@ class TestMlModel(unittest.TestCase):
             self.df_features, self.models, recommendation_ratio=1.0
         )
         self.assertIsNone(predictions["id1"])
+
+    def test_spam_example_csv_pipeline(self):
+        csv_data = """id,from,to,cc,date,threads,labels,subject,content
+19d8718ecb472fdb,email@spam.net,['bill.gates@outlook.com'],[],2026-04-13 09:45:17,19d8718ecb472fdb,['Label_7891913576640435048'],"bill.gates¸Your Account Has been Blocked! Your Photos and Videos will be Removed Mon,13 Apr-2026. take action!!",
+19da5e58f1ba213f,email@spam.net,['bill.gates@outlook.com'],[],2026-04-19 09:16:42,19da5e58f1ba213f,['Label_7891913576640435048'],"bill.gates, Your Cloud Account has been locked on Sun, 19 Apr 2026 09:16:42 -0400. Your photos and videos will be removed!",
+19dbf294452d4b08,email@spam.net,['bill.gates@outlook.com'],[],2026-04-24 07:00:57,19dbf294452d4b08,['Label_7891913576640435048'],Last Alert Before Account Deactivation,
+19dc1d19a0ea36c3,email@spam.net,['bill.gates@outlook.com'],[],2026-04-24 19:15:02,19dc1d19a0ea36c3,['Label_7891913576640435048'],"We've Blocked Your Account! Your photos and videos will be deleted Today Fri,24 Apr-2026",
+19de42f704c33a07,email@spam.net,['bill.gates@outlook.com'],[],2026-05-01 11:24:15,19de42f704c33a07,['Label_7891913576640435048'],RE: Why Veterans Are Cashing In While Others Stay Broke—Don’t Be Left Behind.,
+19de2daa08ea7433,email@spam.net,['bill.gates@outlook.com'],[],2026-05-01 05:24:27,19de2daa08ea7433,['Label_7891913576640435048'],bill.gates Tired of Dieting? Try This Instead,
+19ddef585e04396a,email@spam.net,['bill.gates@outlook.com'],[],2026-04-30 11:14:54,19ddef585e04396a,['Label_7891913576640435048'],Get access to DirectMeds - No insurance Needed,
+19ddbf843a81b143,email@spam.net,['bill.gates@outlook.com'],[],2026-04-29 20:56:32,19ddbf843a81b143,['Label_7891913576640435048'],Last Attempt For You! Claim your Lοwe's Kοbаlt Τοοlset Now,
+19e0ed21b438238a,email@spam.net,['bill.gates@outlook.com'],[],2026-05-09 18:14:58,19e0ed21b438238a,['Label_7891913576640435048'],Payment Failed: Subscription Terminated,
+19e08746fec1990d,email@spam.net,['bill.gates@outlook.com'],[],2026-05-08 12:37:36,19e08746fec1990d,['Label_7891913576640435048'],"We’re sorry: bill.gates from today onward, we will not take any responsibility! Fri,08 May-2026",
+19df9b3bb020c477,email@spam.net,['bill.gates@outlook.com'],[],2026-05-05 15:52:40,19df9b3bb020c477,['Label_7891913576640435048'],2026 Benefit List Shows 12 Programs Many Seniors Miss ...,
+19e13b7e2ff2f9c3,email@spam.net,['bill.gates@outlook.com'],[],2026-05-10 17:05:42,19e13b7e2ff2f9c3,['Label_7891913576640435048'],Your Protection Has Been Disabled,
+"""
+        rows = []
+        for line in csv_data.strip().splitlines()[1:]:
+            entry = line.split(",", 7)
+            subject_content = entry[7]
+            subject, content = subject_content.rsplit(",", 1)
+            rows.append(
+                {
+                    "id": entry[0],
+                    "from": entry[1],
+                    "to": entry[2],
+                    "cc": entry[3],
+                    "date": entry[4],
+                    "threads": entry[5],
+                    "labels": entry[6],
+                    "subject": subject.strip('"'),
+                    "content": content if content else None,
+                }
+            )
+        df = pd.DataFrame(rows)
+        for col in ["to", "cc", "labels"]:
+            df[col] = df[col].apply(ast.literal_eval)
+
+        df_features, df_labels = encode_df_for_machine_learning(df, return_labels=True)
+        df_features = df_features.loc[:, ~df_features.columns.duplicated()]
+        self.assertEqual(len(df_features), 12)
+        self.assertIn("email_id", df_features.columns)
+        self.assertEqual(
+            set(df_labels.columns), {"labels_Label_7891913576640435048"}
+        )
+
+        models = fit_machine_learning_models(
+            df_features, df_labels, n_estimators=10, max_features=2, max_workers=1
+        )
+        predictions = get_predictions_from_machine_learning_models(df_features, models)
+        self.assertEqual(
+            set(predictions.values()), {"Label_7891913576640435048"}
+        )

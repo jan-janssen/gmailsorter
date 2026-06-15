@@ -42,14 +42,8 @@ def command_line_parser():
         help="Email label to be filtered with machine learning.",
     )
     args = parser.parse_args()
-    if args.port:
-        port = args.port
-    else:
-        port = 8080
-    if args.identification:
-        db_user_id = int(args.identification)
-    else:
-        db_user_id = 1
+    port = args.port or 8080
+    db_user_id = int(args.identification) if args.identification else 1
     if args.credentials:
         credentials = args.credentials
     elif "credentials.json" in os.listdir("."):
@@ -57,10 +51,7 @@ def command_line_parser():
     else:
         print("Please provide a credentials file, -c/--credentials credentials.json")
     if credentials:
-        if args.database:
-            database = args.database
-        else:
-            database = "sqlite:///email.db"
+        database = args.database or "sqlite:///email.db"
         gmail = Gmail(
             client_config=load_client_secrets_file(client_secrets_file=credentials),
             connection_str=database,

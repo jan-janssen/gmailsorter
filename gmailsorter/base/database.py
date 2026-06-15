@@ -105,7 +105,7 @@ class DatabaseInterface(DatabaseTemplate):
 
     def update_labels(self, message_id_lst, message_meta_lst, user_id=1):
         for message_id, message_labels in tqdm(
-            iterable=zip(message_id_lst, message_meta_lst),
+            iterable=zip(message_id_lst, message_meta_lst, strict=False),
             desc="Update labels",
             total=len(message_id_lst),
         ):
@@ -172,7 +172,7 @@ class DatabaseInterface(DatabaseTemplate):
                 ]
                 for email in self._session.query(EmailContent)
                 .filter(EmailContent.user_id == user_id)
-                .filter(EmailContent.email_deleted == False)
+                .filter(not EmailContent.email_deleted)
                 .all()
             ]
         return self._create_dataframe(
@@ -282,7 +282,7 @@ class DatabaseInterface(DatabaseTemplate):
                 for email in self._session.query(EmailContent)
                 .filter(EmailContent.user_id == user_id)
                 .filter(EmailContent.email_id.in_(email_id_lst))
-                .filter(EmailContent.email_deleted == False)
+                .filter(not EmailContent.email_deleted)
                 .all()
             ]
         return self._create_dataframe(
@@ -293,7 +293,7 @@ class DatabaseInterface(DatabaseTemplate):
         self._session.add_all(
             [
                 Threads(email_id=email_id, thread_id=thread_id, user_id=user_id)
-                for email_id, thread_id in zip(df["id"], df["threads"])
+                for email_id, thread_id in zip(df["id"], df["threads"], strict=False)
             ]
         )
         self._session.commit()
@@ -302,14 +302,14 @@ class DatabaseInterface(DatabaseTemplate):
         self._session.add_all(
             [
                 EmailFrom(email_id=email_id, email_from=email_from, user_id=user_id)
-                for email_id, email_from in zip(df["id"], df["from"])
+                for email_id, email_from in zip(df["id"], df["from"], strict=False)
             ]
         )
         self._session.commit()
 
     def _commit_label_table(self, df, user_id=1):
         label_lst = []
-        for email_id, lid_lst in zip(df["id"], df["labels"]):
+        for email_id, lid_lst in zip(df["id"], df["labels"], strict=False):
             for label_id in lid_lst:
                 label_lst.append(
                     Labels(email_id=email_id, label_id=label_id, user_id=user_id)
@@ -319,7 +319,7 @@ class DatabaseInterface(DatabaseTemplate):
 
     def _commit_email_to_table(self, df, user_id=1):
         email_to_lst = []
-        for email_id, email_lst in zip(df["id"], df["to"]):
+        for email_id, email_lst in zip(df["id"], df["to"], strict=False):
             for email_to in email_lst:
                 email_to_lst.append(
                     EmailTo(email_id=email_id, email_to=email_to, user_id=user_id)
@@ -329,7 +329,7 @@ class DatabaseInterface(DatabaseTemplate):
 
     def _commit_email_cc_table(self, df, user_id=1):
         email_cc_lst = []
-        for email_id, email_lst in zip(df["id"], df["cc"]):
+        for email_id, email_lst in zip(df["id"], df["cc"], strict=False):
             for email_cc in email_lst:
                 email_cc_lst.append(
                     EmailCc(email_id=email_id, email_cc=email_cc, user_id=user_id)
@@ -349,7 +349,7 @@ class DatabaseInterface(DatabaseTemplate):
                     user_id=user_id,
                 )
                 for email_id, email_subject, email_content, email_date in zip(
-                    df["id"], df["subject"], df["content"], df["date"]
+                    df["id"], df["subject"], df["content"], df["date"], strict=False
                 )
             ]
         )

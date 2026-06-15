@@ -1,8 +1,8 @@
-import pandas
-import numpy as np
-from tqdm import tqdm
-from sklearn.ensemble import RandomForestClassifier
 from concurrent.futures import ProcessPoolExecutor
+
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from tqdm import tqdm
 
 
 def train_random_forest(n_estimators, random_state, bootstrap, max_features, X, y):
@@ -96,9 +96,6 @@ def get_predictions_from_machine_learning_models(
     max_values = prediction_array[np.arange(len(prediction_array)), argmax_indices]
     new_label_lst = [
         label_lst[idx] if max_val > recommendation_ratio else None
-        for idx, max_val in zip(argmax_indices, max_values)
+        for idx, max_val in zip(argmax_indices, max_values, strict=False)
     ]
-    return {
-        email_id: label
-        for email_id, label in zip(df_features.email_id.values, new_label_lst)
-    }
+    return dict(zip(df_features.email_id.values, new_label_lst, strict=False))

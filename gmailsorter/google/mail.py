@@ -1,14 +1,15 @@
 import pandas
-from tqdm import tqdm
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from tqdm import tqdm
+
 from gmailsorter.base import get_email_database
 from gmailsorter.google.database import get_token_database
 from gmailsorter.google.message import get_email_dict
 from gmailsorter.ml import (
     encode_df_for_machine_learning,
-    get_machine_learning_database,
     fit_machine_learning_models,
+    get_machine_learning_database,
     get_predictions_from_machine_learning_models,
 )
 
@@ -158,7 +159,7 @@ class GoogleMailBase:
             include_deleted=include_deleted, user_id=self._db_user_id
         )
 
-    def update_database(self, quick=False, label_lst=[], email_format=None):
+    def update_database(self, quick=False, label_lst=None, email_format=None):
         """
         Update local email database
 
@@ -167,6 +168,8 @@ class GoogleMailBase:
             label_lst (list): list of labels to be searched
             email_format (str/None): Email format to download
         """
+        if label_lst is None:
+            label_lst = []
         if self._db_email is not None:
             message_id_lst = self._search_email_on_server(
                 label_lst=label_lst, only_message_ids=True
@@ -238,7 +241,7 @@ class GoogleMailBase:
             email_format="metadata",
             metadata_headers=["labelIds"],
         )
-        if "labelIds" in message_dict.keys():
+        if "labelIds" in message_dict:
             return message_dict["labelIds"]
         else:
             return []
@@ -265,7 +268,7 @@ class GoogleMailBase:
         labels = results.get("labels", [])
         return {label["name"]: label["id"] for label in labels}
 
-    def _get_message_detail(self, message_id, email_format=None, metadata_headers=[]):
+    def _get_message_detail(self, message_id, email_format=None, metadata_headers=None):
         """
         Get details of a specific email message based on its email ID
 
@@ -279,6 +282,8 @@ class GoogleMailBase:
         """
         if email_format is None:
             email_format = self._email_download_format
+        if metadata_headers is None:
+            metadata_headers = []
         return (
             self._service.users()
             .messages()
@@ -309,7 +314,9 @@ class GoogleMailBase:
             message_list_response.get("nextPageToken"),
         ]
 
-    def _get_messages(self, query_string="", label_ids=[]):
+    def _get_messages(self, query_string="", label_ids=None):
+        if label_ids is None:
+            label_ids = []
         message_items_lst, next_page_token = self._get_messages_page(
             label_ids=label_ids, query_string=query_string, next_page_token=None
         )
@@ -325,8 +332,12 @@ class GoogleMailBase:
         return message_items_lst
 
     def _modify_message_labels(
-        self, message_id, label_id_remove_lst=[], label_id_add_lst=[]
+        self, message_id, label_id_remove_lst=None, label_id_add_lst=None
     ):
+        if label_id_remove_lst is None:
+            label_id_remove_lst = []
+        if label_id_add_lst is None:
+            label_id_add_lst = []
         body_dict = {}
         if len(label_id_remove_lst) > 0:
             body_dict["removeLabelIds"] = label_id_remove_lst
@@ -350,7 +361,7 @@ class GoogleMailBase:
                 )
 
     def _search_email_on_server(
-        self, query_string="", label_lst=[], only_message_ids=False
+        self, query_string="", label_lst=None, only_message_ids=False
     ):
         """
         Search emails either by a specific query or optionally limit your search to a list of labels
@@ -363,6 +374,8 @@ class GoogleMailBase:
         Returns:
             list: list with email IDs and thread IDs of the messages which match the search
         """
+        if label_lst is None:
+            label_lst = []
         label_ids = [self._label_dict[label] for label in label_lst]
         message_id_lst = self._get_messages(
             query_string=query_string, label_ids=label_ids

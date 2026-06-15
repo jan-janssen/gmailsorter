@@ -1,12 +1,12 @@
 import json
-from sqlalchemy import create_engine
-from sqlalchemy import Column, Integer, String, DateTime
-from sqlalchemy.orm import declarative_base
-import googleapiclient.discovery
+
 import google.oauth2.credentials
-from sqlalchemy.orm import sessionmaker
-from gmailsorter.google import GoogleMailBase
+import googleapiclient.discovery
+from sqlalchemy import Column, DateTime, Integer, String, create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
+
 from gmailsorter.base import get_email_database
+from gmailsorter.google import GoogleMailBase
 from gmailsorter.google.database import get_token_database
 from gmailsorter.ml import get_machine_learning_database
 
@@ -22,6 +22,8 @@ SCOPES = [
 
 
 MAILSORT_LABEL = "mailsortinbox"
+
+_REMOVE_LABEL_COUNT = 2
 
 # Job Status Constants
 JOB_STATUS_SUCCESS = "success"
@@ -156,15 +158,15 @@ class GoogleMail(GoogleMailBase):
         elif len(filter_lst) == 1:
             filter_dict = filter_lst[0]
             if (
-                "from" in filter_dict["criteria"].keys()
-                and "to" in filter_dict["criteria"].keys()
-                and "addLabelIds" in filter_dict["action"].keys()
-                and "removeLabelIds" in filter_dict["action"].keys()
+                "from" in filter_dict["criteria"]
+                and "to" in filter_dict["criteria"]
+                and "addLabelIds" in filter_dict["action"]
+                and "removeLabelIds" in filter_dict["action"]
                 and filter_dict["criteria"]["from"] == "*"
                 and filter_dict["criteria"]["to"] == "*"
                 and len(filter_dict["action"]["addLabelIds"]) == 1
                 and filter_dict["action"]["addLabelIds"][0] == label_google_name
-                and len(filter_dict["action"]["removeLabelIds"]) == 2
+                and len(filter_dict["action"]["removeLabelIds"]) == _REMOVE_LABEL_COUNT
                 and "INBOX" in filter_dict["action"]["removeLabelIds"]
                 and "SPAM" in filter_dict["action"]["removeLabelIds"]
             ):
@@ -207,7 +209,7 @@ class GoogleMail(GoogleMailBase):
         Returns:
             str: Label ID of the newly created label
         """
-        if label_name in self._label_dict.keys():
+        if label_name in self._label_dict:
             return self._label_dict[label_name]
         else:
             label_request = {
@@ -227,7 +229,7 @@ class GoogleMail(GoogleMailBase):
 
     def get_filter_list(self):
         results = self._service.users().settings().filters().list(userId="me").execute()
-        if "filter" in results.keys():
+        if "filter" in results:
             return results["filter"]
         else:
             return []
@@ -296,5 +298,5 @@ def get_token(session, user_id):
 
 
 def load_config_file(file_name):
-    with open(file_name, "r") as json_file:
+    with open(file_name) as json_file:
         return json.load(json_file)

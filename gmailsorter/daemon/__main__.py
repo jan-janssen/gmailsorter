@@ -1,7 +1,21 @@
 import argparse
 import os
+
 from gmailsorter.daemon.daemon import update
 from gmailsorter.daemon.shared import get_database_engine, load_config_file
+
+
+def _get_execution_mode(args):
+    if args.update and args.filter:
+        return "all"
+    elif args.update:
+        return "update"
+    elif args.scheduled:
+        return "select"
+    elif args.filter:
+        return "fetch"
+    else:
+        raise ValueError("Mode of execution undefined.")
 
 
 def command_line_parser():
@@ -55,16 +69,7 @@ def command_line_parser():
             "Provide a connection string to connect to the database e.g. sqlite:///email.db ."
         )
     if args.update or args.filter or args.scheduled:
-        if args.update and args.filter:
-            mode = "all"
-        elif args.update:
-            mode = "update"
-        elif args.scheduled:
-            mode = "select"
-        elif args.filter:
-            mode = "fetch"
-        else:
-            raise ValueError("Mode of execution undefined.")
+        mode = _get_execution_mode(args)
         update(
             engine=engine,
             client_secrets_config=client_secrets_config,

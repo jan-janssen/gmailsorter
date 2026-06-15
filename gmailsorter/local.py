@@ -1,4 +1,5 @@
 import json
+
 from gmailsorter.google import GoogleMailBase, create_service
 
 
@@ -61,5 +62,5 @@ class Gmail(GoogleMailBase):
 
 
 def load_client_secrets_file(client_secrets_file):
-    with open(client_secrets_file, "r") as json_file:
+    with open(client_secrets_file) as json_file:
         return json.load(json_file)

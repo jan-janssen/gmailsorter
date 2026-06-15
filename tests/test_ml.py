@@ -30,6 +30,7 @@ from gmailsorter.ml.database import (
     Base,
 )
 
+
 class TestMlDatabase(unittest.TestCase):
     def setUp(self):
         self.engine = create_engine("sqlite:///:memory:")
@@ -49,7 +50,10 @@ class TestMlDatabase(unittest.TestCase):
         self.assertEqual(self.session.query(MachineLearningFeatures).count(), 0)
 
     def test_store_and_load_models_new(self):
-        models = {"label1": RandomForestClassifier(), "label2": RandomForestClassifier()}
+        models = {
+            "label1": RandomForestClassifier(),
+            "label2": RandomForestClassifier(),
+        }
         features = ["feature1", "feature2", "email_id"]
         self.db.store_models(models, features)
 
@@ -110,9 +114,15 @@ class TestMlDatabase(unittest.TestCase):
 
     def test_get_labels(self):
         labels = [
-            MachineLearningLabels(label_id="label1", random_forest=pickle.dumps("test"), user_id=1),
-            MachineLearningLabels(label_id="label2", random_forest=pickle.dumps("test"), user_id=1),
-            MachineLearningLabels(label_id="label3", random_forest=pickle.dumps("test"), user_id=2),
+            MachineLearningLabels(
+                label_id="label1", random_forest=pickle.dumps("test"), user_id=1
+            ),
+            MachineLearningLabels(
+                label_id="label2", random_forest=pickle.dumps("test"), user_id=1
+            ),
+            MachineLearningLabels(
+                label_id="label3", random_forest=pickle.dumps("test"), user_id=2
+            ),
         ]
         self.session.add_all(labels)
         self.session.commit()
@@ -158,7 +168,8 @@ class TestMlEncoding(unittest.TestCase):
             self.df, feature_lst=features, return_labels=False
         )
         self.assertEqual(
-            set(df_features.columns), {"cc_@test.com", "from_from1@test.com", "email_id"}
+            set(df_features.columns),
+            {"cc_@test.com", "from_from1@test.com", "email_id"},
         )
 
     def test_encode_df_for_machine_learning_with_numpy_arrays(self):
@@ -168,7 +179,8 @@ class TestMlEncoding(unittest.TestCase):
             self.df, feature_lst=features, label_lst=labels, return_labels=True
         )
         self.assertEqual(
-            set(df_features.columns), {"cc_@test.com", "from_from1@test.com", "email_id"}
+            set(df_features.columns),
+            {"cc_@test.com", "from_from1@test.com", "email_id"},
         )
         self.assertEqual(set(df_labels.columns), {"labels_Label_1"})
 
@@ -318,14 +330,10 @@ class TestMlModel(unittest.TestCase):
         df_features = df_features.loc[:, ~df_features.columns.duplicated()]
         self.assertEqual(len(df_features), 12)
         self.assertIn("email_id", df_features.columns)
-        self.assertEqual(
-            set(df_labels.columns), {"labels_Label_7891913576640435048"}
-        )
+        self.assertEqual(set(df_labels.columns), {"labels_Label_7891913576640435048"})
 
         models = fit_machine_learning_models(
             df_features, df_labels, n_estimators=10, max_features=2, max_workers=1
         )
         predictions = get_predictions_from_machine_learning_models(df_features, models)
-        self.assertEqual(
-            set(predictions.values()), {"Label_7891913576640435048"}
-        )
+        self.assertEqual(set(predictions.values()), {"Label_7891913576640435048"})

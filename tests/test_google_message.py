@@ -16,12 +16,10 @@ class MessageTest(TestCase):
                     {"name": "Subject", "value": "Test Email Subject"},
                     {"name": "From", "value": "sender@server.net"},
                     {"name": "To", "value": "me@mail.com, friend@provider.org"},
-                    {"name": "Date", "value": "Fri, 11 Feb 2022 18:08:46 +0100"}
+                    {"name": "Date", "value": "Fri, 11 Feb 2022 18:08:46 +0100"},
                 ],
-                "body": {
-                    "data": ""
-                }
-            }
+                "body": {"data": ""},
+            },
         }
         cls.message = Message(message_dict=cls._message_dict)
 
@@ -46,7 +44,9 @@ class MessageTest(TestCase):
     def test_get_date(self):
         self.assertEqual(
             self.message.get_date(),
-            datetime.strptime("Fri, 11 Feb 2022 18:08:46 +0100", "%a, %d %b %Y %H:%M:%S %z").astimezone(timezone.utc)
+            datetime.strptime(
+                "Fri, 11 Feb 2022 18:08:46 +0100", "%a, %d %b %Y %H:%M:%S %z"
+            ).astimezone(timezone.utc),
         )
 
     def test_get_content(self):
@@ -56,13 +56,16 @@ class MessageTest(TestCase):
         self.assertEqual(
             get_email_dict(self._message_dict),
             {
-                'cc': [],
-                'content': None,
-                'date': datetime.strptime("Fri, 11 Feb 2022 18:08:46 +0100", "%a, %d %b %Y %H:%M:%S %z").astimezone(timezone.utc),
-                'from': 'sender@server.net',
-                'id': 'myid123',
-                'labels': ['important', 'Label_123'],
-                'subject': 'Test Email Subject',
-                'threads': 'abc123',
-                'to': ['me@mail.com', 'friend@provider.org']
-            })
+                "cc": [],
+                "content": None,
+                "date": datetime.strptime(
+                    "Fri, 11 Feb 2022 18:08:46 +0100", "%a, %d %b %Y %H:%M:%S %z"
+                ).astimezone(timezone.utc),
+                "from": "sender@server.net",
+                "id": "myid123",
+                "labels": ["important", "Label_123"],
+                "subject": "Test Email Subject",
+                "threads": "abc123",
+                "to": ["me@mail.com", "friend@provider.org"],
+            },
+        )

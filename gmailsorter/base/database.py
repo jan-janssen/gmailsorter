@@ -111,7 +111,7 @@ class DatabaseInterface(DatabaseTemplate):
         ):
             message_label_stored = [
                 m
-                for m, in self._session.query(Labels.label_id)
+                for (m,) in self._session.query(Labels.label_id)
                 .filter(Labels.user_id == user_id)
                 .filter(Labels.email_id == message_id)
                 .all()
@@ -185,7 +185,7 @@ class DatabaseInterface(DatabaseTemplate):
         return self.get_email_collection(
             email_id_lst=[
                 email_id
-                for email_id, in self._session.query(Labels.email_id)
+                for (email_id,) in self._session.query(Labels.email_id)
                 .filter(Labels.user_id == user_id)
                 .filter(Labels.label_id == label_id)
                 .all()
@@ -199,7 +199,7 @@ class DatabaseInterface(DatabaseTemplate):
         return self.get_email_collection(
             email_id_lst=[
                 email_id
-                for email_id, in self._session.query(EmailFrom.email_id)
+                for (email_id,) in self._session.query(EmailFrom.email_id)
                 .filter(EmailFrom.user_id == user_id)
                 .filter(EmailFrom.email_from == email_from)
                 .all()
@@ -213,7 +213,7 @@ class DatabaseInterface(DatabaseTemplate):
         return self.get_email_collection(
             email_id_lst=[
                 email_id
-                for email_id, in self._session.query(EmailTo.email_id)
+                for (email_id,) in self._session.query(EmailTo.email_id)
                 .filter(EmailTo.user_id == user_id)
                 .filter(EmailTo.email_to == email_to)
                 .all()
@@ -227,7 +227,7 @@ class DatabaseInterface(DatabaseTemplate):
         return self.get_email_collection(
             email_id_lst=[
                 email_id
-                for email_id, in self._session.query(EmailTo.email_id)
+                for (email_id,) in self._session.query(EmailTo.email_id)
                 .filter(EmailCc.user_id == user_id)
                 .filter(EmailCc.email_cc == email_cc)
                 .all()
@@ -241,7 +241,7 @@ class DatabaseInterface(DatabaseTemplate):
         return self.get_email_collection(
             email_id_lst=[
                 email_id
-                for email_id, in self._session.query(Threads.email_id)
+                for (email_id,) in self._session.query(Threads.email_id)
                 .filter(Threads.user_id == user_id)
                 .filter(Threads.thread_id == thread_id)
                 .all()

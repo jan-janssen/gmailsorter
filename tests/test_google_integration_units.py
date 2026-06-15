@@ -186,9 +186,14 @@ class TestGoogleMailBase(unittest.TestCase):
     def _service_with_labels(self, labels=None):
         service = MagicMock()
         service.users.return_value.labels.return_value.list.return_value.execute.return_value = {
-            "labels": labels
-            if labels is not None
-            else [{"name": "Inbox", "id": "LBL_INBOX"}, {"name": "Spam", "id": "LBL_SPAM"}]
+            "labels": (
+                labels
+                if labels is not None
+                else [
+                    {"name": "Inbox", "id": "LBL_INBOX"},
+                    {"name": "Spam", "id": "LBL_SPAM"},
+                ]
+            )
         }
         return service
 
@@ -212,7 +217,9 @@ class TestGoogleMailBase(unittest.TestCase):
 
     def test_get_message_detail_default_arguments(self):
         service = self._service_with_labels()
-        get_execute = service.users.return_value.messages.return_value.get.return_value.execute
+        get_execute = (
+            service.users.return_value.messages.return_value.get.return_value.execute
+        )
         get_execute.return_value = {"id": "x"}
         mail = GoogleMailBase(google_mail_service=service, email_download_format="full")
 
@@ -234,7 +241,9 @@ class TestGoogleMailBase(unittest.TestCase):
             message_id="x", label_id_remove_lst=["old"], label_id_add_lst=["new"]
         )
         service.users.return_value.messages.return_value.modify.assert_called_once_with(
-            userId="me", id="x", body={"removeLabelIds": ["old"], "addLabelIds": ["new"]}
+            userId="me",
+            id="x",
+            body={"removeLabelIds": ["old"], "addLabelIds": ["new"]},
         )
 
     @patch("gmailsorter.google.mail.get_email_dict")
@@ -258,7 +267,9 @@ class TestGoogleMailBase(unittest.TestCase):
             None,
         ]
 
-        with patch.object(mail, "_get_message_detail", side_effect=[message_a, message_b]):
+        with patch.object(
+            mail, "_get_message_detail", side_effect=[message_a, message_b]
+        ):
             df = mail._download_messages_to_dataframe(["a", "b"])
 
         self.assertEqual(df["id"].tolist(), ["a"])
@@ -267,7 +278,9 @@ class TestGoogleMailBase(unittest.TestCase):
         service = self._service_with_labels()
         mail = GoogleMailBase(google_mail_service=service)
 
-        with patch.object(mail, "_get_message_detail", return_value={"labelIds": ["L1"]}):
+        with patch.object(
+            mail, "_get_message_detail", return_value={"labelIds": ["L1"]}
+        ):
             self.assertEqual(mail._get_labels_for_email("x"), ["L1"])
 
         with patch.object(mail, "_get_message_detail", return_value={}):
@@ -302,7 +315,9 @@ class TestGoogleMailBase(unittest.TestCase):
         db_email.store_dataframe.assert_called_once()
 
         db_email.store_dataframe.reset_mock()
-        with patch.object(mail, "_download_messages_to_dataframe", return_value=pd.DataFrame()):
+        with patch.object(
+            mail, "_download_messages_to_dataframe", return_value=pd.DataFrame()
+        ):
             mail._store_emails_in_database(["x"])
         db_email.store_dataframe.assert_not_called()
 
@@ -312,9 +327,13 @@ class TestGoogleMailBase(unittest.TestCase):
         db_email.get_labels_to_update.return_value = (["new"], ["update"], ["deleted"])
         mail = GoogleMailBase(google_mail_service=service, database_email=db_email)
 
-        with patch.object(mail, "_search_email_on_server", return_value=["new", "update"]), patch.object(
-            mail, "_get_labels_for_emails", return_value=[["LBL_INBOX"]]
-        ), patch.object(mail, "_store_emails_in_database") as store_mock:
+        with (
+            patch.object(
+                mail, "_search_email_on_server", return_value=["new", "update"]
+            ),
+            patch.object(mail, "_get_labels_for_emails", return_value=[["LBL_INBOX"]]),
+            patch.object(mail, "_store_emails_in_database") as store_mock,
+        ):
             mail.update_database(quick=False, label_lst=["Inbox"])
 
         db_email.mark_emails_as_deleted.assert_called_once_with(
@@ -324,10 +343,17 @@ class TestGoogleMailBase(unittest.TestCase):
         store_mock.assert_called_once_with(message_id_lst=["new"], email_format=None)
 
         db_email.reset_mock()
-        db_email.get_labels_to_update.return_value = (["new2"], ["update2"], ["deleted2"])
-        with patch.object(mail, "_search_email_on_server", return_value=["new2", "update2"]), patch.object(
-            mail, "_store_emails_in_database"
-        ) as store_mock:
+        db_email.get_labels_to_update.return_value = (
+            ["new2"],
+            ["update2"],
+            ["deleted2"],
+        )
+        with (
+            patch.object(
+                mail, "_search_email_on_server", return_value=["new2", "update2"]
+            ),
+            patch.object(mail, "_store_emails_in_database") as store_mock,
+        ):
             mail.update_database(quick=True)
 
         db_email.mark_emails_as_deleted.assert_not_called()
@@ -342,14 +368,17 @@ class TestGoogleMailBase(unittest.TestCase):
         db_ml.load_models.return_value = ({"LBL_SPAM": MagicMock()}, ["f1"])
         mail = GoogleMailBase(google_mail_service=service, database_ml=db_ml)
 
-        df = pd.DataFrame([{"id": "x", "from": "a", "to": [], "cc": [], "labels": [], "threads": "t"}])
+        df = pd.DataFrame(
+            [{"id": "x", "from": "a", "to": [], "cc": [], "labels": [], "threads": "t"}]
+        )
         encoded = pd.DataFrame([{"email_id": "x", "f1": 1}])
         encode_mock.return_value = encoded
         predict_mock.return_value = {"x": "LBL_SPAM"}
 
-        with patch.object(mail, "download_emails_for_label", return_value=df), patch.object(
-            mail, "_move_emails"
-        ) as move_mock:
+        with (
+            patch.object(mail, "download_emails_for_label", return_value=df),
+            patch.object(mail, "_move_emails") as move_mock,
+        ):
             mail.filter_messages_from_server("Inbox", recommendation_ratio=0.6)
 
         encode_mock.assert_called_once()
@@ -359,7 +388,9 @@ class TestGoogleMailBase(unittest.TestCase):
         )
 
         encode_mock.reset_mock()
-        with patch.object(mail, "download_emails_for_label", return_value=pd.DataFrame()):
+        with patch.object(
+            mail, "download_emails_for_label", return_value=pd.DataFrame()
+        ):
             mail.filter_messages_from_server("Inbox")
         encode_mock.assert_not_called()
 
@@ -369,7 +400,9 @@ class TestGoogleMailBase(unittest.TestCase):
         service = self._service_with_labels()
         db_ml = MagicMock()
         db_email = MagicMock()
-        mail = GoogleMailBase(google_mail_service=service, database_email=db_email, database_ml=db_ml)
+        mail = GoogleMailBase(
+            google_mail_service=service, database_email=db_email, database_ml=db_ml
+        )
 
         df_all = pd.DataFrame(
             [
@@ -450,7 +483,9 @@ class TestLocalHelpers(unittest.TestCase):
             email_download_format="full",
         )
 
-        create_databases_mock.assert_called_once_with(connection_str="sqlite:///:memory:")
+        create_databases_mock.assert_called_once_with(
+            connection_str="sqlite:///:memory:"
+        )
         create_service_mock.assert_called_once_with(
             client_config={"installed": {}},
             api_name="gmail",

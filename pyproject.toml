@@ -48,6 +48,32 @@ gmailsorter = "gmailsorter.__main__:command_line_parser"
 gmailsorter-daemon = "gmailsorter.daemon.__main__:command_line_parser"
 gmailsorter-app = "gmailsorter.webapp.app:run_app"
 
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+    # flake8-comprehensions
+    "C4",
+    # eradicate
+    "ERA",
+    # pylint
+    "PL",
+]
+ignore = [
+    # ignore line-length violations
+    "E501",
+]
+
 [tool.hatch.build]
 include = [
     "gmailsorter"

@@ -1,4 +1,5 @@
 import json
+import os
 import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
@@ -457,10 +458,13 @@ class TestGoogleMailBase(unittest.TestCase):
 
 class TestLocalHelpers(unittest.TestCase):
     def test_load_client_secrets_file(self):
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json") as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump({"installed": {"client_id": "abc"}}, f)
-            f.flush()
-            loaded = load_client_secrets_file(f.name)
+            file_name = f.name
+        try:
+            loaded = load_client_secrets_file(file_name)
+        finally:
+            os.remove(file_name)
         self.assertEqual(loaded["installed"]["client_id"], "abc")
 
     @patch("gmailsorter.local.GoogleMailBase.__init__", return_value=None)

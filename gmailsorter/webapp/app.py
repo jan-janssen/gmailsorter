@@ -15,14 +15,12 @@ from flask_login import (
 )
 
 # Internal imports
-from gmailsorter.daemon import SCOPES, MAILSORT_LABEL
+from gmailsorter.daemon import MAILSORT_LABEL, SCOPES
 from gmailsorter.daemon.shared import (
     JOB_STATUS_FAIL,
     JOB_STATUS_PROGRESS,
 )
 from gmailsorter.webapp.config import CLIENT_SECRETS_CONFIG, ENGINE, SECRET_KEY
-from gmailsorter.webapp.user import get_flask_user
-from gmailsorter.webapp.render import color_for_status
 from gmailsorter.webapp.googleapi import (
     get_authentication_url,
     get_google_credentials,
@@ -30,6 +28,8 @@ from gmailsorter.webapp.googleapi import (
     get_user_status,
     reset_user_status,
 )
+from gmailsorter.webapp.render import color_for_status
+from gmailsorter.webapp.user import get_flask_user
 
 # Flask app setup
 app = flask.Flask(

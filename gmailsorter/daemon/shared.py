@@ -1,12 +1,12 @@
 import json
-from sqlalchemy import create_engine
-from sqlalchemy import Column, Integer, String, DateTime
-from sqlalchemy.orm import declarative_base
-import googleapiclient.discovery
+
 import google.oauth2.credentials
-from sqlalchemy.orm import sessionmaker
-from gmailsorter.google import GoogleMailBase
+import googleapiclient.discovery
+from sqlalchemy import Column, DateTime, Integer, String, create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
+
 from gmailsorter.base import get_email_database
+from gmailsorter.google import GoogleMailBase
 from gmailsorter.google.database import get_token_database
 from gmailsorter.ml import get_machine_learning_database
 
@@ -296,5 +296,5 @@ def get_token(session, user_id):
 
 
 def load_config_file(file_name):
-    with open(file_name, "r") as json_file:
+    with open(file_name) as json_file:
         return json.load(json_file)

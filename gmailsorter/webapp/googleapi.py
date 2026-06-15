@@ -1,9 +1,10 @@
 # Based on https://developers.google.com/identity/protocols/oauth2/web-server#python
+import google.oauth2.credentials
 import google_auth_oauthlib.flow
 import googleapiclient.discovery
-import google.oauth2.credentials
 from google.auth.exceptions import RefreshError
 from googleapiclient.errors import HttpError
+
 from gmailsorter.daemon import (
     GoogleMail,
     create_tasks_for_new_users,

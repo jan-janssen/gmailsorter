@@ -1,6 +1,7 @@
 import base64
 from html.parser import HTMLParser
 from io import StringIO
+
 from gmailsorter.base.message import AbstractMessage, email_date_converter
 
 

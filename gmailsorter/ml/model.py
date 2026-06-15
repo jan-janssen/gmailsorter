@@ -1,8 +1,8 @@
-import pandas
-import numpy as np
-from tqdm import tqdm
-from sklearn.ensemble import RandomForestClassifier
 from concurrent.futures import ProcessPoolExecutor
+
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from tqdm import tqdm
 
 
 def train_random_forest(n_estimators, random_state, bootstrap, max_features, X, y):

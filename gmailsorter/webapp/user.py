@@ -1,5 +1,6 @@
-from sqlalchemy.orm import sessionmaker
 from flask_login import UserMixin
+from sqlalchemy.orm import sessionmaker
+
 from gmailsorter.daemon import SQLUser, get_token
 from gmailsorter.webapp.database import (
     create_user_in_database,

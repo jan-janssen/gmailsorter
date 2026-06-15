@@ -1,5 +1,6 @@
 import argparse
 import os
+
 from gmailsorter.daemon.daemon import update
 from gmailsorter.daemon.shared import get_database_engine, load_config_file
 

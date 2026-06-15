@@ -1,5 +1,5 @@
-import pandas
 import numpy as np
+import pandas
 
 
 def encode_df_for_machine_learning(

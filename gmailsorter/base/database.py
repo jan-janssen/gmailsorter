@@ -1,7 +1,7 @@
 import pandas
-from tqdm import tqdm
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import declarative_base
+from tqdm import tqdm
 
 Base = declarative_base()
 

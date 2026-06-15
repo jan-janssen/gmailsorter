@@ -1,5 +1,6 @@
 import argparse
 import os
+
 from gmailsorter import Gmail, load_client_secrets_file
 
 

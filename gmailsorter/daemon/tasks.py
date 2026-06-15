@@ -1,9 +1,10 @@
 from datetime import datetime
+
 from gmailsorter.daemon.shared import (
-    Task,
     JOB_STATUS_INIT,
-    JOB_STATUS_WAIT,
     JOB_STATUS_SUCCESS,
+    JOB_STATUS_WAIT,
+    Task,
 )
 
 

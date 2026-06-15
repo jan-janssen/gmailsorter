@@ -1,16 +1,17 @@
-from sqlalchemy.orm import sessionmaker
 from google.auth.exceptions import RefreshError
 from googleapiclient.errors import HttpError
+from sqlalchemy.orm import sessionmaker
+
 from gmailsorter.daemon.shared import (
-    GoogleToken,
-    GoogleMail,
-    SCOPES,
-    MAILSORT_LABEL,
-    get_task_status_for_user,
     JOB_STATUS_FAIL,
-    JOB_STATUS_PROGRESS,
     JOB_STATUS_INIT,
+    JOB_STATUS_PROGRESS,
     JOB_STATUS_SUCCESS,
+    MAILSORT_LABEL,
+    SCOPES,
+    GoogleMail,
+    GoogleToken,
+    get_task_status_for_user,
 )
 from gmailsorter.daemon.tasks import (
     get_all_tasks_to_execute,

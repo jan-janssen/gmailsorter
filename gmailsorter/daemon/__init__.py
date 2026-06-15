@@ -1,8 +1,8 @@
 from gmailsorter.daemon.shared import (
-    GoogleMail,
-    GoogleToken,
     MAILSORT_LABEL,
     SCOPES,
+    GoogleMail,
+    GoogleToken,
     SQLUser,
     get_database_engine,
     get_task_status_for_user,

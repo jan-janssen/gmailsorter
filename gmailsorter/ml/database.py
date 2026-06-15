@@ -1,6 +1,8 @@
 import pickle
+
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import declarative_base
+
 from gmailsorter.base.database import DatabaseTemplate
 
 Base = declarative_base()
@@ -33,7 +35,7 @@ class MachineLearningDatabase(DatabaseTemplate):
             commit (boolean): boolean flag to write to the database
         """
         feature_filtered_lst = [
-            feature for feature in feature_lst if "email_id" != feature
+            feature for feature in feature_lst if feature != "email_id"
         ]
         label_stored_lst = self._get_labels(user_id=user_id)
         feature_stored_lst = self.get_features(user_id=user_id)

@@ -183,7 +183,7 @@ class TestGoogleTokenDatabase(unittest.TestCase):
 
 
 class TestGoogleMailBase(unittest.TestCase):
-    def _service_with_labels(self, labels=None):
+    def _create_mock_service_with_labels(self, labels=None):
         service = MagicMock()
         service.users.return_value.labels.return_value.list.return_value.execute.return_value = {
             "labels": (
@@ -198,7 +198,7 @@ class TestGoogleMailBase(unittest.TestCase):
         return service
 
     def test_search_messages_and_paginate(self):
-        service = self._service_with_labels()
+        service = self._create_mock_service_with_labels()
         service.users.return_value.messages.return_value.list.return_value.execute.side_effect = [
             {"messages": [{"id": "a"}], "nextPageToken": "NEXT"},
             {"messages": [{"id": "b"}]},
@@ -216,7 +216,7 @@ class TestGoogleMailBase(unittest.TestCase):
         self.assertEqual(ids, ["a", "b"])
 
     def test_get_message_detail_default_arguments(self):
-        service = self._service_with_labels()
+        service = self._create_mock_service_with_labels()
         get_execute = (
             service.users.return_value.messages.return_value.get.return_value.execute
         )
@@ -231,7 +231,7 @@ class TestGoogleMailBase(unittest.TestCase):
         )
 
     def test_modify_message_labels_only_when_needed(self):
-        service = self._service_with_labels()
+        service = self._create_mock_service_with_labels()
         mail = GoogleMailBase(google_mail_service=service)
 
         mail._modify_message_labels(message_id="x")
@@ -248,7 +248,7 @@ class TestGoogleMailBase(unittest.TestCase):
 
     @patch("gmailsorter.google.mail.get_email_dict")
     def test_download_messages_dataframe_filters_none(self, get_email_dict_mock):
-        service = self._service_with_labels()
+        service = self._create_mock_service_with_labels()
         mail = GoogleMailBase(google_mail_service=service)
         message_a = {"id": "a"}
         message_b = {"id": "b"}
@@ -275,7 +275,7 @@ class TestGoogleMailBase(unittest.TestCase):
         self.assertEqual(df["id"].tolist(), ["a"])
 
     def test_get_labels_for_email_and_emails(self):
-        service = self._service_with_labels()
+        service = self._create_mock_service_with_labels()
         mail = GoogleMailBase(google_mail_service=service)
 
         with patch.object(
@@ -291,7 +291,7 @@ class TestGoogleMailBase(unittest.TestCase):
         self.assertEqual(labels, [["L1"], []])
 
     def test_move_emails_and_store_to_database(self):
-        service = self._service_with_labels()
+        service = self._create_mock_service_with_labels()
         db_email = MagicMock()
         mail = GoogleMailBase(google_mail_service=service, database_email=db_email)
 
@@ -322,7 +322,7 @@ class TestGoogleMailBase(unittest.TestCase):
         db_email.store_dataframe.assert_not_called()
 
     def test_update_database_quick_and_full_paths(self):
-        service = self._service_with_labels()
+        service = self._create_mock_service_with_labels()
         db_email = MagicMock()
         db_email.get_labels_to_update.return_value = (["new"], ["update"], ["deleted"])
         mail = GoogleMailBase(google_mail_service=service, database_email=db_email)
@@ -363,7 +363,7 @@ class TestGoogleMailBase(unittest.TestCase):
     @patch("gmailsorter.google.mail.get_predictions_from_machine_learning_models")
     @patch("gmailsorter.google.mail.encode_df_for_machine_learning")
     def test_filter_messages_from_server(self, encode_mock, predict_mock):
-        service = self._service_with_labels()
+        service = self._create_mock_service_with_labels()
         db_ml = MagicMock()
         db_ml.load_models.return_value = ({"LBL_SPAM": MagicMock()}, ["f1"])
         mail = GoogleMailBase(google_mail_service=service, database_ml=db_ml)
@@ -397,7 +397,7 @@ class TestGoogleMailBase(unittest.TestCase):
     @patch("gmailsorter.google.mail.fit_machine_learning_models")
     @patch("gmailsorter.google.mail.encode_df_for_machine_learning")
     def test_fit_machine_learning_model_to_database(self, encode_mock, fit_mock):
-        service = self._service_with_labels()
+        service = self._create_mock_service_with_labels()
         db_ml = MagicMock()
         db_email = MagicMock()
         mail = GoogleMailBase(

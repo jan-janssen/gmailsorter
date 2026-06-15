@@ -172,7 +172,7 @@ class DatabaseInterface(DatabaseTemplate):
                 ]
                 for email in self._session.query(EmailContent)
                 .filter(EmailContent.user_id == user_id)
-                .filter(not EmailContent.email_deleted)
+                .filter(EmailContent.email_deleted.is_(False))
                 .all()
             ]
         return self._create_dataframe(
@@ -282,7 +282,7 @@ class DatabaseInterface(DatabaseTemplate):
                 for email in self._session.query(EmailContent)
                 .filter(EmailContent.user_id == user_id)
                 .filter(EmailContent.email_id.in_(email_id_lst))
-                .filter(not EmailContent.email_deleted)
+                .filter(EmailContent.email_deleted.is_(False))
                 .all()
             ]
         return self._create_dataframe(

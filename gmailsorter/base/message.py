@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 
 _MAX_DATE_COMMAS = 2
+_DATE_HYPHEN_COUNT = 2
 
 
 def email_date_converter(email_date):
@@ -26,7 +27,7 @@ def email_date_converter(email_date):
         date_format = "%a, %d %b %Y %H:%M:%S %z"
     elif email_date[-3] == ":":
         date_format = "%a, %d %b %Y %H:%M:%S"
-    elif email_date.count("-") == 2:
+    elif email_date.count("-") == _DATE_HYPHEN_COUNT:
         date_format = "%d-%m-%Y"
     else:
         date_format = "%d %b %Y %H:%M:%S %z"

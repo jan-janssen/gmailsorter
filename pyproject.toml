@@ -72,6 +72,8 @@ select = [
 ignore = [
     # ignore line-length violations
     "E501",
+    # Too many arguments in function definition
+    "PLR0913",
 ]
 
 [tool.hatch.build]

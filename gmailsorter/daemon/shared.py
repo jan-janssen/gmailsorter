@@ -23,6 +23,8 @@ SCOPES = [
 
 MAILSORT_LABEL = "mailsortinbox"
 
+_REMOVE_LABEL_COUNT = 2
+
 # Job Status Constants
 JOB_STATUS_SUCCESS = "success"
 JOB_STATUS_FAIL = "fail"
@@ -156,15 +158,16 @@ class GoogleMail(GoogleMailBase):
         elif len(filter_lst) == 1:
             filter_dict = filter_lst[0]
             if (
-                "from" in filter_dict["criteria"].keys()
-                and "to" in filter_dict["criteria"].keys()
-                and "addLabelIds" in filter_dict["action"].keys()
-                and "removeLabelIds" in filter_dict["action"].keys()
+                "from" in filter_dict["criteria"]
+                and "to" in filter_dict["criteria"]
+                and "addLabelIds" in filter_dict["action"]
+                and "removeLabelIds" in filter_dict["action"]
                 and filter_dict["criteria"]["from"] == "*"
                 and filter_dict["criteria"]["to"] == "*"
                 and len(filter_dict["action"]["addLabelIds"]) == 1
                 and filter_dict["action"]["addLabelIds"][0] == label_google_name
-                and len(filter_dict["action"]["removeLabelIds"]) == 2
+                and len(filter_dict["action"]["removeLabelIds"])
+                == _REMOVE_LABEL_COUNT
                 and "INBOX" in filter_dict["action"]["removeLabelIds"]
                 and "SPAM" in filter_dict["action"]["removeLabelIds"]
             ):

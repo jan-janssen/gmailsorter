@@ -98,5 +98,5 @@ def get_all_tasks_to_execute(session, task_name="all"):
             ],
         }
     else:
-        task_dict = dict()
+        task_dict = {}
     return {k: v for k, v in task_dict.items() if len(v) > 0}

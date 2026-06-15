@@ -3,7 +3,7 @@ import pandas
 
 
 def encode_df_for_machine_learning(
-    df, feature_lst=[], label_lst=[], return_labels=False
+    df, feature_lst=None, label_lst=None, return_labels=False
 ):
     """
     Encode a given dataframe for machine learning. Either based on a list of existing features and labels or by
@@ -20,6 +20,10 @@ def encode_df_for_machine_learning(
     Returns:
         pandas.DataFrame/ list: Dataframe with features and optionally also the dataframe with labels
     """
+    if feature_lst is None:
+        feature_lst = []
+    if label_lst is None:
+        label_lst = []
     if isinstance(feature_lst, np.ndarray):
         feature_lst = feature_lst.tolist()
     if isinstance(label_lst, np.ndarray):
@@ -48,7 +52,7 @@ def encode_df_for_machine_learning(
         return df_all_features, df_all_encode[label_lst]
 
 
-def one_hot_encoding(df, feature_lst=[]):
+def one_hot_encoding(df, feature_lst=None):
     """
     Binary one hot encoding of features in a pandas DataFrame
 
@@ -59,18 +63,18 @@ def one_hot_encoding(df, feature_lst=[]):
     Returns:
         pandas.DataFrame: hot encoding of features in a pandas DataFrame
     """
+    if feature_lst is None:
+        feature_lst = []
     labels_red_lst = _build_red_lst(df_column=df.labels.values)
     cc_red_lst = _build_red_lst(df_column=df.cc.values)
     thread_red_lst = df["threads"].unique()
     to_red_lst = _build_red_lst(df_column=df.to.values)
     from_red_lst = [email for email in df["from"].unique() if email is not None] + list(
-        set(
-            [
-                "@" + email.split("@")[-1]
-                for email in df["from"].unique()
-                if email is not None and isinstance(email, str) and "@" in email
-            ]
-        )
+        {
+            "@" + email.split("@")[-1]
+            for email in df["from"].unique()
+            if email is not None and isinstance(email, str) and "@" in email
+        }
     )
     dict_labels_lst = _list_entry_df(
         red_lst=labels_red_lst, value_lst=df["labels"].values

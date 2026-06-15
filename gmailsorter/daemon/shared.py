@@ -209,7 +209,7 @@ class GoogleMail(GoogleMailBase):
         Returns:
             str: Label ID of the newly created label
         """
-        if label_name in self._label_dict.keys():
+        if label_name in self._label_dict:
             return self._label_dict[label_name]
         else:
             label_request = {
@@ -229,7 +229,7 @@ class GoogleMail(GoogleMailBase):
 
     def get_filter_list(self):
         results = self._service.users().settings().filters().list(userId="me").execute()
-        if "filter" in results.keys():
+        if "filter" in results:
             return results["filter"]
         else:
             return []

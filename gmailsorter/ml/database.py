@@ -46,7 +46,7 @@ class MachineLearningDatabase(DatabaseTemplate):
             k: v for k, v in model_dict.items() if k in label_stored_lst
         }
         model_delete_lst = [
-            label for label in label_stored_lst if label not in model_dict.keys()
+            label for label in label_stored_lst if label not in model_dict
         ]
         feature_new_lst = [
             feature

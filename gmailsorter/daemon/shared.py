@@ -166,8 +166,7 @@ class GoogleMail(GoogleMailBase):
                 and filter_dict["criteria"]["to"] == "*"
                 and len(filter_dict["action"]["addLabelIds"]) == 1
                 and filter_dict["action"]["addLabelIds"][0] == label_google_name
-                and len(filter_dict["action"]["removeLabelIds"])
-                == _REMOVE_LABEL_COUNT
+                and len(filter_dict["action"]["removeLabelIds"]) == _REMOVE_LABEL_COUNT
                 and "INBOX" in filter_dict["action"]["removeLabelIds"]
                 and "SPAM" in filter_dict["action"]["removeLabelIds"]
             ):

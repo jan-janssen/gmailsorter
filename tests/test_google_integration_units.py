@@ -417,7 +417,7 @@ class TestGoogleMailBase(unittest.TestCase):
             ]
         )
         db_email.get_all_emails.return_value = df_all
-        features = pd.DataFrame([{"email_id": "x", "f1": 1, "f1": 1}])
+        features = pd.DataFrame([{"email_id": "x", "f1": 1, "f2": 1}])
         labels = pd.DataFrame([{"labels_LBL_INBOX": 1}])
         encode_mock.return_value = (features, labels)
         fit_mock.return_value = {"LBL_INBOX": MagicMock()}

@@ -85,9 +85,9 @@ def get_user_status(
         status_dict = gmail.get_status_dict(label_name)
         gmail.close_database_connection()
     except HttpError:
-        return dict(), "Insufficient Permission"
+        return {}, "Insufficient Permission"
     except RefreshError:
-        return dict(), "Token has been expired or revoked."
+        return {}, "Token has been expired or revoked."
     else:
         return status_dict, None
 
@@ -130,15 +130,14 @@ def reset_user_status(
         ]
         gmail.close_database_connection()
     except HttpError:
-        return dict(), "Insufficient Permission"
+        return {}, "Insufficient Permission"
     except RefreshError:
-        return dict(), "Token has been expired or revoked."
+        return {}, "Token has been expired or revoked."
     else:
         return {"update": "success", "fetch": "success"}, None
 
 
 def get_user_info(credentials_dict, service_name="oauth2", version="v2"):
-    # {'id', 'email', 'verified_email', 'name', 'given_name', 'family_name', 'picture', 'locale'}
     credentials = google.oauth2.credentials.Credentials(**credentials_dict)
     user_info_service = googleapiclient.discovery.build(
         serviceName=service_name, version=version, credentials=credentials

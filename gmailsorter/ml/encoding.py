@@ -181,7 +181,7 @@ def _list_entry_df(red_lst, value_lst):
 def _list_entry_email_df(red_lst, value_lst):
     return np.array(
         [
-            [1 if any([red_entry in e for e in email]) else 0 for red_entry in red_lst]
+            [1 if any(red_entry in e for e in email) else 0 for red_entry in red_lst]
             for email in value_lst
         ]
     ).astype("float64")

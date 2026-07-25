@@ -108,15 +108,17 @@ class TestImapServiceIntegration(unittest.TestCase):
         )
         self._wait_for_message_in_inbox(message_id)
 
-        imap = Imap(
+        with Imap(
             host=self.imap_host,
             port=self.imap_port,
             username=self.username,
             password=self.password,
             connection_str="sqlite:///:memory:",
             use_ssl=False,
-        )
+        ) as imap:
+            self._assert_move_round_trip(imap=imap)
 
+    def _assert_move_round_trip(self, imap):
         imap.update_database(quick=False)
         df = imap.get_all_emails_in_database()
 

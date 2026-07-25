@@ -1,9 +1,28 @@
+import imaplib
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
 from gmailsorter.imap.authentication import create_service
 from gmailsorter.imap.mail import ImapMailBase
 from gmailsorter.local import Imap
+
+
+class ReconnectingImapMailBase(ImapMailBase):
+    """
+    Test double which reconnects by swapping in the next prepared mock connection.
+
+    This stands in for gmailsorter.local.Imap, which is the class that actually knows
+    the connection details, without requiring a real IMAP server.
+    """
+
+    def __init__(self, service_lst, **kwargs):
+        self.reconnect_count = 0
+        self._service_lst = list(service_lst)
+        super().__init__(mail_service=self._service_lst.pop(0), **kwargs)
+
+    def _reconnect(self):
+        self.reconnect_count += 1
+        self._service = self._service_lst.pop(0)
 
 
 class TestImapAuthentication(TestCase):
@@ -305,6 +324,84 @@ class TestImapMailBase(TestCase):
 
         self.assertEqual(dbs, ("EMAIL_DB", "ML_DB"))
 
+    def test_close_logs_out(self):
+        service = self._create_mock_service_with_folders()
+        mail = ImapMailBase(mail_service=service)
+
+        mail.close()
+
+        service.logout.assert_called_once_with()
+
+    def test_close_ignores_logout_failure(self):
+        for error in (imaplib.IMAP4.abort("connection lost"), OSError("socket gone")):
+            with self.subTest(error=type(error).__name__):
+                service = self._create_mock_service_with_folders()
+                service.logout.side_effect = error
+                mail = ImapMailBase(mail_service=service)
+
+                mail.close()
+
+                service.logout.assert_called_once_with()
+
+    def test_context_manager_closes_connection(self):
+        service = self._create_mock_service_with_folders()
+
+        with ImapMailBase(mail_service=service) as mail:
+            self.assertEqual(sorted(mail.labels), ["INBOX", "MailSortInbox"])
+            service.logout.assert_not_called()
+
+        service.logout.assert_called_once_with()
+
+    def test_abort_propagates_without_reconnect_support(self):
+        service = self._create_mock_service_with_folders()
+        mail = ImapMailBase(mail_service=service)
+        service.select.side_effect = imaplib.IMAP4.abort("connection lost")
+
+        with self.assertRaises(imaplib.IMAP4.abort):
+            mail._search_email_on_server(label_lst=["INBOX"], only_message_ids=True)
+
+    def test_search_reconnects_and_retries_once_after_abort(self):
+        dead_service = self._create_mock_service_with_folders()
+        dead_service.select.side_effect = imaplib.IMAP4.abort("connection lost")
+        fresh_service = self._create_mock_service_with_folders()
+        fresh_service.select.return_value = ("OK", [b"1"])
+        fresh_service.uid.return_value = ("OK", [b"3"])
+        mail = ReconnectingImapMailBase(service_lst=[dead_service, fresh_service])
+
+        ids = mail._search_email_on_server(label_lst=["INBOX"], only_message_ids=True)
+
+        self.assertEqual(mail.reconnect_count, 1)
+        self.assertEqual(ids, ["INBOX\x1f3"])
+
+    def test_get_message_detail_reconnects_and_retries_once_after_abort(self):
+        raw_message = b"Subject: hi\r\nFrom: a@b.com\r\nTo: c@d.com\r\n\r\nbody"
+        dead_service = self._create_mock_service_with_folders()
+        dead_service.select.side_effect = imaplib.IMAP4.abort("connection lost")
+        fresh_service = self._create_mock_service_with_folders()
+        fresh_service.select.return_value = ("OK", [b"1"])
+        fresh_service.uid.return_value = ("OK", [(b"1 (BODY[] {10}", raw_message)])
+        mail = ReconnectingImapMailBase(service_lst=[dead_service, fresh_service])
+
+        folder, uid, message = mail._get_message_detail(message_id="INBOX\x1f7")
+
+        self.assertEqual(mail.reconnect_count, 1)
+        self.assertEqual((folder, uid), ("INBOX", "7"))
+        self.assertEqual(message["Subject"], "hi")
+
+    def test_retry_is_attempted_only_once(self):
+        dead_service = self._create_mock_service_with_folders()
+        dead_service.select.side_effect = imaplib.IMAP4.abort("connection lost")
+        still_dead_service = self._create_mock_service_with_folders()
+        still_dead_service.select.side_effect = imaplib.IMAP4.abort("connection lost")
+        mail = ReconnectingImapMailBase(
+            service_lst=[dead_service, still_dead_service],
+        )
+
+        with self.assertRaises(imaplib.IMAP4.abort):
+            mail._search_email_on_server(label_lst=["INBOX"], only_message_ids=True)
+
+        self.assertEqual(mail.reconnect_count, 1)
+
 
 class TestImapLocalHelpers(TestCase):
     @patch("gmailsorter.local.ImapMailBase.__init__", return_value=None)
@@ -344,6 +441,39 @@ class TestImapLocalHelpers(TestCase):
             user_id="user",
             db_user_id=4,
             email_download_format="metadata",
+        )
+
+    @patch("gmailsorter.local.ImapMailBase.__init__", return_value=None)
+    @patch("gmailsorter.local.create_imap_service")
+    @patch("gmailsorter.local.Imap._create_databases")
+    def test_imap_reconnect_replaces_the_connection(
+        self, create_databases_mock, create_service_mock, base_init_mock
+    ):
+        create_databases_mock.return_value = (MagicMock(), MagicMock())
+        dead_connection, fresh_connection = MagicMock(), MagicMock()
+        create_service_mock.side_effect = [dead_connection, fresh_connection]
+
+        imap = Imap(
+            host="mail.example.test",
+            port=143,
+            username="user",
+            password="secret",
+            connection_str="sqlite:///:memory:",
+            use_ssl=False,
+        )
+        # ImapMailBase.__init__ is mocked out above, so _service is set by hand here
+        imap._service = dead_connection
+
+        imap._reconnect()
+
+        dead_connection.logout.assert_called_once_with()
+        self.assertIs(imap._service, fresh_connection)
+        create_service_mock.assert_called_with(
+            host="mail.example.test",
+            port=143,
+            username="user",
+            password="secret",
+            use_ssl=False,
         )
 
 

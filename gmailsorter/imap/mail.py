@@ -1,4 +1,6 @@
+import contextlib
 import email
+import imaplib
 import re
 
 from sqlalchemy import create_engine
@@ -72,7 +74,68 @@ def _decode_imap_bytes(value):
 
 
 class ImapMailBase(AbstractMailBox):
+    def close(self):
+        """
+        Log out and close the IMAP connection.
+
+        Errors raised while logging out are ignored on purpose - the connection is
+        being discarded anyway, and a connection which the server already dropped
+        must not turn closing it into a failure.
+        """
+        with contextlib.suppress(imaplib.IMAP4.error, OSError):
+            self._service.logout()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+        return False
+
+    def _reconnect(self):
+        """
+        Re-establish the IMAP connection and store it in self._service.
+
+        Only a subclass which knows the connection details can do this, so the base
+        class signals that no reconnect is possible and the original connection error
+        is re-raised to the caller.
+        """
+        raise NotImplementedError(
+            "ImapMailBase cannot reconnect because it does not know the connection "
+            "details - use gmailsorter.Imap for automatic reconnects."
+        )
+
+    def _run_with_reconnect(self, operation):
+        """
+        Run an IMAP operation, retrying it exactly once on a dropped connection.
+
+        IMAP servers commonly drop idle connections after 20-30 minutes and
+        update_database() can keep a single connection busy for far longer than that
+        on a large mailbox. imaplib signals a dropped connection with IMAP4.abort,
+        which would otherwise leave this instance permanently unusable. The operation
+        is re-run from the start after reconnecting, so a modification the server had
+        already applied before dropping the connection may report a failure on the
+        retry rather than being applied twice.
+
+        Args:
+            operation (callable): zero-argument callable performing the IMAP calls
+
+        Returns:
+            the return value of `operation`
+        """
+        try:
+            return operation()
+        except imaplib.IMAP4.abort as error:
+            try:
+                self._reconnect()
+            except NotImplementedError:
+                raise error from None
+            return operation()
+
     def _get_label_translate_dict(self):
+        return self._run_with_reconnect(self._get_label_translate_dict_impl)
+
+    def _get_label_translate_dict_impl(self):
         status, mailbox_lst = self._service.list()
         if status != "OK" or not mailbox_lst:
             return {}
@@ -123,6 +186,17 @@ class ImapMailBase(AbstractMailBox):
         Returns:
             list: list of composite "{folder}\\x1f{uid}" ids matching the search
         """
+        return self._run_with_reconnect(
+            lambda: self._search_email_on_server_impl(
+                query_string=query_string,
+                label_lst=label_lst,
+                only_message_ids=only_message_ids,
+            )
+        )
+
+    def _search_email_on_server_impl(
+        self, query_string="", label_lst=None, only_message_ids=False
+    ):
         if query_string:
             raise NotImplementedError(
                 "Custom IMAP search queries are not supported yet, only label_lst filtering."
@@ -162,6 +236,11 @@ class ImapMailBase(AbstractMailBox):
         Returns:
             tuple: (folder, uid, email.message.Message)
         """
+        return self._run_with_reconnect(
+            lambda: self._get_message_detail_impl(message_id=message_id)
+        )
+
+    def _get_message_detail_impl(self, message_id):
         folder, uid = message_id.split("\x1f", 1)
         status, _ = self._service.select(f'"{folder}"')
         if status != "OK":
@@ -174,6 +253,17 @@ class ImapMailBase(AbstractMailBox):
         return folder, uid, parsed_message
 
     def _modify_message_labels(
+        self, message_id, label_id_remove_lst=None, label_id_add_lst=None
+    ):
+        return self._run_with_reconnect(
+            lambda: self._modify_message_labels_impl(
+                message_id=message_id,
+                label_id_remove_lst=label_id_remove_lst,
+                label_id_add_lst=label_id_add_lst,
+            )
+        )
+
+    def _modify_message_labels_impl(
         self, message_id, label_id_remove_lst=None, label_id_add_lst=None
     ):
         if not label_id_add_lst:

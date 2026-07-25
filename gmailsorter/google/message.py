@@ -1,24 +1,6 @@
 import base64
-from html.parser import HTMLParser
-from io import StringIO
 
-from gmailsorter.base.message import AbstractMessage, email_date_converter
-
-
-# https://stackoverflow.com/questions/753052/strip-html-from-strings-in-python
-class MLStripper(HTMLParser):
-    def __init__(self):
-        super().__init__()
-        self.reset()
-        self.strict = False
-        self.convert_charrefs = True
-        self.text = StringIO()
-
-    def handle_data(self, d):
-        self.text.write(d)
-
-    def get_data(self):
-        return self.text.getvalue()
+from gmailsorter.base.message import AbstractMessage, email_date_converter, strip_html_tags
 
 
 def get_email_dict(message):
@@ -100,7 +82,7 @@ class Message(AbstractMessage):
                 message_parts=message_parts[content_types.index("text/plain")]
             )
         elif "text/html" in content_types:
-            return self._strip_tags(
+            return strip_html_tags(
                 html=self._get_email_body(
                     message_parts=message_parts[content_types.index("text/html")]
                 )
@@ -137,12 +119,6 @@ class Message(AbstractMessage):
             ).decode("UTF-8")
         else:
             return ""
-
-    @staticmethod
-    def _strip_tags(html):
-        s = MLStripper()
-        s.feed(html)
-        return s.get_data()
 
     @staticmethod
     def _get_email_address(email):

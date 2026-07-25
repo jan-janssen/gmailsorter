@@ -1,8 +1,32 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
+from html.parser import HTMLParser
+from io import StringIO
 
 _MAX_DATE_COMMAS = 2
 _DATE_HYPHEN_COUNT = 2
+
+
+# https://stackoverflow.com/questions/753052/strip-html-from-strings-in-python
+class _MLStripper(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.reset()
+        self.strict = False
+        self.convert_charrefs = True
+        self.text = StringIO()
+
+    def handle_data(self, d):
+        self.text.write(d)
+
+    def get_data(self):
+        return self.text.getvalue()
+
+
+def strip_html_tags(html):
+    stripper = _MLStripper()
+    stripper.feed(html)
+    return stripper.get_data()
 
 
 def email_date_converter(email_date):

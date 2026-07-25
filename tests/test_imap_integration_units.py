@@ -92,13 +92,13 @@ class TestImapMailBase(TestCase):
         service = self._create_mock_service_with_folders()
         raw_message = b"Subject: hi\r\nFrom: a@b.com\r\nTo: c@d.com\r\n\r\nbody"
         service.select.return_value = ("OK", [b"1"])
-        service.uid.return_value = ("OK", [(b"1 (RFC822 {10}", raw_message)])
+        service.uid.return_value = ("OK", [(b"1 (BODY[] {10}", raw_message)])
         mail = ImapMailBase(mail_service=service)
 
         folder, uid, message = mail._get_message_detail(message_id="INBOX\x1f7")
 
         service.select.assert_called_once_with('"INBOX"')
-        service.uid.assert_called_once_with("fetch", "7", "(RFC822)")
+        service.uid.assert_called_once_with("fetch", "7", "(BODY.PEEK[])")
         self.assertEqual(folder, "INBOX")
         self.assertEqual(uid, "7")
         self.assertEqual(message["Subject"], "hi")

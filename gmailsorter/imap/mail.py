@@ -71,7 +71,11 @@ class ImapMailBase(AbstractMailBox):
 
     def _get_message_detail(self, message_id, email_format=None, metadata_headers=None):
         """
-        Fetch the raw RFC822 message for a composite "{folder}\\x1f{uid}" id.
+        Fetch the raw message for a composite "{folder}\\x1f{uid}" id.
+
+        BODY.PEEK[] is used rather than RFC822/BODY[] because the latter implicitly
+        set the \\Seen flag (RFC 3501), which would mark the whole mailbox as read
+        on every update_database() run.
 
         Returns:
             tuple: (folder, uid, email.message.Message)
@@ -80,7 +84,7 @@ class ImapMailBase(AbstractMailBox):
         status, _ = self._service.select(f'"{folder}"')
         if status != "OK":
             raise RuntimeError(f"Could not select IMAP folder {folder!r}")
-        status, data = self._service.uid("fetch", uid, "(RFC822)")
+        status, data = self._service.uid("fetch", uid, "(BODY.PEEK[])")
         if status != "OK" or not data or data[0] is None:
             raise RuntimeError(f"Could not fetch IMAP message {message_id!r}")
         raw_message = data[0][1]

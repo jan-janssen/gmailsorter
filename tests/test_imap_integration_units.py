@@ -55,6 +55,42 @@ class TestImapMailBase(TestCase):
 
         self.assertEqual(sorted(mail.labels), ["INBOX", "MailSortInbox"])
 
+    def test_get_label_translate_dict_accepts_nil_delimiter(self):
+        service = self._create_mock_service_with_folders(
+            folders=[b"(\\HasNoChildren) NIL INBOX"]
+        )
+        mail = ImapMailBase(mail_service=service)
+
+        self.assertEqual(mail.labels, ["INBOX"])
+
+    def test_get_label_translate_dict_accepts_literal_name_tuple(self):
+        service = self._create_mock_service_with_folders(
+            folders=[(b'(\\HasNoChildren) "/" {11}', b"MailSortBox"), b")"]
+        )
+        mail = ImapMailBase(mail_service=service)
+
+        self.assertEqual(mail.labels, ["MailSortBox"])
+
+    def test_get_label_translate_dict_handles_empty_mailbox_list(self):
+        service = self._create_mock_service_with_folders(folders=[None])
+        mail = ImapMailBase(mail_service=service)
+
+        self.assertEqual(mail.labels, [])
+
+    def test_get_label_translate_dict_skips_unparseable_entries(self):
+        service = self._create_mock_service_with_folders(
+            folders=[b"total garbage", b'(\\HasNoChildren) "/" "MailSortInbox"']
+        )
+        mail = ImapMailBase(mail_service=service)
+
+        self.assertEqual(mail.labels, ["MailSortInbox"])
+
+    def test_parse_list_entry_returns_none_for_unparseable_input(self):
+        self.assertIsNone(ImapMailBase._parse_list_entry(None))
+        self.assertIsNone(ImapMailBase._parse_list_entry(b"not a list response"))
+        self.assertIsNone(ImapMailBase._parse_list_entry((b'(\\Noselect) "/" {3}',)))
+        self.assertIsNone(ImapMailBase._parse_list_entry(b'(\\HasNoChildren) "/" '))
+
     def test_search_email_on_server_single_folder(self):
         service = self._create_mock_service_with_folders()
         service.select.return_value = ("OK", [b"1"])

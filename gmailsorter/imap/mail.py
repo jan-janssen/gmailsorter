@@ -10,18 +10,39 @@ from gmailsorter.imap.message import get_email_dict
 from gmailsorter.ml import get_machine_learning_database
 
 _LIST_ENTRY_PATTERN = re.compile(
-    r'\((?P<flags>[^)]*)\)\s+"(?P<delimiter>.*)"\s+(?P<name>.+)'
+    r'\((?P<flags>[^)]*)\)\s+(?:"(?P<delimiter>[^"]*)"|NIL)\s*(?P<name>.*)'
 )
+
+
+def _decode_imap_bytes(value):
+    """
+    Decode a bytes/str fragment of an IMAP response, returning None for anything else.
+
+    Mailbox names are usually pure ASCII (modified UTF-7), but servers may send raw
+    UTF-8 literals - latin-1 is used as a lossless fallback so that a surprising
+    encoding never raises out of the LIST parser.
+    """
+    if isinstance(value, str):
+        return value
+    if not isinstance(value, bytes):
+        return None
+    try:
+        return value.decode()
+    except UnicodeDecodeError:
+        return value.decode("latin-1")
 
 
 class ImapMailBase(AbstractMailBox):
     def _get_label_translate_dict(self):
         status, mailbox_lst = self._service.list()
-        if status != "OK" or mailbox_lst is None:
+        if status != "OK" or not mailbox_lst:
             return {}
         label_dict = {}
         for entry in mailbox_lst:
-            flags, _delimiter, name = self._parse_list_entry(entry)
+            parsed_entry = self._parse_list_entry(entry)
+            if parsed_entry is None:
+                continue
+            flags, _delimiter, name = parsed_entry
             if "\\Noselect" in flags:
                 continue
             label_dict[name] = name
@@ -126,11 +147,44 @@ class ImapMailBase(AbstractMailBox):
 
     @staticmethod
     def _parse_list_entry(entry):
-        decoded = entry.decode() if isinstance(entry, bytes) else entry
+        """
+        Parse a single entry of an IMAP LIST response.
+
+        Handles the plain bytes/str form, the ``(header, literal_name)`` tuple form
+        imaplib returns when the server encodes the mailbox name as an IMAP literal,
+        and the unquoted ``NIL`` hierarchy delimiter which is legal per RFC 3501 for
+        servers without a folder hierarchy.
+
+        Args:
+            entry (bytes/str/tuple/None): one element of ``imaplib.IMAP4.list()`` data
+
+        Returns:
+            tuple/None: (flags, delimiter, name) or None if the entry is unparseable.
+                        Unparseable entries are skipped rather than raised on, because
+                        this runs from ``AbstractMailBox.__init__``.
+        """
+        literal_name = None
+        if isinstance(entry, tuple):
+            try:
+                entry, literal_name = entry[0], _decode_imap_bytes(entry[1])
+            except IndexError:
+                return None
+            if literal_name is None:
+                return None
+        decoded = _decode_imap_bytes(entry)
+        if decoded is None:
+            return None
         match = _LIST_ENTRY_PATTERN.match(decoded)
+        if match is None:
+            return None
         flags = match.group("flags").split()
         delimiter = match.group("delimiter")
-        name = match.group("name").strip('"')
+        if literal_name is not None:
+            name = literal_name
+        else:
+            name = match.group("name").strip().strip('"')
+        if not name:
+            return None
         return flags, delimiter, name
 
     @staticmethod

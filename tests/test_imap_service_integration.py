@@ -28,13 +28,18 @@ class TestImapServiceIntegration(unittest.TestCase):
             )
 
     @classmethod
-    def _imap_server_available(cls, timeout=2.0):
-        try:
-            with IMAP4(cls.imap_host, cls.imap_port, timeout=timeout) as client:
-                status, _ = client.noop()
-                return status == "OK"
-        except OSError:
-            return False
+    def _imap_server_available(cls, timeout=2.0, attempts=5, delay=1.5):
+        for attempt in range(attempts):
+            try:
+                with IMAP4(cls.imap_host, cls.imap_port, timeout=timeout) as client:
+                    status, _ = client.noop()
+                    if status == "OK":
+                        return True
+            except OSError:
+                pass
+            if attempt < attempts - 1:
+                time.sleep(delay)
+        return False
 
     def setUp(self):
         with IMAP4(self.imap_host, self.imap_port, timeout=10) as client:

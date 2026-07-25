@@ -29,8 +29,8 @@ their similarity to previous emails you assigned to the same label. All the comm
 via your Google Mail account. Following there simple steps:
 
 * Gmailsorter takes your new emails and moves them from your inbox to its inbox.
-* Afterwards Gmailsorter scans the content of your email, calculates the similarity to all existing emails and then based
-  on the email labels you assigned to all your previous emails it predicts the email label for the new email.
+* Afterwards Gmailsorter compares who sent the email, who else received it and which thread and labels it is
+  associated with to your previously sorted emails, and based on that predicts the email label for the new email.
 * If you agree with this suggestion you do have to do anything. But if you disagree with the suggestion, you can simply
   change the email label, on the one hand this overwrites the suggestion from Gmailsorter and on the other hand Gmailsorter
   takes your modification into account when it retrains its model for making suggestions.
@@ -45,5 +45,6 @@ Documentation
 
    preparation
    configuration
+   architecture
    support
    developer

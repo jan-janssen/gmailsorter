@@ -66,6 +66,8 @@ jobs:
       TEST_IMAP_USERNAME: testuser
       TEST_EMAIL: testuser@example.test
       TEST_EMAIL_PASSWORD: secret
+      # fail this job rather than skip it if the greenmail service never came up
+      IMAP_INTEGRATION_REQUIRED: "true"
 
     steps:
     - uses: actions/checkout@v4

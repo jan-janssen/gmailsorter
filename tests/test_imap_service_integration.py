@@ -5,8 +5,23 @@ import unittest
 import uuid
 from email.message import EmailMessage
 from imaplib import IMAP4
+from unittest.mock import patch
 
 from gmailsorter.local import Imap
+
+#: When this environment variable is set to any non-empty value, an unreachable IMAP
+#: server is a test failure rather than a skip. CI sets it so the imap-integration job
+#: cannot report green when the GreenMail service never came up; local runs leave it
+#: unset and keep the clean skip.
+IMAP_INTEGRATION_REQUIRED = "IMAP_INTEGRATION_REQUIRED"
+
+
+def imap_integration_required():
+    """
+    Returns:
+        bool: True if a missing IMAP test server must fail instead of skip
+    """
+    return bool(os.environ.get(IMAP_INTEGRATION_REQUIRED, "").strip())
 
 
 class TestImapServiceIntegration(unittest.TestCase):
@@ -20,12 +35,19 @@ class TestImapServiceIntegration(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        if not cls._imap_server_available():
-            raise unittest.SkipTest(
-                "No IMAP test server reachable at "
-                f"{cls.imap_host}:{cls.imap_port} - start the greenmail container "
-                "described in https://github.com/jan-janssen/testing-imap to run this test."
+        if cls._imap_server_available():
+            return
+        reason = (
+            "No IMAP test server reachable at "
+            f"{cls.imap_host}:{cls.imap_port} - start the greenmail container "
+            "described in https://github.com/jan-janssen/testing-imap to run this test."
+        )
+        if imap_integration_required():
+            raise AssertionError(
+                f"{IMAP_INTEGRATION_REQUIRED} is set, so this test must actually run "
+                f"rather than be skipped. {reason}"
             )
+        raise unittest.SkipTest(reason)
 
     @classmethod
     def _imap_server_available(cls, timeout=2.0, attempts=5, delay=1.5):
@@ -115,6 +137,42 @@ class TestImapServiceIntegration(unittest.TestCase):
         ]
         self.assertEqual(len(moved_row), 1)
         self.assertTrue(moved_row.iloc[0]["id"].startswith("MailSortInbox\x1f"))
+
+
+class TestImapIntegrationRequiredGate(unittest.TestCase):
+    """Covers the env-var gate itself, which needs no IMAP server."""
+
+    def test_not_required_by_default(self):
+        with patch.dict(os.environ, {}, clear=True):
+            self.assertFalse(imap_integration_required())
+
+    def test_not_required_for_empty_value(self):
+        with patch.dict(os.environ, {IMAP_INTEGRATION_REQUIRED: "  "}):
+            self.assertFalse(imap_integration_required())
+
+    def test_required_for_truthy_value(self):
+        with patch.dict(os.environ, {IMAP_INTEGRATION_REQUIRED: "true"}):
+            self.assertTrue(imap_integration_required())
+
+    def test_set_up_class_skips_without_server_by_default(self):
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            patch.object(
+                TestImapServiceIntegration, "_imap_server_available", return_value=False
+            ),
+            self.assertRaises(unittest.SkipTest),
+        ):
+            TestImapServiceIntegration.setUpClass()
+
+    def test_set_up_class_fails_without_server_when_required(self):
+        with (
+            patch.dict(os.environ, {IMAP_INTEGRATION_REQUIRED: "true"}),
+            patch.object(
+                TestImapServiceIntegration, "_imap_server_available", return_value=False
+            ),
+            self.assertRaises(AssertionError),
+        ):
+            TestImapServiceIntegration.setUpClass()
 
 
 if __name__ == "__main__":

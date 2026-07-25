@@ -25,9 +25,7 @@ class MessageTest(TestCase):
         self.assertEqual(self.message.get_from(), "sender@server.net")
 
     def test_to(self):
-        self.assertEqual(
-            self.message.get_to(), ["me@mail.com", "friend@provider.org"]
-        )
+        self.assertEqual(self.message.get_to(), ["me@mail.com", "friend@provider.org"])
 
     def test_cc_empty(self):
         self.assertEqual(self.message.get_cc(), [])

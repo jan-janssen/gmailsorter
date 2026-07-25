@@ -1,6 +1,10 @@
 import base64
 
-from gmailsorter.base.message import AbstractMessage, email_date_converter, strip_html_tags
+from gmailsorter.base.message import (
+    AbstractMessage,
+    email_date_converter,
+    strip_html_tags,
+)
 
 
 def get_email_dict(message):

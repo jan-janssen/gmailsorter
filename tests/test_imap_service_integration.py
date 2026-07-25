@@ -99,9 +99,7 @@ class TestImapServiceIntegration(unittest.TestCase):
         df = imap.get_all_emails_in_database()
 
         self.assertIn("Integration test message", df["subject"].tolist())
-        stored_id = df.loc[
-            df["subject"] == "Integration test message", "id"
-        ].iloc[0]
+        stored_id = df.loc[df["subject"] == "Integration test message", "id"].iloc[0]
         self.assertTrue(stored_id.startswith("INBOX\x1f"))
 
         imap._modify_message_labels(

@@ -1,6 +1,10 @@
 from unittest import TestCase
 from datetime import datetime
-from gmailsorter.base.message import email_date_converter, AbstractMessage, strip_html_tags
+from gmailsorter.base.message import (
+    email_date_converter,
+    AbstractMessage,
+    strip_html_tags,
+)
 
 
 class MessageTest(TestCase):

@@ -32,9 +32,7 @@ class Message(AbstractMessage):
         if from_header is None:
             return None
         addresses = [
-            address
-            for _, address in email.utils.getaddresses([from_header])
-            if address
+            address for _, address in email.utils.getaddresses([from_header]) if address
         ]
         if len(addresses) == 1:
             return addresses[0].lower()

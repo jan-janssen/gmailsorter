@@ -40,16 +40,13 @@ class TestImapMailBase(TestCase):
     def _create_mock_service_with_folders(self, folders=None):
         service = MagicMock()
         service.capabilities = ["IMAP4rev1", "MOVE"]
-        service.list.return_value = (
-            "OK",
-            folders
-            if folders is not None
-            else [
+        if folders is None:
+            folders = [
                 b'(\\HasNoChildren) "/" "INBOX"',
                 b'(\\HasNoChildren) "/" "MailSortInbox"',
                 b'(\\Noselect \\HasChildren) "/" "[Gmail]"',
-            ],
-        )
+            ]
+        service.list.return_value = ("OK", folders)
         return service
 
     def test_get_label_translate_dict_skips_noselect(self):

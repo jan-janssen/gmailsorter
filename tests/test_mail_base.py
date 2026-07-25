@@ -10,14 +10,19 @@ class _StubMailBox(AbstractMailBox):
     """Minimal concrete AbstractMailBox used to test the shared loop in isolation."""
 
     def __init__(self, label_dict_fixture=None, **kwargs):
-        self.label_dict_fixture = label_dict_fixture or {"Inbox": "Inbox", "Spam": "Spam"}
+        self.label_dict_fixture = label_dict_fixture or {
+            "Inbox": "Inbox",
+            "Spam": "Spam",
+        }
         self.search_result = []
         self.message_detail_dict = {}
         self.modify_calls = []
         self.labels_for_email_dict = {}
         super().__init__(mail_service=MagicMock(), **kwargs)
 
-    def _search_email_on_server(self, query_string="", label_lst=None, only_message_ids=False):
+    def _search_email_on_server(
+        self, query_string="", label_lst=None, only_message_ids=False
+    ):
         return self.search_result
 
     def _get_message_detail(self, message_id, email_format=None, metadata_headers=None):
@@ -26,7 +31,9 @@ class _StubMailBox(AbstractMailBox):
     def _get_label_translate_dict(self):
         return self.label_dict_fixture
 
-    def _modify_message_labels(self, message_id, label_id_remove_lst=None, label_id_add_lst=None):
+    def _modify_message_labels(
+        self, message_id, label_id_remove_lst=None, label_id_add_lst=None
+    ):
         self.modify_calls.append((message_id, label_id_remove_lst, label_id_add_lst))
 
     def _get_labels_for_email(self, message_id):
@@ -104,7 +111,16 @@ class AbstractMailBoxTest(TestCase):
     def test_fit_machine_learning_model_to_database(self, encode_mock, fit_mock):
         db_email = MagicMock()
         db_email.get_all_emails.return_value = pd.DataFrame(
-            [{"id": "x", "from": "a@b.com", "to": [], "cc": [], "labels": [], "threads": "t"}]
+            [
+                {
+                    "id": "x",
+                    "from": "a@b.com",
+                    "to": [],
+                    "cc": [],
+                    "labels": [],
+                    "threads": "t",
+                }
+            ]
         )
         db_ml = MagicMock()
         mailbox = _StubMailBox(database_email=db_email, database_ml=db_ml)

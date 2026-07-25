@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 
 from gmailsorter.imap.authentication import create_service
 from gmailsorter.imap.mail import ImapMailBase
+from gmailsorter.local import Imap
 
 
 class TestImapAuthentication(TestCase):
@@ -189,6 +190,47 @@ class TestImapMailBase(TestCase):
             dbs = ImapMailBase._create_databases("sqlite:///file.db")
 
         self.assertEqual(dbs, ("EMAIL_DB", "ML_DB"))
+
+
+class TestImapLocalHelpers(TestCase):
+    @patch("gmailsorter.local.ImapMailBase.__init__", return_value=None)
+    @patch("gmailsorter.local.create_imap_service")
+    @patch("gmailsorter.local.Imap._create_databases")
+    def test_imap_initialization_wiring(
+        self, create_databases_mock, create_service_mock, base_init_mock
+    ):
+        db_email, db_ml = MagicMock(), MagicMock()
+        create_databases_mock.return_value = (db_email, db_ml)
+        connection = MagicMock()
+        create_service_mock.return_value = connection
+
+        Imap(
+            host="localhost",
+            port=993,
+            username="user",
+            password="secret",
+            connection_str="sqlite:///:memory:",
+            db_user_id=4,
+        )
+
+        create_databases_mock.assert_called_once_with(
+            connection_str="sqlite:///:memory:"
+        )
+        create_service_mock.assert_called_once_with(
+            host="localhost",
+            port=993,
+            username="user",
+            password="secret",
+            use_ssl=True,
+        )
+        base_init_mock.assert_called_once_with(
+            mail_service=connection,
+            database_email=db_email,
+            database_ml=db_ml,
+            user_id="user",
+            db_user_id=4,
+            email_download_format="metadata",
+        )
 
 
 if __name__ == "__main__":

@@ -46,5 +46,6 @@ Documentation
    preparation
    configuration
    architecture
+   troubleshooting
    support
    developer

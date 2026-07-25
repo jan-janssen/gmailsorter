@@ -196,7 +196,15 @@ class ImapMailBase(AbstractMailBox):
                     f"Could not copy IMAP message {message_id!r} to {target_folder!r}"
                 )
             self._service.uid("store", uid, "+FLAGS", r"(\Deleted)")
-            self._service.expunge()
+            if "UIDPLUS" in self._service.capabilities:
+                # RFC 4315 UID EXPUNGE - expunges only the message just copied
+                self._service.uid("expunge", uid)
+            else:
+                # Without UIDPLUS a bare EXPUNGE is the only option, and it also
+                # permanently removes any other message in this folder which is
+                # already flagged as \Deleted - an unavoidable limitation of
+                # servers supporting neither MOVE nor UIDPLUS.
+                self._service.expunge()
 
     def _get_labels_for_email(self, message_id):
         folder, _uid = message_id.split("\x1f", 1)

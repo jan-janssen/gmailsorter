@@ -241,6 +241,29 @@ class TestImapMailBase(TestCase):
         )
         service.expunge.assert_called_once()
 
+    def test_modify_message_labels_uses_uid_expunge_with_uidplus(self):
+        service = self._create_mock_service_with_folders()
+        service.capabilities = ["IMAP4rev1", "UIDPLUS"]
+        service.select.return_value = ("OK", [b"1"])
+        service.uid.return_value = ("OK", [b"1"])
+        mail = ImapMailBase(mail_service=service)
+
+        mail._modify_message_labels(
+            message_id="INBOX\x1f7",
+            label_id_remove_lst=["INBOX"],
+            label_id_add_lst=["MailSortInbox"],
+        )
+
+        self.assertEqual(
+            service.uid.call_args_list,
+            [
+                (("copy", "7", '"MailSortInbox"'),),
+                (("store", "7", "+FLAGS", r"(\Deleted)"),),
+                (("expunge", "7"),),
+            ],
+        )
+        service.expunge.assert_not_called()
+
     def test_modify_message_labels_noop_without_target(self):
         service = self._create_mock_service_with_folders()
         mail = ImapMailBase(mail_service=service)

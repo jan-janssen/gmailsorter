@@ -55,6 +55,64 @@ class TestImapMailBase(TestCase):
 
         self.assertEqual(sorted(mail.labels), ["INBOX", "MailSortInbox"])
 
+    def test_get_label_translate_dict_skips_special_use_attributes(self):
+        service = self._create_mock_service_with_folders(
+            folders=[
+                b'(\\HasNoChildren \\Trash) "/" "Papierkorb"',
+                b'(\\HasNoChildren \\Junk) "/" "Unerwuenscht"',
+                b'(\\HasNoChildren \\Sent) "/" "Gesendet"',
+                b'(\\HasNoChildren \\Drafts) "/" "Entwuerfe"',
+                b'(\\HasNoChildren \\Archive) "/" "Ablage"',
+                b'(\\HasNoChildren \\All) "/" "Alle"',
+                b'(\\HasNoChildren \\Flagged) "/" "Markiert"',
+                b'(\\HasNoChildren) "/" "MailSortInbox"',
+            ]
+        )
+        mail = ImapMailBase(mail_service=service)
+
+        self.assertEqual(mail.labels, ["MailSortInbox"])
+
+    def test_get_label_translate_dict_skips_special_names_without_attributes(self):
+        service = self._create_mock_service_with_folders(
+            folders=[
+                b'(\\HasNoChildren) "/" "Trash"',
+                b'(\\HasNoChildren) "/" "junk e-mail"',
+                b'(\\HasNoChildren) "/" "Deleted Items"',
+                b'(\\HasNoChildren) "/" "SPAM"',
+                b'(\\HasNoChildren) "/" "Sent Items"',
+                b'(\\HasNoChildren) "/" "Drafts"',
+                b'(\\HasNoChildren) "/" "All Mail"',
+                b'(\\HasNoChildren) "/" "[Gmail]/Trash"',
+                b'(\\HasNoChildren) "/" "MailSortInbox"',
+            ]
+        )
+        mail = ImapMailBase(mail_service=service)
+
+        self.assertEqual(mail.labels, ["MailSortInbox"])
+
+    def test_get_label_translate_dict_keeps_custom_folders(self):
+        service = self._create_mock_service_with_folders(
+            folders=[
+                b'(\\HasNoChildren) "/" "MailSortInbox"',
+                b'(\\HasNoChildren) "/" "Sorted"',
+                b'(\\HasNoChildren) "/" "Archived Projects"',
+                b'(\\HasNoChildren) "/" "Trashcan Design"',
+                b'(\\HasNoChildren) "/" "INBOX"',
+            ]
+        )
+        mail = ImapMailBase(mail_service=service)
+
+        self.assertEqual(
+            sorted(mail.labels),
+            [
+                "Archived Projects",
+                "INBOX",
+                "MailSortInbox",
+                "Sorted",
+                "Trashcan Design",
+            ],
+        )
+
     def test_get_label_translate_dict_accepts_nil_delimiter(self):
         service = self._create_mock_service_with_folders(
             folders=[b"(\\HasNoChildren) NIL INBOX"]

@@ -13,6 +13,45 @@ _LIST_ENTRY_PATTERN = re.compile(
     r'\((?P<flags>[^)]*)\)\s+(?:"(?P<delimiter>[^"]*)"|NIL)\s*(?P<name>.*)'
 )
 
+# Folder attributes which mark a folder as not usable as a sorting target: \Noselect
+# (RFC 3501) plus the special-use attributes of RFC 6154. Without this the machine
+# learning model can be trained on - and therefore recommend moving mail into -
+# Trash, Spam, Sent or Drafts.
+_SKIP_FOLDER_ATTRIBUTES = frozenset(
+    {
+        "\\noselect",
+        "\\all",
+        "\\archive",
+        "\\drafts",
+        "\\flagged",
+        "\\junk",
+        "\\sent",
+        "\\trash",
+    }
+)
+
+# Many servers (GreenMail among them) do not advertise the RFC 6154 special-use
+# attributes at all, so a deliberately short list of unambiguous special folder names
+# is used as a fallback. Only exact (case-insensitive) matches are excluded, so a
+# custom sorting folder such as "Sorted" or "MailSortInbox" is unaffected.
+_SKIP_FOLDER_NAMES = frozenset(
+    {
+        "all mail",
+        "archive",
+        "deleted items",
+        "deleted messages",
+        "drafts",
+        "junk",
+        "junk e-mail",
+        "junk email",
+        "sent",
+        "sent items",
+        "sent messages",
+        "spam",
+        "trash",
+    }
+)
+
 
 def _decode_imap_bytes(value):
     """
@@ -42,11 +81,33 @@ class ImapMailBase(AbstractMailBox):
             parsed_entry = self._parse_list_entry(entry)
             if parsed_entry is None:
                 continue
-            flags, _delimiter, name = parsed_entry
-            if "\\Noselect" in flags:
+            flags, delimiter, name = parsed_entry
+            if self._is_special_folder(flags=flags, delimiter=delimiter, name=name):
                 continue
             label_dict[name] = name
         return label_dict
+
+    @staticmethod
+    def _is_special_folder(flags, delimiter, name):
+        """
+        Check whether an IMAP folder is a special-purpose folder rather than a folder
+        emails may be sorted into.
+
+        Args:
+            flags (list): folder attributes from the LIST response
+            delimiter (str/None): hierarchy delimiter from the LIST response
+            name (str): full folder name
+
+        Returns:
+            bool: True if the folder must not be offered as a sorting label
+        """
+        if any(flag.lower() in _SKIP_FOLDER_ATTRIBUTES for flag in flags):
+            return True
+        name_lst = [name.strip().lower()]
+        if delimiter:
+            # also check the leaf of a nested name such as "[Gmail]/Trash"
+            name_lst.append(name.rsplit(delimiter, 1)[-1].strip().lower())
+        return any(candidate in _SKIP_FOLDER_NAMES for candidate in name_lst)
 
     def _search_email_on_server(
         self, query_string="", label_lst=None, only_message_ids=False

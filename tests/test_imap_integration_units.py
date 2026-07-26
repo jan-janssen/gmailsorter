@@ -154,6 +154,13 @@ class TestImapMailBase(TestCase):
 
         self.assertEqual(mail.labels, [])
 
+    def test_get_label_translate_dict_returns_empty_on_list_failure(self):
+        service = self._create_mock_service_with_folders()
+        service.list.return_value = ("NO", None)
+        mail = ImapMailBase(mail_service=service)
+
+        self.assertEqual(mail.labels, [])
+
     def test_get_label_translate_dict_skips_unparseable_entries(self):
         service = self._create_mock_service_with_folders(
             folders=[b"total garbage", b'(\\HasNoChildren) "/" "MailSortInbox"']
@@ -167,6 +174,21 @@ class TestImapMailBase(TestCase):
         self.assertIsNone(ImapMailBase._parse_list_entry(b"not a list response"))
         self.assertIsNone(ImapMailBase._parse_list_entry((b'(\\Noselect) "/" {3}',)))
         self.assertIsNone(ImapMailBase._parse_list_entry(b'(\\HasNoChildren) "/" '))
+
+    def test_parse_list_entry_returns_none_when_literal_name_undecodable(self):
+        self.assertIsNone(
+            ImapMailBase._parse_list_entry((b'(\\HasNoChildren) "/" {3}', None))
+        )
+
+    def test_parse_list_entry_accepts_plain_str_entry(self):
+        result = ImapMailBase._parse_list_entry('(\\HasNoChildren) "/" "INBOX"')
+
+        self.assertEqual(result, (["\\HasNoChildren"], "/", "INBOX"))
+
+    def test_parse_list_entry_falls_back_to_latin1_on_invalid_utf8(self):
+        result = ImapMailBase._parse_list_entry(b'(\\HasNoChildren) "/" "Caf\xe9"')
+
+        self.assertEqual(result, (["\\HasNoChildren"], "/", "Caf\xe9"))
 
     def test_search_email_on_server_single_folder(self):
         service = self._create_mock_service_with_folders()
@@ -201,6 +223,46 @@ class TestImapMailBase(TestCase):
         with self.assertRaises(NotImplementedError):
             mail._search_email_on_server(query_string="SUBJECT foo")
 
+    def test_search_email_on_server_returns_dicts_by_default(self):
+        service = self._create_mock_service_with_folders()
+        service.select.return_value = ("OK", [b"1"])
+        service.uid.return_value = ("OK", [b"1 2"])
+        mail = ImapMailBase(mail_service=service)
+
+        result = mail._search_email_on_server(label_lst=["INBOX"])
+
+        self.assertEqual(result, [{"id": "INBOX\x1f1"}, {"id": "INBOX\x1f2"}])
+
+    def test_search_folder_returns_empty_list_when_select_fails(self):
+        service = self._create_mock_service_with_folders()
+        service.select.return_value = ("NO", [b"failed"])
+        mail = ImapMailBase(mail_service=service)
+
+        ids = mail._search_email_on_server(label_lst=["INBOX"], only_message_ids=True)
+
+        service.uid.assert_not_called()
+        self.assertEqual(ids, [])
+
+    def test_search_folder_returns_empty_list_when_search_fails(self):
+        service = self._create_mock_service_with_folders()
+        service.select.return_value = ("OK", [b"1"])
+        service.uid.return_value = ("NO", [None])
+        mail = ImapMailBase(mail_service=service)
+
+        ids = mail._search_email_on_server(label_lst=["INBOX"], only_message_ids=True)
+
+        self.assertEqual(ids, [])
+
+    def test_search_folder_returns_empty_list_when_search_data_is_none(self):
+        service = self._create_mock_service_with_folders()
+        service.select.return_value = ("OK", [b"1"])
+        service.uid.return_value = ("OK", [None])
+        mail = ImapMailBase(mail_service=service)
+
+        ids = mail._search_email_on_server(label_lst=["INBOX"], only_message_ids=True)
+
+        self.assertEqual(ids, [])
+
     def test_get_message_detail_selects_and_fetches(self):
         service = self._create_mock_service_with_folders()
         raw_message = b"Subject: hi\r\nFrom: a@b.com\r\nTo: c@d.com\r\n\r\nbody"
@@ -215,6 +277,23 @@ class TestImapMailBase(TestCase):
         self.assertEqual(folder, "INBOX")
         self.assertEqual(uid, "7")
         self.assertEqual(message["Subject"], "hi")
+
+    def test_get_message_detail_raises_when_select_fails(self):
+        service = self._create_mock_service_with_folders()
+        service.select.return_value = ("NO", [b"failed"])
+        mail = ImapMailBase(mail_service=service)
+
+        with self.assertRaises(RuntimeError):
+            mail._get_message_detail(message_id="INBOX\x1f7")
+
+    def test_get_message_detail_raises_when_fetch_fails(self):
+        service = self._create_mock_service_with_folders()
+        service.select.return_value = ("OK", [b"1"])
+        service.uid.return_value = ("NO", [None])
+        mail = ImapMailBase(mail_service=service)
+
+        with self.assertRaises(RuntimeError):
+            mail._get_message_detail(message_id="INBOX\x1f7")
 
     def test_get_labels_for_email_from_composite_id(self):
         service = self._create_mock_service_with_folders()
@@ -282,6 +361,39 @@ class TestImapMailBase(TestCase):
             ],
         )
         service.expunge.assert_not_called()
+
+    def test_modify_message_labels_raises_when_select_fails(self):
+        service = self._create_mock_service_with_folders()
+        service.select.return_value = ("NO", [b"failed"])
+        mail = ImapMailBase(mail_service=service)
+
+        with self.assertRaises(RuntimeError):
+            mail._modify_message_labels(
+                message_id="INBOX\x1f7", label_id_add_lst=["MailSortInbox"]
+            )
+
+    def test_modify_message_labels_raises_when_move_fails(self):
+        service = self._create_mock_service_with_folders()
+        service.select.return_value = ("OK", [b"1"])
+        service.uid.return_value = ("NO", [None])
+        mail = ImapMailBase(mail_service=service)
+
+        with self.assertRaises(RuntimeError):
+            mail._modify_message_labels(
+                message_id="INBOX\x1f7", label_id_add_lst=["MailSortInbox"]
+            )
+
+    def test_modify_message_labels_raises_when_copy_fails(self):
+        service = self._create_mock_service_with_folders()
+        service.capabilities = ["IMAP4rev1"]
+        service.select.return_value = ("OK", [b"1"])
+        service.uid.return_value = ("NO", [None])
+        mail = ImapMailBase(mail_service=service)
+
+        with self.assertRaises(RuntimeError):
+            mail._modify_message_labels(
+                message_id="INBOX\x1f7", label_id_add_lst=["MailSortInbox"]
+            )
 
     def test_modify_message_labels_noop_without_target(self):
         service = self._create_mock_service_with_folders()

@@ -1,5 +1,7 @@
 from datetime import datetime
 from email.message import EmailMessage
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from unittest import TestCase
 
 from gmailsorter.imap.message import Message, get_email_dict
@@ -76,6 +78,60 @@ class MessageTest(TestCase):
         message = Message(message=msg, folder="INBOX", uid="45")
 
         self.assertIsNone(message.get_from())
+
+    def test_get_from_missing_header_returns_none(self):
+        msg = EmailMessage()
+        message = Message(message=msg, folder="INBOX", uid="46")
+
+        self.assertIsNone(message.get_from())
+
+    def test_get_date_missing_header_returns_none(self):
+        msg = EmailMessage()
+        message = Message(message=msg, folder="INBOX", uid="47")
+
+        self.assertIsNone(message.get_date())
+
+    def test_get_content_multipart_prefers_plain_over_html(self):
+        outer = MIMEMultipart("mixed")
+        inner = MIMEMultipart("alternative")
+        inner.attach(MIMEText("Hello world", "plain"))
+        inner.attach(MIMEText("<p>Hello <b>World</b></p>", "html"))
+        outer.attach(inner)
+        message = Message(message=outer, folder="INBOX", uid="48")
+
+        self.assertEqual(message.get_content().strip(), "Hello world")
+
+    def test_get_content_returns_none_for_unknown_mimetype(self):
+        msg = EmailMessage()
+        msg.set_content(b"\x00\x01", maintype="application", subtype="octet-stream")
+        message = Message(message=msg, folder="INBOX", uid="49")
+
+        self.assertIsNone(message.get_content())
+
+    def test_thread_id_uses_in_reply_to_when_no_references(self):
+        msg = EmailMessage()
+        msg["In-Reply-To"] = " <parent@server.net> "
+        msg["Message-ID"] = "<mid@server.net>"
+        message = Message(message=msg, folder="INBOX", uid="50")
+
+        self.assertEqual(message.get_thread_id(), "<parent@server.net>")
+
+    def test_thread_id_falls_back_to_email_id_without_any_headers(self):
+        msg = EmailMessage()
+        message = Message(message=msg, folder="INBOX", uid="51")
+
+        self.assertEqual(message.get_thread_id(), "INBOX\x1f51")
+
+    def test_decode_part_returns_empty_string_when_payload_is_none(self):
+        multipart_msg = MIMEMultipart("mixed")
+
+        self.assertEqual(Message._decode_part(multipart_msg), "")
+
+    def test_get_email_dict_catches_value_error_and_returns_none(self):
+        msg = EmailMessage()
+        msg["Date"] = "Mon, 32 Jan 2024 25:99:99 +0000"
+
+        self.assertIsNone(get_email_dict(msg, folder="INBOX", uid="52"))
 
     def test_get_email_dict(self):
         result = get_email_dict(self._message, folder="INBOX", uid="42")

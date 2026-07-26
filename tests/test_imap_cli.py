@@ -77,6 +77,30 @@ class ImapCliTest(TestCase):
         )
 
     @patch("gmailsorter.imap.__main__.Imap")
+    def test_no_update_or_label_prints_help(self, imap_cls):
+        imap_instance = imap_cls.return_value
+        os.environ["IMAP_PASSWORD"] = "secret"
+        try:
+            with patch(
+                "sys.argv",
+                [
+                    "gmailsorter-imap",
+                    "--host",
+                    "localhost",
+                    "--username",
+                    "user",
+                    "-d",
+                    "sqlite:///:memory:",
+                ],
+            ):
+                command_line_parser()
+        finally:
+            del os.environ["IMAP_PASSWORD"]
+
+        imap_instance.update_database.assert_not_called()
+        imap_instance.filter_messages_from_server.assert_not_called()
+
+    @patch("gmailsorter.imap.__main__.Imap")
     def test_missing_password_env_skips_wiring(self, imap_cls):
         os.environ.pop("IMAP_PASSWORD", None)
         with patch(

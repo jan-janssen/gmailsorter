@@ -10,6 +10,7 @@ dependencies:
 - python
 - scikit-learn =1.8.0
 - sqlalchemy =2.0.51
-- tqdm =4.69.0
+- tqdm =4.69.1
 - hatchling
 - hatch-vcs
+- flask-login =0.6.3

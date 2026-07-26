@@ -477,9 +477,10 @@ class TestWebappConfig(unittest.TestCase):
 
     def tearDown(self):
         # Restore the module to a working state for any later imports.
-        with patch(
-            "gmailsorter.daemon.load_config_file", return_value={"web": {}}
-        ), patch("gmailsorter.daemon.get_database_engine", return_value=MagicMock()):
+        with (
+            patch("gmailsorter.daemon.load_config_file", return_value={"web": {}}),
+            patch("gmailsorter.daemon.get_database_engine", return_value=MagicMock()),
+        ):
             with patch.dict(
                 os.environ,
                 {
@@ -495,26 +496,31 @@ class TestWebappConfig(unittest.TestCase):
         env.pop("MAILSORT_ENV_SECRET_KEY", None)
         env["MAILSORT_ENV_CREDENTIALS_FILE"] = _TMP_CREDENTIALS.name
         env["MAILSORT_ENV_DATABASE_URL"] = "sqlite:///:memory:"
-        with patch(
-            "gmailsorter.daemon.load_config_file", return_value={"web": {}}
-        ), patch("gmailsorter.daemon.get_database_engine", return_value=MagicMock()):
+        with (
+            patch("gmailsorter.daemon.load_config_file", return_value={"web": {}}),
+            patch("gmailsorter.daemon.get_database_engine", return_value=MagicMock()),
+        ):
             with patch.dict(os.environ, env, clear=True):
                 with self.assertRaises(ValueError):
                     self._reload_config()
 
     def test_env_vars_are_used_when_provided(self):
-        with patch(
-            "gmailsorter.daemon.load_config_file",
-            return_value={"web": {"client_id": "abc"}},
-        ) as load_mock, patch(
-            "gmailsorter.daemon.get_database_engine", return_value="ENGINE"
-        ) as engine_mock, patch.dict(
-            os.environ,
-            {
-                "MAILSORT_ENV_SECRET_KEY": "supersecret",
-                "MAILSORT_ENV_CREDENTIALS_FILE": "custom_creds.json",
-                "MAILSORT_ENV_DATABASE_URL": "sqlite:///custom.db",
-            },
+        with (
+            patch(
+                "gmailsorter.daemon.load_config_file",
+                return_value={"web": {"client_id": "abc"}},
+            ) as load_mock,
+            patch(
+                "gmailsorter.daemon.get_database_engine", return_value="ENGINE"
+            ) as engine_mock,
+            patch.dict(
+                os.environ,
+                {
+                    "MAILSORT_ENV_SECRET_KEY": "supersecret",
+                    "MAILSORT_ENV_CREDENTIALS_FILE": "custom_creds.json",
+                    "MAILSORT_ENV_DATABASE_URL": "sqlite:///custom.db",
+                },
+            ),
         ):
             config_module = self._reload_config()
             self.assertEqual(config_module.SECRET_KEY, "supersecret")
@@ -530,11 +536,15 @@ class TestWebappConfig(unittest.TestCase):
         env.pop("MAILSORT_ENV_CREDENTIALS_FILE", None)
         env.pop("MAILSORT_ENV_DATABASE_URL", None)
         env["MAILSORT_ENV_SECRET_KEY"] = "supersecret"
-        with patch(
-            "gmailsorter.daemon.load_config_file", return_value={"web": {}}
-        ) as load_mock, patch(
-            "gmailsorter.daemon.get_database_engine", return_value="ENGINE"
-        ) as engine_mock, patch.dict(os.environ, env, clear=True):
+        with (
+            patch(
+                "gmailsorter.daemon.load_config_file", return_value={"web": {}}
+            ) as load_mock,
+            patch(
+                "gmailsorter.daemon.get_database_engine", return_value="ENGINE"
+            ) as engine_mock,
+            patch.dict(os.environ, env, clear=True),
+        ):
             self._reload_config()
             load_mock.assert_called_once_with(file_name="credentials.json")
             engine_mock.assert_called_once_with(connection_str="sqlite:///email.db")

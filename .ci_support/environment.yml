@@ -13,3 +13,4 @@ dependencies:
 - tqdm =4.69.1
 - hatchling
 - hatch-vcs
+- flask-login =0.6.3

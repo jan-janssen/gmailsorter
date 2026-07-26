@@ -97,3 +97,7 @@ packages = [
 [tool.hatch.version]
 source = "vcs"
 path = "gmailsorter/_version.py"
+
+[tool.coverage.run]
+source = ["gmailsorter"]
+command_line = "-m unittest discover tests"

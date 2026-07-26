@@ -27,7 +27,7 @@ jobs:
       shell: bash -l {0}
       run: |
         pip install --no-deps .
-        coverage run -a -m unittest discover tests
+        coverage run -a
         coverage xml
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5

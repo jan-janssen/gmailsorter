@@ -9,9 +9,7 @@ from gmailsorter.__main__ import command_line_parser
 class TestMainCommandLineParser(unittest.TestCase):
     @patch("gmailsorter.__main__.Gmail")
     @patch("gmailsorter.__main__.load_client_secrets_file")
-    def test_update_flag_triggers_update_and_fit(
-        self, load_secrets_mock, gmail_cls
-    ):
+    def test_update_flag_triggers_update_and_fit(self, load_secrets_mock, gmail_cls):
         load_secrets_mock.return_value = {"installed": {}}
         gmail_instance = MagicMock()
         gmail_cls.return_value = gmail_instance
@@ -109,9 +107,7 @@ class TestMainCommandLineParser(unittest.TestCase):
 
     @patch("gmailsorter.__main__.Gmail")
     @patch("gmailsorter.__main__.load_client_secrets_file")
-    def test_credentials_found_in_current_directory(
-        self, load_secrets_mock, gmail_cls
-    ):
+    def test_credentials_found_in_current_directory(self, load_secrets_mock, gmail_cls):
         load_secrets_mock.return_value = {"installed": {}}
         gmail_cls.return_value = MagicMock()
         cwd = os.getcwd()

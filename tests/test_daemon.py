@@ -280,7 +280,10 @@ class TestTasks(unittest.TestCase):
     def test_update_task_status(self):
         create_tasks_for_new_users(session=self.session, user_id=1)
         update_task_status(
-            session=self.session, user_id=1, task_name="update", status=JOB_STATUS_SUCCESS
+            session=self.session,
+            user_id=1,
+            task_name="update",
+            status=JOB_STATUS_SUCCESS,
         )
         self.assertEqual(
             get_task_status_for_user(
@@ -296,9 +299,24 @@ class TestTasks(unittest.TestCase):
     def test_get_all_tasks_to_execute_all(self):
         self.session.add_all(
             [
-                Task(task_name="update", date=datetime.now(), status=JOB_STATUS_INIT, user_id=1),
-                Task(task_name="fetch", date=datetime.now(), status=JOB_STATUS_WAIT, user_id=1),
-                Task(task_name="update", date=datetime.now(), status=JOB_STATUS_SUCCESS, user_id=2),
+                Task(
+                    task_name="update",
+                    date=datetime.now(),
+                    status=JOB_STATUS_INIT,
+                    user_id=1,
+                ),
+                Task(
+                    task_name="fetch",
+                    date=datetime.now(),
+                    status=JOB_STATUS_WAIT,
+                    user_id=1,
+                ),
+                Task(
+                    task_name="update",
+                    date=datetime.now(),
+                    status=JOB_STATUS_SUCCESS,
+                    user_id=2,
+                ),
             ]
         )
         self.session.commit()
@@ -309,12 +327,24 @@ class TestTasks(unittest.TestCase):
     def test_get_all_tasks_to_execute_update_and_fetch(self):
         self.session.add_all(
             [
-                Task(task_name="update", date=datetime.now(), status=JOB_STATUS_INIT, user_id=1),
-                Task(task_name="fetch", date=datetime.now(), status=JOB_STATUS_WAIT, user_id=1),
+                Task(
+                    task_name="update",
+                    date=datetime.now(),
+                    status=JOB_STATUS_INIT,
+                    user_id=1,
+                ),
+                Task(
+                    task_name="fetch",
+                    date=datetime.now(),
+                    status=JOB_STATUS_WAIT,
+                    user_id=1,
+                ),
             ]
         )
         self.session.commit()
-        result_update = get_all_tasks_to_execute(session=self.session, task_name="update")
+        result_update = get_all_tasks_to_execute(
+            session=self.session, task_name="update"
+        )
         self.assertEqual(result_update, {"update": [1]})
 
         result_fetch = get_all_tasks_to_execute(session=self.session, task_name="fetch")
@@ -323,8 +353,18 @@ class TestTasks(unittest.TestCase):
     def test_get_all_tasks_to_execute_select(self):
         self.session.add_all(
             [
-                Task(task_name="update", date=datetime.now(), status=JOB_STATUS_INIT, user_id=1),
-                Task(task_name="fetch", date=datetime.now(), status=JOB_STATUS_SUCCESS, user_id=1),
+                Task(
+                    task_name="update",
+                    date=datetime.now(),
+                    status=JOB_STATUS_INIT,
+                    user_id=1,
+                ),
+                Task(
+                    task_name="fetch",
+                    date=datetime.now(),
+                    status=JOB_STATUS_SUCCESS,
+                    user_id=1,
+                ),
             ]
         )
         self.session.commit()
@@ -347,8 +387,18 @@ class TestDaemon(unittest.TestCase):
         )
         self.session.add_all(
             [
-                Task(task_name="update", date=datetime.now(), status=JOB_STATUS_INIT, user_id=1),
-                Task(task_name="fetch", date=datetime.now(), status=JOB_STATUS_WAIT, user_id=1),
+                Task(
+                    task_name="update",
+                    date=datetime.now(),
+                    status=JOB_STATUS_INIT,
+                    user_id=1,
+                ),
+                Task(
+                    task_name="fetch",
+                    date=datetime.now(),
+                    status=JOB_STATUS_WAIT,
+                    user_id=1,
+                ),
             ]
         )
         self.session.commit()
@@ -382,11 +432,15 @@ class TestDaemon(unittest.TestCase):
             client_secrets_config={"web": {"client_id": "cid", "client_secret": "sec"}},
         )
         self.assertEqual(
-            get_task_status_for_user(session=self.session, user_id=1, task_name="update"),
+            get_task_status_for_user(
+                session=self.session, user_id=1, task_name="update"
+            ),
             JOB_STATUS_FAIL,
         )
         self.assertEqual(
-            get_task_status_for_user(session=self.session, user_id=1, task_name="fetch"),
+            get_task_status_for_user(
+                session=self.session, user_id=1, task_name="fetch"
+            ),
             JOB_STATUS_FAIL,
         )
 
@@ -415,11 +469,15 @@ class TestDaemon(unittest.TestCase):
         mail_instance.update_database.assert_called_once_with(quick=False)
         mail_instance.fit_machine_learning_model_to_database.assert_called_once()
         self.assertEqual(
-            get_task_status_for_user(session=self.session, user_id=1, task_name="update"),
+            get_task_status_for_user(
+                session=self.session, user_id=1, task_name="update"
+            ),
             JOB_STATUS_SUCCESS,
         )
         self.assertEqual(
-            get_task_status_for_user(session=self.session, user_id=1, task_name="fetch"),
+            get_task_status_for_user(
+                session=self.session, user_id=1, task_name="fetch"
+            ),
             JOB_STATUS_INIT,
         )
 
@@ -450,7 +508,9 @@ class TestDaemon(unittest.TestCase):
         )
         mail_instance.filter_messages_from_server.assert_called_once()
         self.assertEqual(
-            get_task_status_for_user(session=self.session, user_id=1, task_name="fetch"),
+            get_task_status_for_user(
+                session=self.session, user_id=1, task_name="fetch"
+            ),
             JOB_STATUS_SUCCESS,
         )
 
@@ -483,7 +543,9 @@ class TestDaemon(unittest.TestCase):
             filter_messages=True,
         )
         self.assertEqual(
-            get_task_status_for_user(session=self.session, user_id=1, task_name="fetch"),
+            get_task_status_for_user(
+                session=self.session, user_id=1, task_name="fetch"
+            ),
             JOB_STATUS_FAIL,
         )
 
@@ -504,7 +566,9 @@ class TestDaemon(unittest.TestCase):
                 scopes=["scope"],
                 engine=self.engine,
                 session=self.session,
-                client_secrets_config={"web": {"client_id": "cid", "client_secret": "sec"}},
+                client_secrets_config={
+                    "web": {"client_id": "cid", "client_secret": "sec"}
+                },
                 database_update=False,
                 filter_messages=False,
             )
@@ -526,19 +590,27 @@ class TestDaemon(unittest.TestCase):
 class TestDaemonMain(unittest.TestCase):
     def test_get_execution_mode(self):
         self.assertEqual(
-            _get_execution_mode(argparse.Namespace(update=True, filter=True, scheduled=False)),
+            _get_execution_mode(
+                argparse.Namespace(update=True, filter=True, scheduled=False)
+            ),
             "all",
         )
         self.assertEqual(
-            _get_execution_mode(argparse.Namespace(update=True, filter=False, scheduled=False)),
+            _get_execution_mode(
+                argparse.Namespace(update=True, filter=False, scheduled=False)
+            ),
             "update",
         )
         self.assertEqual(
-            _get_execution_mode(argparse.Namespace(update=False, filter=False, scheduled=True)),
+            _get_execution_mode(
+                argparse.Namespace(update=False, filter=False, scheduled=True)
+            ),
             "select",
         )
         self.assertEqual(
-            _get_execution_mode(argparse.Namespace(update=False, filter=True, scheduled=False)),
+            _get_execution_mode(
+                argparse.Namespace(update=False, filter=True, scheduled=False)
+            ),
             "fetch",
         )
         with self.assertRaises(ValueError):

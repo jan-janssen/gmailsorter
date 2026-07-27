@@ -74,6 +74,8 @@ ignore = [
     "E501",
     # Too many arguments in function definition
     "PLR0913",
+    # Too many not-keyword-only arguments,
+    "PLR0917",
 ]
 
 [tool.hatch.build]

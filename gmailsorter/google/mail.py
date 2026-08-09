@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 
 import pandas
 from googleapiclient.discovery import Resource
@@ -117,7 +117,8 @@ class GoogleMailBase:
         random_state: int = 42,
         bootstrap: bool = True,
         include_deleted: bool = False,
-    ) -> None:
+        max_workers: Optional[int] = None,
+    ):
         """
         Fit machine learning models to emails stored in database and afterwards store machine learning models in
         database.
@@ -129,6 +130,7 @@ class GoogleMailBase:
             bootstrap (boolean): Whether bootstrap samples are used when building trees. If False, the whole dataset is
                                  used to build each tree. (default: true)
             include_deleted (bool): Flag to include deleted emails - default False
+            max_workers (int): maximum number of workers for the machine learning models
         """
         df_all = self.get_all_emails_in_database(include_deleted=include_deleted)
         df_all_features, df_all_labels = encode_df_for_machine_learning(
@@ -147,6 +149,7 @@ class GoogleMailBase:
             max_features=max_features,
             random_state=random_state,
             bootstrap=bootstrap,
+            max_workers=max_workers,
         )
         self._db_ml.store_models(
             model_dict=model_dict,

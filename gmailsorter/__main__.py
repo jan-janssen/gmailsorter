@@ -8,7 +8,7 @@ def command_line_parser() -> None:
     """
     Main function primarily used for the command line interface
     """
-    credentials, database = None, None
+    credentials, database, tasks = None, None, None
     parser = argparse.ArgumentParser(prog="gmailsorter")
     parser.add_argument(
         "-c",
@@ -41,6 +41,11 @@ def command_line_parser() -> None:
         "--label",
         help="Email label to be filtered with machine learning.",
     )
+    parser.add_argument(
+        "-t",
+        "--tasks",
+        help="Number of parallel tasks to use.",
+    )
     args = parser.parse_args()
     port = args.port or 8080
     db_user_id = int(args.identification) if args.identification else 1
@@ -50,6 +55,8 @@ def command_line_parser() -> None:
         credentials = os.path.abspath("credentials.json")
     else:
         print("Please provide a credentials file, -c/--credentials credentials.json")
+    if args.tasks:
+        tasks = int(args.tasks)
     if credentials:
         database = args.database or "sqlite:///email.db"
         gmail = Gmail(
@@ -68,6 +75,7 @@ def command_line_parser() -> None:
                 random_state=42,
                 bootstrap=True,
                 include_deleted=False,
+                max_workers=tasks,
             )
         elif args.label:
             gmail.filter_messages_from_server(

@@ -1,14 +1,19 @@
 import json
+from datetime import datetime
+from typing import Any
 
 import google.oauth2.credentials
 import googleapiclient.discovery
-from sqlalchemy import Column, DateTime, Integer, String, create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy import Column, DateTime, Engine, Integer, String, create_engine
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 from gmailsorter.base import get_email_database
+from gmailsorter.base.database import DatabaseInterface as EmailDatabaseInterface
 from gmailsorter.google import GoogleMailBase
+from gmailsorter.google.database import DatabaseInterface as TokenDatabaseInterface
 from gmailsorter.google.database import get_token_database
 from gmailsorter.ml import get_machine_learning_database
+from gmailsorter.ml.database import MachineLearningDatabase
 
 # Modifying the labels of emails requires /auth/gmail.modify
 # https://developers.google.com/gmail/api/reference/rest/v1/users.messages/modify
@@ -70,20 +75,20 @@ class Task(Base):
 class GoogleMail(GoogleMailBase):
     def __init__(
         self,
-        scopes,
-        database_engine,
-        token,
-        refresh_token,
-        token_uri,
-        client_id,
-        client_secret,
-        expiry,
-        user_id="me",
-        db_user_id=1,
-        email_download_format="metadata",
-        serviceName="gmail",
-        version="v1",
-    ):
+        scopes: list[str],
+        database_engine: Engine,
+        token: str | None,
+        refresh_token: str | None,
+        token_uri: str | None,
+        client_id: str | None,
+        client_secret: str | None,
+        expiry: datetime | None,
+        user_id: str = "me",
+        db_user_id: int = 1,
+        email_download_format: str = "metadata",
+        serviceName: str = "gmail",
+        version: str = "v1",
+    ) -> None:
         """
         Gmail class to manage Emails via the Gmail API directly from Python
 
@@ -133,13 +138,13 @@ class GoogleMail(GoogleMailBase):
         )
 
     @property
-    def session(self):
+    def session(self) -> Session:
         return self._session
 
-    def close_database_connection(self):
+    def close_database_connection(self) -> None:
         self._session.close()
 
-    def create_filter_moving_all_labels(self, label_name):
+    def create_filter_moving_all_labels(self, label_name: str) -> str:
         """
         Create a filter to move all emails to the selected label.
 
@@ -192,10 +197,10 @@ class GoogleMail(GoogleMailBase):
 
     def create_label(
         self,
-        label_name,
-        label_list_visibility="labelHide",
-        message_list_visibility="hide",
-    ):
+        label_name: str,
+        label_list_visibility: str = "labelHide",
+        message_list_visibility: str = "hide",
+    ) -> str:
         """
         Create a new email label using the Google API and return the label ID. If the label already exists this function
         still returns the label ID. More information can be found in the Google API documentation:
@@ -227,14 +232,14 @@ class GoogleMail(GoogleMailBase):
             self._label_dict_inverse = {v: k for k, v in self._label_dict.items()}
             return result["id"]
 
-    def get_filter_list(self):
+    def get_filter_list(self) -> list[dict[str, Any]]:
         results = self._service.users().settings().filters().list(userId="me").execute()
         if "filter" in results:
             return results["filter"]
         else:
             return []
 
-    def get_status_dict(self, label_name):
+    def get_status_dict(self, label_name: str) -> dict[str, str | None]:
         status_dict = get_tasks_status_for_user(
             session=self._session, user_id=self._db_user_id
         )
@@ -257,7 +262,9 @@ class GoogleMail(GoogleMailBase):
             status_dict["filter"] = JOB_STATUS_FAIL
         return status_dict
 
-    def _create_databases(self, engine):
+    def _create_databases(
+        self, engine: Engine
+    ) -> tuple[EmailDatabaseInterface, MachineLearningDatabase, TokenDatabaseInterface]:
         self._session = sessionmaker(bind=engine)()
         db_email = get_email_database(engine=engine, session=self._session)
         db_ml = get_machine_learning_database(engine=engine, session=self._session)
@@ -265,13 +272,15 @@ class GoogleMail(GoogleMailBase):
         return db_email, db_ml, db_token
 
 
-def get_database_engine(connection_str):
+def get_database_engine(connection_str: str) -> Engine:
     engine = create_engine(connection_str)
     Base.metadata.create_all(engine)
     return engine
 
 
-def get_task_status_for_user(session, user_id, task_name):
+def get_task_status_for_user(
+    session: Session, user_id: int, task_name: str
+) -> str | None:
     status_obj = (
         session.query(Task)
         .filter(Task.user_id == user_id)
@@ -284,7 +293,7 @@ def get_task_status_for_user(session, user_id, task_name):
         return None
 
 
-def get_tasks_status_for_user(session, user_id):
+def get_tasks_status_for_user(session: Session, user_id: int) -> dict[str, str | None]:
     return {
         task_name: get_task_status_for_user(
             session=session, user_id=user_id, task_name=task_name
@@ -293,10 +302,10 @@ def get_tasks_status_for_user(session, user_id):
     }
 
 
-def get_token(session, user_id):
+def get_token(session: Session, user_id: int) -> GoogleToken | None:
     return session.query(GoogleToken).filter_by(user_id=user_id).first()
 
 
-def load_config_file(file_name):
+def load_config_file(file_name: str) -> dict[str, Any]:
     with open(file_name) as json_file:
         return json.load(json_file)

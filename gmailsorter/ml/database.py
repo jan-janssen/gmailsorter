@@ -1,7 +1,8 @@
 import pickle
 
-from sqlalchemy import Column, Integer, String
-from sqlalchemy.orm import declarative_base
+from sklearn.ensemble import RandomForestClassifier
+from sqlalchemy import Column, Engine, Integer, String
+from sqlalchemy.orm import Session, declarative_base
 
 from gmailsorter.base.database import DatabaseTemplate
 
@@ -24,7 +25,13 @@ class MachineLearningFeatures(Base):
 
 
 class MachineLearningDatabase(DatabaseTemplate):
-    def store_models(self, model_dict, feature_lst, user_id=1, commit=True):
+    def store_models(
+        self,
+        model_dict: dict[str, RandomForestClassifier],
+        feature_lst: list[str],
+        user_id: int = 1,
+        commit: bool = True,
+    ) -> None:
         """
         Store machine learning models in database
 
@@ -98,7 +105,9 @@ class MachineLearningDatabase(DatabaseTemplate):
         if commit:
             self._session.commit()
 
-    def load_models(self, user_id=1):
+    def load_models(
+        self, user_id: int = 1
+    ) -> tuple[dict[str, RandomForestClassifier], list[str]]:
         """
         Load models from database
 
@@ -119,7 +128,7 @@ class MachineLearningDatabase(DatabaseTemplate):
             for label_obj in label_obj_lst
         }, feature_lst
 
-    def _get_labels(self, user_id=1):
+    def _get_labels(self, user_id: int = 1) -> list[str]:
         return [
             label[0]
             for label in self._session.query(MachineLearningLabels.label_id)
@@ -127,7 +136,7 @@ class MachineLearningDatabase(DatabaseTemplate):
             .all()
         ]
 
-    def get_features(self, user_id=1):
+    def get_features(self, user_id: int = 1) -> list[str]:
         return [
             feature_obj.feature
             for feature_obj in (
@@ -138,6 +147,8 @@ class MachineLearningDatabase(DatabaseTemplate):
         ]
 
 
-def get_machine_learning_database(engine, session):
+def get_machine_learning_database(
+    engine: Engine, session: Session
+) -> MachineLearningDatabase:
     Base.metadata.create_all(engine)
     return MachineLearningDatabase(session=session)

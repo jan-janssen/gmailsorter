@@ -1,9 +1,14 @@
+from typing import Any
+
 import pandas
+from googleapiclient.discovery import Resource
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from tqdm import tqdm
 
 from gmailsorter.base import get_email_database
+from gmailsorter.base.database import DatabaseInterface as EmailDatabaseInterface
+from gmailsorter.google.database import DatabaseInterface as TokenDatabaseInterface
 from gmailsorter.google.database import get_token_database
 from gmailsorter.google.message import get_email_dict
 from gmailsorter.ml import (
@@ -12,19 +17,24 @@ from gmailsorter.ml import (
     get_machine_learning_database,
     get_predictions_from_machine_learning_models,
 )
+from gmailsorter.ml.database import MachineLearningDatabase
+
+_DatabaseTriple = tuple[
+    EmailDatabaseInterface, MachineLearningDatabase, TokenDatabaseInterface
+]
 
 
 class GoogleMailBase:
     def __init__(
         self,
-        google_mail_service,
-        database_email=None,
-        database_ml=None,
-        database_token=None,
-        user_id="me",
-        db_user_id=1,
-        email_download_format="metadata",
-    ):
+        google_mail_service: Resource,
+        database_email: EmailDatabaseInterface | None = None,
+        database_ml: MachineLearningDatabase | None = None,
+        database_token: TokenDatabaseInterface | None = None,
+        user_id: str = "me",
+        db_user_id: int = 1,
+        email_download_format: str = "metadata",
+    ) -> None:
         """
         Gmail class to manage Emails via the Gmail API directly from Python
 
@@ -48,10 +58,10 @@ class GoogleMailBase:
         self._label_dict_inverse = {v: k for k, v in self._label_dict.items()}
 
     @property
-    def labels(self):
+    def labels(self) -> list[str]:
         return list(self._label_dict.keys())
 
-    def download_emails_for_label(self, label):
+    def download_emails_for_label(self, label: str) -> pandas.DataFrame:
         """
         Download emails for a specific label
 
@@ -69,9 +79,9 @@ class GoogleMailBase:
 
     def filter_messages_from_server(
         self,
-        label,
-        recommendation_ratio=0.9,
-    ):
+        label: str,
+        recommendation_ratio: float = 0.9,
+    ) -> None:
         """
         Filter new emails based on machine learning model recommendations.
 
@@ -102,12 +112,12 @@ class GoogleMailBase:
 
     def fit_machine_learning_model_to_database(
         self,
-        n_estimators=100,
-        max_features=400,
-        random_state=42,
-        bootstrap=True,
-        include_deleted=False,
-    ):
+        n_estimators: int = 100,
+        max_features: int = 400,
+        random_state: int = 42,
+        bootstrap: bool = True,
+        include_deleted: bool = False,
+    ) -> None:
         """
         Fit machine learning models to emails stored in database and afterwards store machine learning models in
         database.
@@ -145,7 +155,9 @@ class GoogleMailBase:
             commit=True,
         )
 
-    def get_all_emails_in_database(self, include_deleted=False):
+    def get_all_emails_in_database(
+        self, include_deleted: bool = False
+    ) -> pandas.DataFrame:
         """
         Get all emails stored in the local database
 
@@ -159,7 +171,12 @@ class GoogleMailBase:
             include_deleted=include_deleted, user_id=self._db_user_id
         )
 
-    def update_database(self, quick=False, label_lst=None, email_format=None):
+    def update_database(
+        self,
+        quick: bool = False,
+        label_lst: list[str] | None = None,
+        email_format: str | None = None,
+    ) -> None:
         """
         Update local email database
 
@@ -196,7 +213,9 @@ class GoogleMailBase:
                 message_id_lst=new_messages_lst, email_format=email_format
             )
 
-    def _download_messages_to_dataframe(self, message_id_lst, email_format=None):
+    def _download_messages_to_dataframe(
+        self, message_id_lst: list[str], email_format: str | None = None
+    ) -> pandas.DataFrame:
         """
         Download a list of messages based on their email IDs and store the content in a pandas.DataFrame.
 
@@ -226,7 +245,7 @@ class GoogleMailBase:
             ]
         )
 
-    def _get_labels_for_email(self, message_id):
+    def _get_labels_for_email(self, message_id: str) -> list[str]:
         """
         Get labels for email
 
@@ -246,7 +265,7 @@ class GoogleMailBase:
         else:
             return []
 
-    def _get_labels_for_emails(self, message_id_lst):
+    def _get_labels_for_emails(self, message_id_lst: list[str]) -> list[list[str]]:
         """
         Get labels for a list of emails
 
@@ -263,12 +282,17 @@ class GoogleMailBase:
             )
         ]
 
-    def _get_label_translate_dict(self):
+    def _get_label_translate_dict(self) -> dict[str, str]:
         results = self._service.users().labels().list(userId=self._userid).execute()
         labels = results.get("labels", [])
         return {label["name"]: label["id"] for label in labels}
 
-    def _get_message_detail(self, message_id, email_format=None, metadata_headers=None):
+    def _get_message_detail(
+        self,
+        message_id: str,
+        email_format: str | None = None,
+        metadata_headers: list[str] | None = None,
+    ) -> dict[str, Any]:
         """
         Get details of a specific email message based on its email ID
 
@@ -296,7 +320,12 @@ class GoogleMailBase:
             .execute()
         )
 
-    def _get_messages_page(self, label_ids, query_string, next_page_token=None):
+    def _get_messages_page(
+        self,
+        label_ids: list[str],
+        query_string: str,
+        next_page_token: str | None = None,
+    ) -> list[Any]:
         message_list_response = (
             self._service.users()
             .messages()
@@ -314,7 +343,9 @@ class GoogleMailBase:
             message_list_response.get("nextPageToken"),
         ]
 
-    def _get_messages(self, query_string="", label_ids=None):
+    def _get_messages(
+        self, query_string: str = "", label_ids: list[str] | None = None
+    ) -> list[dict[str, Any]]:
         if label_ids is None:
             label_ids = []
         message_items_lst, next_page_token = self._get_messages_page(
@@ -332,13 +363,16 @@ class GoogleMailBase:
         return message_items_lst
 
     def _modify_message_labels(
-        self, message_id, label_id_remove_lst=None, label_id_add_lst=None
-    ):
+        self,
+        message_id: str,
+        label_id_remove_lst: list[str] | None = None,
+        label_id_add_lst: list[str] | None = None,
+    ) -> None:
         if label_id_remove_lst is None:
             label_id_remove_lst = []
         if label_id_add_lst is None:
             label_id_add_lst = []
-        body_dict = {}
+        body_dict: dict[str, list[str]] = {}
         if len(label_id_remove_lst) > 0:
             body_dict["removeLabelIds"] = label_id_remove_lst
         if len(label_id_add_lst) > 0:
@@ -348,7 +382,9 @@ class GoogleMailBase:
                 userId=self._userid, id=message_id, body=body_dict
             ).execute()
 
-    def _move_emails(self, move_email_dict, label_to_ignore):
+    def _move_emails(
+        self, move_email_dict: dict[str, str | None], label_to_ignore: str
+    ) -> None:
         label_existing = self._label_dict[label_to_ignore]
         for message_id, label_add in tqdm(
             iterable=move_email_dict.items(), desc="Move emails"
@@ -361,8 +397,11 @@ class GoogleMailBase:
                 )
 
     def _search_email_on_server(
-        self, query_string="", label_lst=None, only_message_ids=False
-    ):
+        self,
+        query_string: str = "",
+        label_lst: list[str] | None = None,
+        only_message_ids: bool = False,
+    ) -> list[dict[str, Any]] | list[str]:
         """
         Search emails either by a specific query or optionally limit your search to a list of labels
 
@@ -385,7 +424,9 @@ class GoogleMailBase:
         else:
             return [d["id"] for d in message_id_lst]
 
-    def _store_emails_in_database(self, message_id_lst, email_format=None):
+    def _store_emails_in_database(
+        self, message_id_lst: list[str], email_format: str | None = None
+    ) -> None:
         df = self._download_messages_to_dataframe(
             message_id_lst=message_id_lst, email_format=email_format
         )
@@ -393,7 +434,7 @@ class GoogleMailBase:
             self._db_email.store_dataframe(df=df, user_id=self._db_user_id)
 
     @staticmethod
-    def _create_databases(connection_str):
+    def _create_databases(connection_str: str) -> _DatabaseTriple:
         engine = create_engine(connection_str)
         session = sessionmaker(bind=engine)()
         db_email = get_email_database(engine=engine, session=session)
@@ -402,5 +443,5 @@ class GoogleMailBase:
         return db_email, db_ml, db_token
 
     @staticmethod
-    def _get_message_ids(message_lst):
+    def _get_message_ids(message_lst: list[dict[str, Any]]) -> list[str]:
         return [d["id"] for d in message_lst]

@@ -5,7 +5,7 @@ from gmailsorter.daemon.daemon import update
 from gmailsorter.daemon.shared import get_database_engine, load_config_file
 
 
-def _get_execution_mode(args):
+def _get_execution_mode(args: argparse.Namespace) -> str:
     if args.update and args.filter:
         return "all"
     elif args.update:
@@ -18,7 +18,7 @@ def _get_execution_mode(args):
         raise ValueError("Mode of execution undefined.")
 
 
-def command_line_parser():
+def command_line_parser() -> None:
     """
     Main function primarily used for the command line interface
     """

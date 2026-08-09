@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
+from typing import Any
 
 _MAX_DATE_COMMAS = 2
 _DATE_HYPHEN_COUNT = 2
 
 
-def email_date_converter(email_date):
+def email_date_converter(email_date: Any) -> datetime | None:
     if not isinstance(email_date, str):
         return None
     if email_date[:1] == "\xa0":
@@ -35,46 +36,46 @@ def email_date_converter(email_date):
 
 
 class AbstractMessage(ABC):
-    def __init__(self, message_dict):
+    def __init__(self, message_dict: dict[str, Any]) -> None:
         self._message_dict = message_dict
 
     @abstractmethod
-    def get_from(self):
+    def get_from(self) -> str | None:
         pass
 
     @abstractmethod
-    def get_to(self):
+    def get_to(self) -> list[str]:
         pass
 
     @abstractmethod
-    def get_cc(self):
+    def get_cc(self) -> list[str]:
         pass
 
     @abstractmethod
-    def get_label_ids(self):
+    def get_label_ids(self) -> list[str]:
         pass
 
     @abstractmethod
-    def get_subject(self):
+    def get_subject(self) -> str | None:
         pass
 
     @abstractmethod
-    def get_date(self):
+    def get_date(self) -> datetime | None:
         pass
 
     @abstractmethod
-    def get_content(self):
+    def get_content(self) -> str | None:
         pass
 
     @abstractmethod
-    def get_thread_id(self):
+    def get_thread_id(self) -> str:
         pass
 
     @abstractmethod
-    def get_email_id(self):
+    def get_email_id(self) -> str:
         pass
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.get_email_id(),
             "threads": self.get_thread_id(),

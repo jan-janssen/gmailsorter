@@ -1,9 +1,13 @@
 # Based on https://developers.google.com/identity/protocols/oauth2/web-server#python
+from datetime import datetime
+from typing import Any
+
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
 import googleapiclient.discovery
 from google.auth.exceptions import RefreshError
 from googleapiclient.errors import HttpError
+from sqlalchemy import Engine
 
 from gmailsorter.daemon import (
     GoogleMail,
@@ -12,7 +16,9 @@ from gmailsorter.daemon import (
 )
 
 
-def get_authentication_url(client_config, scopes, redirect_uri):
+def get_authentication_url(
+    client_config: dict[str, Any], scopes: list[str], redirect_uri: str
+) -> tuple[str, str, str]:
     # Create flow instance to manage the OAuth 2.0 Authorization Grant Flow steps.
     flow = google_auth_oauthlib.flow.Flow.from_client_config(
         client_config=client_config, scopes=scopes
@@ -35,8 +41,13 @@ def get_authentication_url(client_config, scopes, redirect_uri):
 
 
 def get_google_credentials(
-    client_config, scopes, state, code_verifier, redirect_uri, authorization_response
-):
+    client_config: dict[str, Any],
+    scopes: list[str],
+    state: str,
+    code_verifier: str,
+    redirect_uri: str,
+    authorization_response: str,
+) -> dict[str, Any]:
     # Create flow instance to manage the OAuth 2.0 Authorization Grant Flow steps.
     flow = google_auth_oauthlib.flow.Flow.from_client_config(
         client_config=client_config, scopes=scopes, state=state
@@ -54,17 +65,17 @@ def get_google_credentials(
 
 
 def get_user_status(
-    scopes,
-    database_engine,
-    token,
-    refresh_token,
-    token_uri,
-    client_id,
-    client_secret,
-    expiry,
-    db_user_id,
-    label_name,
-):
+    scopes: list[str],
+    database_engine: Engine,
+    token: str | None,
+    refresh_token: str | None,
+    token_uri: str | None,
+    client_id: str | None,
+    client_secret: str | None,
+    expiry: datetime | None,
+    db_user_id: int,
+    label_name: str,
+) -> tuple[dict[str, str | None], str | None]:
     try:
         gmail = GoogleMail(
             scopes=scopes,
@@ -93,16 +104,16 @@ def get_user_status(
 
 
 def reset_user_status(
-    scopes,
-    database_engine,
-    token,
-    refresh_token,
-    token_uri,
-    client_id,
-    client_secret,
-    expiry,
-    db_user_id,
-):
+    scopes: list[str],
+    database_engine: Engine,
+    token: str | None,
+    refresh_token: str | None,
+    token_uri: str | None,
+    client_id: str | None,
+    client_secret: str | None,
+    expiry: datetime | None,
+    db_user_id: int,
+) -> tuple[dict[str, str], str | None]:
     try:
         gmail = GoogleMail(
             scopes=scopes,
@@ -137,7 +148,9 @@ def reset_user_status(
         return {"update": "success", "fetch": "success"}, None
 
 
-def get_user_info(credentials_dict, service_name="oauth2", version="v2"):
+def get_user_info(
+    credentials_dict: dict[str, Any], service_name: str = "oauth2", version: str = "v2"
+) -> tuple[dict[str, Any] | None, str | None, google.oauth2.credentials.Credentials]:
     credentials = google.oauth2.credentials.Credentials(**credentials_dict)
     user_info_service = googleapiclient.discovery.build(
         serviceName=service_name, version=version, credentials=credentials
@@ -150,7 +163,9 @@ def get_user_info(credentials_dict, service_name="oauth2", version="v2"):
     return user_info, error, credentials
 
 
-def _credentials_to_dict(credentials):
+def _credentials_to_dict(
+    credentials: google.oauth2.credentials.Credentials,
+) -> dict[str, Any]:
     return {
         "token": credentials.token,
         "refresh_token": credentials.refresh_token,

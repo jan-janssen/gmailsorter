@@ -1,7 +1,7 @@
 from gmailsorter.daemon.shared import JOB_STATUS_FAIL, JOB_STATUS_SUCCESS
 
 
-def color_for_status(status):
+def color_for_status(status: str) -> str:
     if status == JOB_STATUS_SUCCESS:
         return '<span style="color:MediumSeaGreen;">' + status + "</span>"
     elif status == JOB_STATUS_FAIL:

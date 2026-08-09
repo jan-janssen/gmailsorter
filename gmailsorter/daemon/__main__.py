@@ -51,6 +51,11 @@ def command_line_parser() -> None:
         action="store_true",
         help="Filter emails using machine learning and initialize empty databases.",
     )
+    parser.add_argument(
+        "-t",
+        "--tasks",
+        help="Number of parallel tasks to use.",
+    )
     args = parser.parse_args()
     if args.credentials:
         client_secrets_config = load_config_file(file_name=args.credentials)
@@ -80,6 +85,7 @@ def command_line_parser() -> None:
             bootstrap=True,
             include_deleted=False,
             recommendation_ratio=0.9,
+            max_workers=int(args.tasks) if args.tasks else None,
         )
     else:
         parser.print_help()

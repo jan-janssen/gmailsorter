@@ -426,8 +426,12 @@ class TestGoogleMailBase(unittest.TestCase):
         mail.fit_machine_learning_model_to_database(n_estimators=5, max_features=2)
 
         fit_mock.assert_called_once()
-        pd.testing.assert_frame_equal(fit_mock.call_args.kwargs["df_all_features"], features)
-        pd.testing.assert_frame_equal(fit_mock.call_args.kwargs["df_all_labels"], labels)
+        pd.testing.assert_frame_equal(
+            fit_mock.call_args.kwargs["df_all_features"], features
+        )
+        pd.testing.assert_frame_equal(
+            fit_mock.call_args.kwargs["df_all_labels"], labels
+        )
         self.assertEqual(fit_mock.call_args.kwargs["n_estimators"], 5)
         self.assertEqual(fit_mock.call_args.kwargs["max_features"], 2)
         self.assertEqual(fit_mock.call_args.kwargs["random_state"], 42)

@@ -425,8 +425,50 @@ class TestGoogleMailBase(unittest.TestCase):
 
         mail.fit_machine_learning_model_to_database(n_estimators=5, max_features=2)
 
+        fit_mock.assert_called_once()
+        pd.testing.assert_frame_equal(fit_mock.call_args.kwargs["df_all_features"], features)
+        pd.testing.assert_frame_equal(fit_mock.call_args.kwargs["df_all_labels"], labels)
+        self.assertEqual(fit_mock.call_args.kwargs["n_estimators"], 5)
+        self.assertEqual(fit_mock.call_args.kwargs["max_features"], 2)
+        self.assertEqual(fit_mock.call_args.kwargs["random_state"], 42)
+        self.assertTrue(fit_mock.call_args.kwargs["bootstrap"])
+        self.assertIsNone(fit_mock.call_args.kwargs["max_workers"])
         db_ml.store_models.assert_called_once()
         self.assertEqual(mail.get_all_emails_in_database().iloc[0]["id"], "x")
+
+    @patch("gmailsorter.google.mail.fit_machine_learning_models")
+    @patch("gmailsorter.google.mail.encode_df_for_machine_learning")
+    def test_fit_machine_learning_model_to_database_forwards_max_workers(
+        self, encode_mock, fit_mock
+    ):
+        service = self._create_mock_service_with_labels()
+        db_ml = MagicMock()
+        db_email = MagicMock()
+        mail = GoogleMailBase(
+            google_mail_service=service, database_email=db_email, database_ml=db_ml
+        )
+
+        db_email.get_all_emails.return_value = pd.DataFrame(
+            [
+                {
+                    "id": "x",
+                    "from": "from@test.com",
+                    "to": ["to@test.com"],
+                    "cc": [],
+                    "labels": ["LBL_INBOX"],
+                    "threads": "t",
+                }
+            ]
+        )
+        encode_mock.return_value = (
+            pd.DataFrame([{"email_id": "x", "f1": 1}]),
+            pd.DataFrame([{"labels_LBL_INBOX": 1}]),
+        )
+        fit_mock.return_value = {"LBL_INBOX": MagicMock()}
+
+        mail.fit_machine_learning_model_to_database(max_workers=3)
+
+        self.assertEqual(fit_mock.call_args.kwargs["max_workers"], 3)
 
     @patch("gmailsorter.google.mail.get_token_database")
     @patch("gmailsorter.google.mail.get_machine_learning_database")

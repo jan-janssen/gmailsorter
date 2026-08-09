@@ -1,6 +1,8 @@
+from typing import Any
+
 import pandas
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
-from sqlalchemy.orm import declarative_base
+from sqlalchemy import Boolean, Column, DateTime, Engine, ForeignKey, Integer, String
+from sqlalchemy.orm import Session, declarative_base
 from tqdm import tqdm
 
 Base = declarative_base()
@@ -58,19 +60,19 @@ class EmailFrom(Base):
 
 
 class DatabaseTemplate:
-    def __init__(self, session):
+    def __init__(self, session: Session) -> None:
         self._session = session
 
-    def close(self):
+    def close(self) -> None:
         self._session.close()
 
 
 class DatabaseInterface(DatabaseTemplate):
     @property
-    def session(self):
+    def session(self) -> Session:
         return self._session
 
-    def store_dataframe(self, df, user_id=1):
+    def store_dataframe(self, df: pandas.DataFrame, user_id: int = 1) -> None:
         self._commit_content_table(df=df, user_id=user_id)
         self._commit_email_from_table(df=df, user_id=user_id)
         self._commit_email_to_table(df=df, user_id=user_id)
@@ -78,7 +80,7 @@ class DatabaseInterface(DatabaseTemplate):
         self._commit_label_table(df=df, user_id=user_id)
         self._commit_thread_table(df=df, user_id=user_id)
 
-    def list_email_ids(self, user_id=1):
+    def list_email_ids(self, user_id: int = 1) -> list[str]:
         return [
             instance.email_id
             for instance in self._session.query(EmailContent)
@@ -86,7 +88,9 @@ class DatabaseInterface(DatabaseTemplate):
             .order_by(EmailContent.id)
         ]
 
-    def mark_emails_as_deleted(self, message_id_lst, user_id=1):
+    def mark_emails_as_deleted(
+        self, message_id_lst: list[str], user_id: int = 1
+    ) -> None:
         for instance in (
             self._session.query(EmailContent)
             .filter(EmailContent.user_id == user_id)
@@ -96,14 +100,21 @@ class DatabaseInterface(DatabaseTemplate):
             instance.email_deleted = True
         self._session.commit()
 
-    def get_labels_to_update(self, message_id_lst, user_id=1):
+    def get_labels_to_update(
+        self, message_id_lst: list[str], user_id: int = 1
+    ) -> tuple[list[str], list[str], list[str]]:
         email_in_db_id = self.list_email_ids(user_id=user_id)
         new_messages_lst = [m for m in message_id_lst if m not in email_in_db_id]
         deleted_messages_lst = [m for m in email_in_db_id if m not in message_id_lst]
         message_label_updates_lst = [m for m in message_id_lst if m in email_in_db_id]
         return new_messages_lst, message_label_updates_lst, deleted_messages_lst
 
-    def update_labels(self, message_id_lst, message_meta_lst, user_id=1):
+    def update_labels(
+        self,
+        message_id_lst: list[str],
+        message_meta_lst: list[list[str]],
+        user_id: int = 1,
+    ) -> None:
         for message_id, message_labels in tqdm(
             iterable=zip(message_id_lst, message_meta_lst, strict=False),
             desc="Update labels",
@@ -149,7 +160,9 @@ class DatabaseInterface(DatabaseTemplate):
                     ]
                 self._session.commit()
 
-    def get_all_emails(self, include_deleted=False, user_id=1):
+    def get_all_emails(
+        self, include_deleted: bool = False, user_id: int = 1
+    ) -> pandas.DataFrame:
         if include_deleted:
             email_collect_lst = [
                 [
@@ -181,7 +194,9 @@ class DatabaseInterface(DatabaseTemplate):
             desc="Create dataframe from database",
         )
 
-    def get_emails_by_label(self, label_id, include_deleted=False, user_id=1):
+    def get_emails_by_label(
+        self, label_id: str, include_deleted: bool = False, user_id: int = 1
+    ) -> pandas.DataFrame:
         return self.get_email_collection(
             email_id_lst=[
                 email_id
@@ -195,7 +210,9 @@ class DatabaseInterface(DatabaseTemplate):
             desc="Create dataframe from emails by label",
         )
 
-    def get_emails_by_from(self, email_from, include_deleted=False, user_id=1):
+    def get_emails_by_from(
+        self, email_from: str, include_deleted: bool = False, user_id: int = 1
+    ) -> pandas.DataFrame:
         return self.get_email_collection(
             email_id_lst=[
                 email_id
@@ -209,7 +226,9 @@ class DatabaseInterface(DatabaseTemplate):
             desc="Create dataframe from emails by from",
         )
 
-    def get_emails_by_to(self, email_to, include_deleted=False, user_id=1):
+    def get_emails_by_to(
+        self, email_to: str, include_deleted: bool = False, user_id: int = 1
+    ) -> pandas.DataFrame:
         return self.get_email_collection(
             email_id_lst=[
                 email_id
@@ -223,7 +242,9 @@ class DatabaseInterface(DatabaseTemplate):
             desc="Create dataframe from emails by to",
         )
 
-    def get_emails_by_cc(self, email_cc, include_deleted=False, user_id=1):
+    def get_emails_by_cc(
+        self, email_cc: str, include_deleted: bool = False, user_id: int = 1
+    ) -> pandas.DataFrame:
         return self.get_email_collection(
             email_id_lst=[
                 email_id
@@ -237,7 +258,9 @@ class DatabaseInterface(DatabaseTemplate):
             desc="Create dataframe from emails by cc",
         )
 
-    def get_emails_by_thread(self, thread_id, include_deleted=False, user_id=1):
+    def get_emails_by_thread(
+        self, thread_id: str, include_deleted: bool = False, user_id: int = 1
+    ) -> pandas.DataFrame:
         return self.get_email_collection(
             email_id_lst=[
                 email_id
@@ -253,11 +276,11 @@ class DatabaseInterface(DatabaseTemplate):
 
     def get_email_collection(
         self,
-        email_id_lst,
-        include_deleted=False,
-        user_id=1,
-        desc="Create dataframe from email collection",
-    ):
+        email_id_lst: list[str],
+        include_deleted: bool = False,
+        user_id: int = 1,
+        desc: str = "Create dataframe from email collection",
+    ) -> pandas.DataFrame:
         if include_deleted:
             email_collect_lst = [
                 [
@@ -289,7 +312,7 @@ class DatabaseInterface(DatabaseTemplate):
             email_collect_lst=email_collect_lst, user_id=user_id, desc=desc
         )
 
-    def _commit_thread_table(self, df, user_id=1):
+    def _commit_thread_table(self, df: pandas.DataFrame, user_id: int = 1) -> None:
         self._session.add_all(
             [
                 Threads(email_id=email_id, thread_id=thread_id, user_id=user_id)
@@ -298,7 +321,7 @@ class DatabaseInterface(DatabaseTemplate):
         )
         self._session.commit()
 
-    def _commit_email_from_table(self, df, user_id=1):
+    def _commit_email_from_table(self, df: pandas.DataFrame, user_id: int = 1) -> None:
         self._session.add_all(
             [
                 EmailFrom(email_id=email_id, email_from=email_from, user_id=user_id)
@@ -307,7 +330,7 @@ class DatabaseInterface(DatabaseTemplate):
         )
         self._session.commit()
 
-    def _commit_label_table(self, df, user_id=1):
+    def _commit_label_table(self, df: pandas.DataFrame, user_id: int = 1) -> None:
         label_lst = []
         for email_id, lid_lst in zip(df["id"], df["labels"], strict=False):
             for label_id in lid_lst:
@@ -317,7 +340,7 @@ class DatabaseInterface(DatabaseTemplate):
         self._session.add_all(label_lst)
         self._session.commit()
 
-    def _commit_email_to_table(self, df, user_id=1):
+    def _commit_email_to_table(self, df: pandas.DataFrame, user_id: int = 1) -> None:
         email_to_lst = []
         for email_id, email_lst in zip(df["id"], df["to"], strict=False):
             for email_to in email_lst:
@@ -327,7 +350,7 @@ class DatabaseInterface(DatabaseTemplate):
         self._session.add_all(email_to_lst)
         self._session.commit()
 
-    def _commit_email_cc_table(self, df, user_id=1):
+    def _commit_email_cc_table(self, df: pandas.DataFrame, user_id: int = 1) -> None:
         email_cc_lst = []
         for email_id, email_lst in zip(df["id"], df["cc"], strict=False):
             for email_cc in email_lst:
@@ -337,7 +360,7 @@ class DatabaseInterface(DatabaseTemplate):
         self._session.add_all(email_cc_lst)
         self._session.commit()
 
-    def _commit_content_table(self, df, user_id=1):
+    def _commit_content_table(self, df: pandas.DataFrame, user_id: int = 1) -> None:
         self._session.add_all(
             [
                 EmailContent(
@@ -356,8 +379,11 @@ class DatabaseInterface(DatabaseTemplate):
         self._session.commit()
 
     def _create_dataframe(
-        self, email_collect_lst, user_id=1, desc="Create dataframe from email list"
-    ):
+        self,
+        email_collect_lst: list[list[Any]],
+        user_id: int = 1,
+        desc: str = "Create dataframe from email list",
+    ) -> pandas.DataFrame:
         (
             email_id_lst,
             email_subject_lst,
@@ -434,6 +460,6 @@ class DatabaseInterface(DatabaseTemplate):
         )
 
 
-def get_email_database(engine, session):
+def get_email_database(engine: Engine, session: Session) -> DatabaseInterface:
     Base.metadata.create_all(engine)
     return DatabaseInterface(session=session)

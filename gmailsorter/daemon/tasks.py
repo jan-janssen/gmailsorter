@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from sqlalchemy.orm import Session
+
 from gmailsorter.daemon.shared import (
     JOB_STATUS_INIT,
     JOB_STATUS_SUCCESS,
@@ -8,7 +10,7 @@ from gmailsorter.daemon.shared import (
 )
 
 
-def create_tasks_for_new_users(session, user_id):
+def create_tasks_for_new_users(session: Session, user_id: int) -> None:
     task_lst = []
     task_update_from_database = (
         session.query(Task)
@@ -45,7 +47,9 @@ def create_tasks_for_new_users(session, user_id):
         session.commit()
 
 
-def update_task_status(session, user_id, task_name, status):
+def update_task_status(
+    session: Session, user_id: int, task_name: str, status: str
+) -> None:
     task = (
         session.query(Task)
         .filter(Task.user_id == user_id)
@@ -57,7 +61,9 @@ def update_task_status(session, user_id, task_name, status):
     session.commit()
 
 
-def get_all_tasks_to_execute(session, task_name="all"):
+def get_all_tasks_to_execute(
+    session: Session, task_name: str = "all"
+) -> dict[str, list[int]]:
     if task_name not in ["all", "update", "fetch", "select"]:
         raise ValueError(
             'The task_name parameter has to be one of the following ["all", "update", "fetch", "select"]'

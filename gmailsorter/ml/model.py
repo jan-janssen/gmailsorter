@@ -1,11 +1,19 @@
 from concurrent.futures import ProcessPoolExecutor
 
 import numpy as np
+import pandas
 from sklearn.ensemble import RandomForestClassifier
 from tqdm import tqdm
 
 
-def train_random_forest(n_estimators, random_state, bootstrap, max_features, X, y):
+def train_random_forest(
+    n_estimators: int,
+    random_state: int,
+    bootstrap: bool,
+    max_features: int,
+    X: pandas.DataFrame,
+    y: pandas.Series,
+) -> RandomForestClassifier:
     """
     Train a random forest classifier
 
@@ -29,14 +37,14 @@ def train_random_forest(n_estimators, random_state, bootstrap, max_features, X, 
 
 
 def fit_machine_learning_models(
-    df_all_features,
-    df_all_labels,
-    n_estimators=100,
-    max_features=400,
-    random_state=42,
-    bootstrap=True,
-    max_workers=None,
-):
+    df_all_features: pandas.DataFrame,
+    df_all_labels: pandas.DataFrame,
+    n_estimators: int = 100,
+    max_features: int = 400,
+    random_state: int = 42,
+    bootstrap: bool = True,
+    max_workers: int | None = None,
+) -> dict[str, RandomForestClassifier]:
     """
     Train machine learning models
 
@@ -75,8 +83,10 @@ def fit_machine_learning_models(
 
 
 def get_predictions_from_machine_learning_models(
-    df_features, model_dict, recommendation_ratio=0.9
-):
+    df_features: pandas.DataFrame,
+    model_dict: dict[str, RandomForestClassifier],
+    recommendation_ratio: float = 0.9,
+) -> dict[str, str | None]:
     """
     Get recommendations from machine learning models
 

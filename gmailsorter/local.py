@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 from gmailsorter.google import GoogleMailBase, create_service
 
@@ -6,13 +7,13 @@ from gmailsorter.google import GoogleMailBase, create_service
 class Gmail(GoogleMailBase):
     def __init__(
         self,
-        client_config,
-        connection_str,
-        user_id="me",
-        db_user_id=1,
-        port=8080,
-        email_download_format="metadata",
-    ):
+        client_config: dict[str, Any],
+        connection_str: str,
+        user_id: str = "me",
+        db_user_id: int = 1,
+        port: int = 8080,
+        email_download_format: str = "metadata",
+    ) -> None:
         """
         Gmail class to manage Emails via the Gmail API directly from Python
 
@@ -61,6 +62,6 @@ class Gmail(GoogleMailBase):
         )
 
 
-def load_client_secrets_file(client_secrets_file):
+def load_client_secrets_file(client_secrets_file: str) -> dict[str, Any]:
     with open(client_secrets_file) as json_file:
         return json.load(json_file)

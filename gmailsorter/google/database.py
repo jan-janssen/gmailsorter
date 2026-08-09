@@ -1,5 +1,8 @@
-from sqlalchemy import Column, DateTime, Integer, String
-from sqlalchemy.orm import declarative_base
+from typing import Any
+
+from google.oauth2.credentials import Credentials
+from sqlalchemy import Column, DateTime, Engine, Integer, String
+from sqlalchemy.orm import Session, declarative_base
 
 from gmailsorter.base.database import DatabaseTemplate
 
@@ -21,10 +24,12 @@ class GoogleToken(Base):
 
 class DatabaseInterface(DatabaseTemplate):
     @property
-    def session(self):
+    def session(self) -> Session:
         return self._session
 
-    def update_token_with_dict(self, token, credentials, commit=True):
+    def update_token_with_dict(
+        self, token: GoogleToken, credentials: Credentials, commit: bool = True
+    ) -> None:
         token.token = credentials.token
         token.refresh_token = credentials.refresh_token
         token.token_uri = credentials.token_uri
@@ -36,7 +41,7 @@ class DatabaseInterface(DatabaseTemplate):
         if commit:
             self._session.commit()
 
-    def get_token(self, user_id):
+    def get_token(self, user_id: int) -> GoogleToken:
         token = self._session.query(GoogleToken).filter_by(user_id=user_id).first()
         if token is None:
             return GoogleToken(user_id=user_id)
@@ -44,7 +49,7 @@ class DatabaseInterface(DatabaseTemplate):
             return token
 
     @staticmethod
-    def token_to_dict(token):
+    def token_to_dict(token: GoogleToken) -> dict[str, Any]:
         return {
             "token": token.token,
             "refresh_token": token.refresh_token,
@@ -56,6 +61,6 @@ class DatabaseInterface(DatabaseTemplate):
         }
 
 
-def get_token_database(engine, session):
+def get_token_database(engine: Engine, session: Session) -> DatabaseInterface:
     Base.metadata.create_all(engine)
     return DatabaseInterface(session=session)

@@ -4,7 +4,7 @@ import os
 from gmailsorter import Gmail, load_client_secrets_file
 
 
-def command_line_parser():
+def command_line_parser() -> None:
     """
     Main function primarily used for the command line interface
     """

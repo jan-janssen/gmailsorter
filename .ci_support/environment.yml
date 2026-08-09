@@ -8,7 +8,7 @@ dependencies:
 - numpy =2.4.3
 - pandas =3.0.2
 - python
-- scikit-learn =1.8.0
+- scikit-learn =1.9.0
 - sqlalchemy =2.0.51
 - tqdm =4.70.0
 - hatchling

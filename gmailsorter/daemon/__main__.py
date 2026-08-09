@@ -73,10 +73,6 @@ def command_line_parser() -> None:
         raise ValueError(
             "Provide a connection string to connect to the database e.g. sqlite:///email.db ."
         )
-    if args.tasks:
-        tasks = int(args.tasks)
-    else:
-        tasks = None
     if args.update or args.filter or args.scheduled:
         mode = _get_execution_mode(args)
         update(
@@ -89,7 +85,7 @@ def command_line_parser() -> None:
             bootstrap=True,
             include_deleted=False,
             recommendation_ratio=0.9,
-            max_workers=tasks,
+            max_workers=int(args.tasks) if args.tasks else None,
         )
     else:
         parser.print_help()

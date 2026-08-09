@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 
 import pandas
 from googleapiclient.discovery import Resource
@@ -117,7 +117,7 @@ class GoogleMailBase:
         random_state: int = 42,
         bootstrap: bool = True,
         include_deleted: bool = False,
-        max_workers: Optional[int] = None,
+        max_workers: int | None = None,
     ):
         """
         Fit machine learning models to emails stored in database and afterwards store machine learning models in

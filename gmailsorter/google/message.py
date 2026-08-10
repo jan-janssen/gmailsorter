@@ -1,4 +1,5 @@
 import base64
+from datetime import datetime
 from typing import Any
 
 from gmailsorter.base.message import (

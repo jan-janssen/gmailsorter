@@ -1,3 +1,4 @@
+import email.header
 import email.utils
 
 from gmailsorter.base.message import AbstractMessage, strip_html_tags
@@ -48,7 +49,7 @@ class Message(AbstractMessage):
         return [self._folder]
 
     def get_subject(self):
-        return self._message.get("Subject")
+        return self._decode_header(self._message.get("Subject"))
 
     def get_date(self):
         date_header = self._message.get("Date")
@@ -91,6 +92,30 @@ class Message(AbstractMessage):
 
     def get_email_id(self):
         return f"{self._folder}\x1f{self._uid}"
+
+    @staticmethod
+    def _decode_header(header_value):
+        """
+        Decode an email header into a plain str.
+
+        Under the default compat32 policy, email.message.Message.get() normally
+        returns a str, but a header containing raw non-ASCII bytes that are not
+        valid RFC 2047 encoded-words (seen from some IMAP servers) is returned as
+        an email.header.Header instead. That object is not a str subclass, so it
+        fails SQLAlchemy's parameter binding - str() it first, then run RFC 2047
+        decoding to resolve any encoded-words into text.
+        """
+        if header_value is None:
+            return None
+        if isinstance(header_value, email.header.Header):
+            header_value = str(header_value)
+        decoded_chunks = email.header.decode_header(header_value)
+        return "".join(
+            chunk.decode(charset or "utf-8", errors="replace")
+            if isinstance(chunk, bytes)
+            else chunk
+            for chunk, charset in decoded_chunks
+        )
 
     @staticmethod
     def _decode_part(part):

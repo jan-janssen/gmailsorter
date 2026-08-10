@@ -1,5 +1,6 @@
 from datetime import datetime
-from email.message import EmailMessage
+from email.header import Header
+from email.message import EmailMessage, Message as EmailLibMessage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from unittest import TestCase
@@ -22,6 +23,25 @@ class MessageTest(TestCase):
 
     def test_subject(self):
         self.assertEqual(self.message.get_subject(), "Test Email Subject")
+
+    def test_subject_encoded_word(self):
+        msg = EmailMessage()
+        msg["Subject"] = "Exclusieve Nieuwsbrief • Binobet"
+        message = Message(message=msg, folder="INBOX", uid="1")
+        self.assertEqual(
+            message.get_subject(), "Exclusieve Nieuwsbrief • Binobet"
+        )
+
+    def test_subject_header_object_is_coerced_to_str(self):
+        # Some servers/Python versions cause Message.get() to return an
+        # email.header.Header instance instead of a str, which used to crash
+        # SQLAlchemy's parameter binding when inserted into the database.
+        msg = EmailLibMessage()
+        msg["Subject"] = Header("Exclusieve Nieuwsbrief • Binobet", "utf-8")
+        message = Message(message=msg, folder="INBOX", uid="1")
+        subject = message.get_subject()
+        self.assertIsInstance(subject, str)
+        self.assertEqual(subject, "Exclusieve Nieuwsbrief • Binobet")
 
     def test_from(self):
         self.assertEqual(self.message.get_from(), "sender@server.net")

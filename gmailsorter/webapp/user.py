@@ -1,4 +1,7 @@
+from datetime import datetime
+
 from flask_login import UserMixin
+from sqlalchemy import Engine
 from sqlalchemy.orm import sessionmaker
 
 from gmailsorter.daemon import SQLUser, get_token
@@ -11,16 +14,16 @@ from gmailsorter.webapp.database import (
 class FlaskUser(UserMixin):
     def __init__(
         self,
-        database_id,
-        google_id,
-        name,
-        email,
-        profile_pic,
-        token,
-        refresh_token,
-        token_uri,
-        expiry,
-    ):
+        database_id: int,
+        google_id: str,
+        name: str | None,
+        email: str | None,
+        profile_pic: str | None,
+        token: str | None,
+        refresh_token: str | None,
+        token_uri: str | None,
+        expiry: datetime | None,
+    ) -> None:
         self.id = google_id
         self.database_id = database_id
         self.name = name
@@ -33,19 +36,19 @@ class FlaskUser(UserMixin):
 
 
 def get_flask_user(
-    engine,
-    google_id,
-    users_name=None,
-    users_email=None,
-    picture=None,
-    token=None,
-    refresh_token=None,
-    token_uri=None,
-    client_id=None,
-    client_secret=None,
-    expiry=None,
-    update=True,
-):
+    engine: Engine,
+    google_id: str,
+    users_name: str | None = None,
+    users_email: str | None = None,
+    picture: str | None = None,
+    token: str | None = None,
+    refresh_token: str | None = None,
+    token_uri: str | None = None,
+    client_id: str | None = None,
+    client_secret: str | None = None,
+    expiry: datetime | None = None,
+    update: bool = True,
+) -> FlaskUser | None:
     session = sessionmaker(bind=engine)()
     user = session.query(SQLUser).filter_by(google_id=google_id).first()
     if not update:

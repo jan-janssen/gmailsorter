@@ -42,6 +42,37 @@ class TestMainCommandLineParser(unittest.TestCase):
 
     @patch("gmailsorter.__main__.Gmail")
     @patch("gmailsorter.__main__.load_client_secrets_file")
+    def test_tasks_flag_sets_max_workers(self, load_secrets_mock, gmail_cls):
+        load_secrets_mock.return_value = {"installed": {}}
+        gmail_instance = MagicMock()
+        gmail_cls.return_value = gmail_instance
+
+        with patch(
+            "sys.argv",
+            [
+                "gmailsorter",
+                "-c",
+                "creds.json",
+                "-d",
+                "sqlite:///:memory:",
+                "-u",
+                "-t",
+                "4",
+            ],
+        ):
+            command_line_parser()
+
+        gmail_instance.fit_machine_learning_model_to_database.assert_called_once_with(
+            n_estimators=100,
+            max_features=400,
+            random_state=42,
+            bootstrap=True,
+            include_deleted=False,
+            max_workers=4,
+        )
+
+    @patch("gmailsorter.__main__.Gmail")
+    @patch("gmailsorter.__main__.load_client_secrets_file")
     def test_label_flag_triggers_filter(self, load_secrets_mock, gmail_cls):
         load_secrets_mock.return_value = {"installed": {}}
         gmail_instance = MagicMock()

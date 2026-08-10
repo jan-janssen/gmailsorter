@@ -1,3 +1,7 @@
+from datetime import datetime
+
+from sqlalchemy.orm import Session
+
 from gmailsorter.daemon import (
     GoogleToken,
     SQLUser,
@@ -6,18 +10,18 @@ from gmailsorter.daemon import (
 
 
 def create_user_in_database(
-    session,
-    google_id,
-    name,
-    email,
-    profile_pic,
-    token,
-    refresh_token,
-    token_uri,
-    client_id,
-    client_secret,
-    expiry,
-):
+    session: Session,
+    google_id: str,
+    name: str | None,
+    email: str | None,
+    profile_pic: str | None,
+    token: str | None,
+    refresh_token: str | None,
+    token_uri: str | None,
+    client_id: str | None,
+    client_secret: str | None,
+    expiry: datetime | None,
+) -> int:
     user = SQLUser(
         google_id=google_id,
         name=name,
@@ -41,8 +45,15 @@ def create_user_in_database(
 
 
 def update_token_in_database(
-    session, user_id, token, refresh_token, token_uri, client_id, client_secret, expiry
-):
+    session: Session,
+    user_id: int,
+    token: str | None,
+    refresh_token: str | None,
+    token_uri: str | None,
+    client_id: str | None,
+    client_secret: str | None,
+    expiry: datetime | None,
+) -> None:
     token_obj = get_token(session=session, user_id=user_id)
     if token_obj is None:
         token_obj = GoogleToken(user_id=user_id)

@@ -1,6 +1,9 @@
+from typing import Any
+
 from google.auth.exceptions import RefreshError
 from googleapiclient.errors import HttpError
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import Engine
+from sqlalchemy.orm import Session, sessionmaker
 
 from gmailsorter.daemon.shared import (
     JOB_STATUS_FAIL,
@@ -19,7 +22,9 @@ from gmailsorter.daemon.tasks import (
 )
 
 
-def load_user_data_from_database(session, mode):
+def load_user_data_from_database(
+    session: Session, mode: str
+) -> tuple[dict[str, list[int]], dict[int, dict[str, Any]]]:
     job_dict = get_all_tasks_to_execute(session=session, task_name=mode)
     user_id_lst = []
     for lst in job_dict.values():
@@ -41,21 +46,22 @@ def load_user_data_from_database(session, mode):
 
 
 def iterate_over_users(
-    user_id_lst,
-    token_detail_dict,
-    scopes,
-    engine,
-    session,
-    client_secrets_config,
-    database_update=True,
-    filter_messages=True,
-    n_estimators=100,
-    max_features=400,
-    random_state=42,
-    bootstrap=True,
-    include_deleted=False,
-    recommendation_ratio=0.9,
-):
+    user_id_lst: list[int],
+    token_detail_dict: dict[int, dict[str, Any]],
+    scopes: list[str],
+    engine: Engine,
+    session: Session,
+    client_secrets_config: dict[str, Any],
+    database_update: bool = True,
+    filter_messages: bool = True,
+    n_estimators: int = 100,
+    max_features: int = 400,
+    random_state: int = 42,
+    bootstrap: bool = True,
+    include_deleted: bool = False,
+    recommendation_ratio: float = 0.9,
+    max_workers: int | None = None,
+) -> None:
     for user_database_id in user_id_lst:
         token_user_dict = token_detail_dict[user_database_id]
         try:
@@ -102,6 +108,7 @@ def iterate_over_users(
                     random_state=random_state,
                     bootstrap=bootstrap,
                     include_deleted=include_deleted,
+                    max_workers=max_workers,
                 )
                 if status_start == JOB_STATUS_INIT:
                     update_task_status(
@@ -149,16 +156,17 @@ def iterate_over_users(
 
 
 def update(
-    engine,
-    client_secrets_config,
-    mode,
-    n_estimators=100,
-    max_features=400,
-    random_state=42,
-    bootstrap=True,
-    include_deleted=False,
-    recommendation_ratio=0.9,
-):
+    engine: Engine,
+    client_secrets_config: dict[str, Any],
+    mode: str,
+    n_estimators: int = 100,
+    max_features: int = 400,
+    random_state: int = 42,
+    bootstrap: bool = True,
+    include_deleted: bool = False,
+    recommendation_ratio: float = 0.9,
+    max_workers: int | None = None,
+) -> None:
     session = sessionmaker(bind=engine)()
     job_dict, token_detail_dict = load_user_data_from_database(
         session=session, mode=mode
@@ -185,4 +193,5 @@ def update(
             bootstrap=bootstrap,
             include_deleted=include_deleted,
             recommendation_ratio=recommendation_ratio,
+            max_workers=max_workers,
         )

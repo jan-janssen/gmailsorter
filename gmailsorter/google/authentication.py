@@ -1,19 +1,23 @@
+from typing import Any
+
 from google.auth.exceptions import RefreshError
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
+from googleapiclient.discovery import Resource, build
+
+from gmailsorter.google.database import DatabaseInterface
 
 
 def create_service(
-    client_config,
-    api_name,
-    api_version,
-    scopes,
-    database,
-    database_user_id,
-    port=8080,
-):
+    client_config: dict[str, Any],
+    api_name: str,
+    api_version: str,
+    scopes: list[str],
+    database: DatabaseInterface,
+    database_user_id: int,
+    port: int = 8080,
+) -> Resource:
     cred = None
 
     token = database.get_token(user_id=database_user_id)
@@ -43,7 +47,12 @@ def create_service(
     return build(api_name, api_version, credentials=cred)
 
 
-def validate_token(cred, client_config, scopes, port=8080):
+def validate_token(
+    cred: Credentials | None,
+    client_config: dict[str, Any],
+    scopes: list[str],
+    port: int = 8080,
+) -> Credentials:
     token_valid = False
     if cred and cred.expired and cred.refresh_token:
         try:

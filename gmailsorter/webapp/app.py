@@ -29,7 +29,7 @@ from gmailsorter.webapp.googleapi import (
     reset_user_status,
 )
 from gmailsorter.webapp.render import color_for_status
-from gmailsorter.webapp.user import get_flask_user
+from gmailsorter.webapp.user import FlaskUser, get_flask_user
 
 # Flask app setup
 app = flask.Flask(
@@ -47,18 +47,18 @@ login_manager.init_app(app)
 
 
 @login_manager.unauthorized_handler
-def unauthorized():
+def unauthorized() -> tuple[str, int]:
     return "You must be logged in to access this content.", 403
 
 
 # Flask-Login helper to retrieve a user from our db
 @login_manager.user_loader
-def load_user(user_id):
+def load_user(user_id: str) -> FlaskUser | None:
     return get_flask_user(engine=ENGINE, google_id=user_id, update=False)
 
 
 @app.route("/")
-def index():
+def index() -> str:
     if current_user.is_authenticated:
         # Access Gmail
         status_dict, error = get_user_status(
@@ -105,7 +105,7 @@ def index():
 
 
 @app.route("/authorize")
-def authorize():
+def authorize() -> flask.Response:
     authorization_url, state, code_verifier = get_authentication_url(
         client_config=CLIENT_SECRETS_CONFIG,
         scopes=SCOPES,
@@ -121,7 +121,7 @@ def authorize():
 
 @app.route("/reset")
 @login_required
-def reset_status():
+def reset_status() -> str | flask.Response:
     status_dict, error = reset_user_status(
         scopes=SCOPES,
         database_engine=ENGINE,
@@ -145,7 +145,7 @@ def reset_status():
 
 
 @app.route("/oauth2callback")
-def oauth2callback():
+def oauth2callback() -> flask.Response | tuple[str, int]:
     # Specify the state when creating the flow in the callback so that it can
     # verified in the authorization server response.
     state = flask.session["state"]
@@ -191,12 +191,12 @@ def oauth2callback():
 
 @app.route("/logout")
 @login_required
-def logout():
+def logout() -> flask.Response:
     logout_user()
     return flask.redirect(flask.url_for("index"))
 
 
-def run_app():
+def run_app() -> None:
     # When running locally, disable OAuthlib's HTTPs verification.
     # ACTION ITEM for developers:
     #     When running in production *do not* leave this option enabled.

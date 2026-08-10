@@ -1,24 +1,40 @@
+from typing import Any
+
+import pandas
+from googleapiclient.discovery import Resource
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from gmailsorter.base import get_email_database
 from gmailsorter.base.mail import AbstractMailBox
+from gmailsorter.base.database import DatabaseInterface as EmailDatabaseInterface
+from gmailsorter.google.database import DatabaseInterface as TokenDatabaseInterface
 from gmailsorter.google.database import get_token_database
 from gmailsorter.google.message import get_email_dict
-from gmailsorter.ml import get_machine_learning_database
+from gmailsorter.ml import (
+    encode_df_for_machine_learning,
+    fit_machine_learning_models,
+    get_machine_learning_database,
+    get_predictions_from_machine_learning_models,
+)
+from gmailsorter.ml.database import MachineLearningDatabase
+
+_DatabaseTriple = tuple[
+    EmailDatabaseInterface, MachineLearningDatabase, TokenDatabaseInterface
+]
 
 
 class GoogleMailBase(AbstractMailBox):
     def __init__(
         self,
-        google_mail_service,
-        database_email=None,
-        database_ml=None,
-        database_token=None,
-        user_id="me",
-        db_user_id=1,
-        email_download_format="metadata",
-    ):
+        google_mail_service: Resource,
+        database_email: EmailDatabaseInterface | None = None,
+        database_ml: MachineLearningDatabase | None = None,
+        database_token: TokenDatabaseInterface | None = None,
+        user_id: str = "me",
+        db_user_id: int = 1,
+        email_download_format: str = "metadata",
+    ) -> None:
         """
         Gmail class to manage Emails via the Gmail API directly from Python
 
@@ -46,7 +62,12 @@ class GoogleMailBase(AbstractMailBox):
         labels = results.get("labels", [])
         return {label["name"]: label["id"] for label in labels}
 
-    def _get_message_detail(self, message_id, email_format=None, metadata_headers=None):
+    def _get_message_detail(
+        self,
+        message_id: str,
+        email_format: str | None = None,
+        metadata_headers: list[str] | None = None,
+    ) -> dict[str, Any]:
         """
         Get details of a specific email message based on its email ID
 
@@ -74,7 +95,12 @@ class GoogleMailBase(AbstractMailBox):
             .execute()
         )
 
-    def _get_messages_page(self, label_ids, query_string, next_page_token=None):
+    def _get_messages_page(
+        self,
+        label_ids: list[str],
+        query_string: str,
+        next_page_token: str | None = None,
+    ) -> list[Any]:
         message_list_response = (
             self._service.users()
             .messages()
@@ -92,7 +118,9 @@ class GoogleMailBase(AbstractMailBox):
             message_list_response.get("nextPageToken"),
         ]
 
-    def _get_messages(self, query_string="", label_ids=None):
+    def _get_messages(
+        self, query_string: str = "", label_ids: list[str] | None = None
+    ) -> list[dict[str, Any]]:
         if label_ids is None:
             label_ids = []
         message_items_lst, next_page_token = self._get_messages_page(
@@ -110,13 +138,16 @@ class GoogleMailBase(AbstractMailBox):
         return message_items_lst
 
     def _modify_message_labels(
-        self, message_id, label_id_remove_lst=None, label_id_add_lst=None
-    ):
+        self,
+        message_id: str,
+        label_id_remove_lst: list[str] | None = None,
+        label_id_add_lst: list[str] | None = None,
+    ) -> None:
         if label_id_remove_lst is None:
             label_id_remove_lst = []
         if label_id_add_lst is None:
             label_id_add_lst = []
-        body_dict = {}
+        body_dict: dict[str, list[str]] = {}
         if len(label_id_remove_lst) > 0:
             body_dict["removeLabelIds"] = label_id_remove_lst
         if len(label_id_add_lst) > 0:
@@ -127,8 +158,11 @@ class GoogleMailBase(AbstractMailBox):
             ).execute()
 
     def _search_email_on_server(
-        self, query_string="", label_lst=None, only_message_ids=False
-    ):
+        self,
+        query_string: str = "",
+        label_lst: list[str] | None = None,
+        only_message_ids: bool = False,
+    ) -> list[dict[str, Any]] | list[str]:
         """
         Search emails either by a specific query or optionally limit your search to a list of labels
 
@@ -175,7 +209,7 @@ class GoogleMailBase(AbstractMailBox):
         return get_email_dict(message=message)
 
     @staticmethod
-    def _create_databases(connection_str):
+    def _create_databases(connection_str: str) -> _DatabaseTriple:
         engine = create_engine(connection_str)
         session = sessionmaker(bind=engine)()
         db_email = get_email_database(engine=engine, session=session)
@@ -184,5 +218,5 @@ class GoogleMailBase(AbstractMailBox):
         return db_email, db_ml, db_token
 
     @staticmethod
-    def _get_message_ids(message_lst):
+    def _get_message_ids(message_lst: list[dict[str, Any]]) -> list[str]:
         return [d["id"] for d in message_lst]

@@ -695,6 +695,52 @@ class TestDaemonMain(unittest.TestCase):
             command_line_parser()
         update_mock.assert_not_called()
 
+    @patch("gmailsorter.daemon.__main__.update")
+    @patch("gmailsorter.daemon.__main__.get_database_engine", return_value="ENGINE")
+    @patch("gmailsorter.daemon.__main__.load_config_file", return_value={"web": {}})
+    def test_command_line_parser_tasks_provided(
+        self, load_config_mock, get_engine_mock, update_mock
+    ):
+        with patch(
+            "sys.argv",
+            [
+                "gmailsortdaemon",
+                "-c",
+                "creds.json",
+                "-d",
+                "sqlite:///:memory:",
+                "-u",
+                "-t",
+                "4",
+            ],
+        ):
+            command_line_parser()
+
+        _, kwargs = update_mock.call_args
+        self.assertEqual(kwargs["max_workers"], 4)
+
+    @patch("gmailsorter.daemon.__main__.update")
+    @patch("gmailsorter.daemon.__main__.get_database_engine", return_value="ENGINE")
+    @patch("gmailsorter.daemon.__main__.load_config_file", return_value={"web": {}})
+    def test_command_line_parser_tasks_not_provided(
+        self, load_config_mock, get_engine_mock, update_mock
+    ):
+        with patch(
+            "sys.argv",
+            [
+                "gmailsortdaemon",
+                "-c",
+                "creds.json",
+                "-d",
+                "sqlite:///:memory:",
+                "-u",
+            ],
+        ):
+            command_line_parser()
+
+        _, kwargs = update_mock.call_args
+        self.assertIsNone(kwargs["max_workers"])
+
 
 if __name__ == "__main__":
     unittest.main()

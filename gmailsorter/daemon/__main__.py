@@ -5,7 +5,7 @@ from gmailsorter.daemon.daemon import update
 from gmailsorter.daemon.shared import get_database_engine, load_config_file
 
 
-def _get_execution_mode(args):
+def _get_execution_mode(args: argparse.Namespace) -> str:
     if args.update and args.filter:
         return "all"
     elif args.update:
@@ -18,7 +18,7 @@ def _get_execution_mode(args):
         raise ValueError("Mode of execution undefined.")
 
 
-def command_line_parser():
+def command_line_parser() -> None:
     """
     Main function primarily used for the command line interface
     """
@@ -51,6 +51,11 @@ def command_line_parser():
         action="store_true",
         help="Filter emails using machine learning and initialize empty databases.",
     )
+    parser.add_argument(
+        "-t",
+        "--tasks",
+        help="Number of parallel tasks to use.",
+    )
     args = parser.parse_args()
     if args.credentials:
         client_secrets_config = load_config_file(file_name=args.credentials)
@@ -80,6 +85,7 @@ def command_line_parser():
             bootstrap=True,
             include_deleted=False,
             recommendation_ratio=0.9,
+            max_workers=int(args.tasks) if args.tasks else None,
         )
     else:
         parser.print_help()

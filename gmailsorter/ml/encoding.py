@@ -1,10 +1,15 @@
+from typing import Any
+
 import numpy as np
 import pandas
 
 
 def encode_df_for_machine_learning(
-    df, feature_lst=None, label_lst=None, return_labels=False
-):
+    df: pandas.DataFrame,
+    feature_lst: list[str] | np.ndarray | None = None,
+    label_lst: list[str] | np.ndarray | None = None,
+    return_labels: bool = False,
+) -> pandas.DataFrame | tuple[pandas.DataFrame, pandas.DataFrame]:
     """
     Encode a given dataframe for machine learning. Either based on a list of existing features and labels or by
     generating the features and labels from the dataframe. By default, only the dataframe with features is returned
@@ -52,7 +57,9 @@ def encode_df_for_machine_learning(
         return df_all_features, df_all_encode[label_lst]
 
 
-def one_hot_encoding(df, feature_lst=None):
+def one_hot_encoding(
+    df: pandas.DataFrame, feature_lst: list[str] | None = None
+) -> pandas.DataFrame:
     """
     Binary one hot encoding of features in a pandas DataFrame
 
@@ -116,7 +123,7 @@ def one_hot_encoding(df, feature_lst=None):
 
 
 # Helper functions for one hot encoding
-def _build_red_lst(df_column):
+def _build_red_lst(df_column: np.ndarray) -> list[str]:
     collect_lst = []
     for lst in df_column:
         for entry in lst:
@@ -129,7 +136,7 @@ def _build_red_lst(df_column):
     return list(set(collect_lst))
 
 
-def _get_lst_without_none(lst, column):
+def _get_lst_without_none(lst: list[Any], column: str) -> list[str]:
     return [
         column + "_" + entry
         for entry in lst
@@ -137,7 +144,7 @@ def _get_lst_without_none(lst, column):
     ]
 
 
-def _single_entry_df(red_lst, value_lst):
+def _single_entry_df(red_lst: np.ndarray, value_lst: np.ndarray) -> np.ndarray:
     return np.array(
         [
             [
@@ -150,7 +157,7 @@ def _single_entry_df(red_lst, value_lst):
     ).astype("float64")
 
 
-def _single_entry_email_df(red_lst, value_lst):
+def _single_entry_email_df(red_lst: list[str], value_lst: np.ndarray) -> np.ndarray:
     return np.array(
         [
             [
@@ -169,7 +176,7 @@ def _single_entry_email_df(red_lst, value_lst):
     ).astype("float64")
 
 
-def _list_entry_df(red_lst, value_lst):
+def _list_entry_df(red_lst: list[str], value_lst: np.ndarray) -> np.ndarray:
     return np.array(
         [
             [1 if red_entry in email else 0 for red_entry in red_lst]
@@ -178,7 +185,7 @@ def _list_entry_df(red_lst, value_lst):
     ).astype("float64")
 
 
-def _list_entry_email_df(red_lst, value_lst):
+def _list_entry_email_df(red_lst: list[str], value_lst: np.ndarray) -> np.ndarray:
     return np.array(
         [
             [1 if any(red_entry in e for e in email) else 0 for red_entry in red_lst]

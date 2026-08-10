@@ -119,7 +119,9 @@ def one_hot_encoding(
         labels_to_drop = [label for label in all_labels if label not in feature_lst]
         labels_to_add = [label for label in feature_lst if label not in all_labels]
         if len(labels_to_add) > 0:
-            pad_sparse = sparse.csr_matrix((len(df), len(labels_to_add)), dtype=np.uint8)
+            pad_sparse = sparse.csr_matrix(
+                (len(df), len(labels_to_add)), dtype=np.uint8
+            )
             data_stack = sparse.hstack(
                 [all_binary_sparse, pad_sparse], format="csr", dtype=np.uint8
             )

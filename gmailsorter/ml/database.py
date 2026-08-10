@@ -110,7 +110,11 @@ class MachineLearningDatabase(DatabaseTemplate):
         feature_lst = self.get_features(user_id=user_id)
         if model_obj is None:
             return None, [], feature_lst
-        return pickle.loads(model_obj.model), pickle.loads(model_obj.labels), feature_lst
+        return (
+            pickle.loads(model_obj.model),
+            pickle.loads(model_obj.labels),
+            feature_lst,
+        )
 
     def get_features(self, user_id: int = 1) -> list[str]:
         return [

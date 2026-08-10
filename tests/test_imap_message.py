@@ -28,9 +28,7 @@ class MessageTest(TestCase):
         msg = EmailMessage()
         msg["Subject"] = "Exclusieve Nieuwsbrief • Binobet"
         message = Message(message=msg, folder="INBOX", uid="1")
-        self.assertEqual(
-            message.get_subject(), "Exclusieve Nieuwsbrief • Binobet"
-        )
+        self.assertEqual(message.get_subject(), "Exclusieve Nieuwsbrief • Binobet")
 
     def test_subject_header_object_is_coerced_to_str(self):
         # Some servers/Python versions cause Message.get() to return an

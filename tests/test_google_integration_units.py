@@ -361,8 +361,8 @@ class TestGoogleMailBase(unittest.TestCase):
         db_email.update_labels.assert_not_called()
         store_mock.assert_called_once_with(message_id_lst=["new2"], email_format=None)
 
-    @patch("gmailsorter.google.mail.get_predictions_from_machine_learning_models")
-    @patch("gmailsorter.google.mail.encode_df_for_machine_learning")
+    @patch("gmailsorter.base.mail.get_predictions_from_machine_learning_models")
+    @patch("gmailsorter.base.mail.encode_df_for_machine_learning")
     def test_filter_messages_from_server(self, encode_mock, predict_mock):
         service = self._create_mock_service_with_labels()
         db_ml = MagicMock()
@@ -395,8 +395,8 @@ class TestGoogleMailBase(unittest.TestCase):
             mail.filter_messages_from_server("Inbox")
         encode_mock.assert_not_called()
 
-    @patch("gmailsorter.google.mail.fit_machine_learning_models")
-    @patch("gmailsorter.google.mail.encode_df_for_machine_learning")
+    @patch("gmailsorter.base.mail.fit_machine_learning_models")
+    @patch("gmailsorter.base.mail.encode_df_for_machine_learning")
     def test_fit_machine_learning_model_to_database(self, encode_mock, fit_mock):
         service = self._create_mock_service_with_labels()
         db_ml = MagicMock()
@@ -440,8 +440,8 @@ class TestGoogleMailBase(unittest.TestCase):
         db_ml.store_models.assert_called_once()
         self.assertEqual(mail.get_all_emails_in_database().iloc[0]["id"], "x")
 
-    @patch("gmailsorter.google.mail.fit_machine_learning_models")
-    @patch("gmailsorter.google.mail.encode_df_for_machine_learning")
+    @patch("gmailsorter.base.mail.fit_machine_learning_models")
+    @patch("gmailsorter.base.mail.encode_df_for_machine_learning")
     def test_fit_machine_learning_model_to_database_forwards_max_workers(
         self, encode_mock, fit_mock
     ):

@@ -1,21 +1,17 @@
 from typing import Any
 
-import pandas
 from googleapiclient.discovery import Resource
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from tqdm import tqdm
 
 from gmailsorter.base import get_email_database
 from gmailsorter.base.database import DatabaseInterface as EmailDatabaseInterface
+from gmailsorter.base.mail import AbstractMailBox
 from gmailsorter.google.database import DatabaseInterface as TokenDatabaseInterface
 from gmailsorter.google.database import get_token_database
 from gmailsorter.google.message import get_email_dict
 from gmailsorter.ml import (
-    encode_df_for_machine_learning,
-    fit_machine_learning_models,
     get_machine_learning_database,
-    get_predictions_from_machine_learning_models,
 )
 from gmailsorter.ml.database import MachineLearningDatabase
 
@@ -24,7 +20,7 @@ _DatabaseTriple = tuple[
 ]
 
 
-class GoogleMailBase:
+class GoogleMailBase(AbstractMailBox):
     def __init__(
         self,
         google_mail_service: Resource,
@@ -47,243 +43,15 @@ class GoogleMailBase:
             db_user_id (int): Default 1 - set a user id when sharing a database with multiple users
             email_download_format (str): API response format [full, metadata]
         """
-        self._service = google_mail_service
-        self._db_email = database_email
-        self._db_ml = database_ml
         self._db_token = database_token
-        self._db_user_id = db_user_id
-        self._userid = user_id
-        self._email_download_format = email_download_format
-        self._label_dict = self._get_label_translate_dict()
-        self._label_dict_inverse = {v: k for k, v in self._label_dict.items()}
-
-    @property
-    def labels(self) -> list[str]:
-        return list(self._label_dict.keys())
-
-    def download_emails_for_label(self, label: str) -> pandas.DataFrame:
-        """
-        Download emails for a specific label
-
-        Args:
-            label (str): label to download emails for
-
-        Returns:
-            pandas.DataFrame: Email content for the downloaded emails
-        """
-        return self._download_messages_to_dataframe(
-            message_id_lst=self._search_email_on_server(
-                label_lst=[label], only_message_ids=True
-            )
+        super().__init__(
+            mail_service=google_mail_service,
+            database_email=database_email,
+            database_ml=database_ml,
+            user_id=user_id,
+            db_user_id=db_user_id,
+            email_download_format=email_download_format,
         )
-
-    def filter_messages_from_server(
-        self,
-        label: str,
-        recommendation_ratio: float = 0.9,
-    ) -> None:
-        """
-        Filter new emails based on machine learning model recommendations.
-
-        Args:
-            label (str): Email label to filter for
-            recommendation_ratio (float): Only accept recommendation above this ratio (0<r<1)
-        """
-        df_partial = self.download_emails_for_label(label=label)
-        if len(df_partial) > 0:
-            model_reload_dict, feature_reload_lst = self._db_ml.load_models()
-            df_partial_features = encode_df_for_machine_learning(
-                df=df_partial,
-                feature_lst=feature_reload_lst,
-                label_lst=list(model_reload_dict.keys()),
-                return_labels=False,
-            )
-            df_partial_features = df_partial_features.reindex(
-                sorted(df_partial_features.columns), axis=1
-            )
-            model_recommendation_dict = get_predictions_from_machine_learning_models(
-                df_features=df_partial_features,
-                model_dict=model_reload_dict,
-                recommendation_ratio=recommendation_ratio,
-            )
-            self._move_emails(
-                move_email_dict=model_recommendation_dict, label_to_ignore=label
-            )
-
-    def fit_machine_learning_model_to_database(
-        self,
-        n_estimators: int = 100,
-        max_features: int = 400,
-        random_state: int = 42,
-        bootstrap: bool = True,
-        include_deleted: bool = False,
-        max_workers: int | None = None,
-    ):
-        """
-        Fit machine learning models to emails stored in database and afterwards store machine learning models in
-        database.
-
-        Args:
-            n_estimators (int): Number of estimators
-            max_features (int): Number of features
-            random_state (int): Random state
-            bootstrap (boolean): Whether bootstrap samples are used when building trees. If False, the whole dataset is
-                                 used to build each tree. (default: true)
-            include_deleted (bool): Flag to include deleted emails - default False
-            max_workers (int): maximum number of workers for the machine learning models
-        """
-        df_all = self.get_all_emails_in_database(include_deleted=include_deleted)
-        df_all_features, df_all_labels = encode_df_for_machine_learning(
-            df=df_all, feature_lst=[], label_lst=[], return_labels=True
-        )
-        df_all_features = df_all_features.loc[
-            :, ~df_all_features.columns.duplicated()
-        ].copy()
-        df_all_features = df_all_features.reindex(
-            sorted(df_all_features.columns), axis=1
-        )
-        model_dict = fit_machine_learning_models(
-            df_all_features=df_all_features,
-            df_all_labels=df_all_labels,
-            n_estimators=n_estimators,
-            max_features=max_features,
-            random_state=random_state,
-            bootstrap=bootstrap,
-            max_workers=max_workers,
-        )
-        self._db_ml.store_models(
-            model_dict=model_dict,
-            feature_lst=df_all_features.columns.values.tolist(),
-            user_id=self._db_user_id,
-            commit=True,
-        )
-
-    def get_all_emails_in_database(
-        self, include_deleted: bool = False
-    ) -> pandas.DataFrame:
-        """
-        Get all emails stored in the local database
-
-        Args:
-            include_deleted (bool): Flag to include deleted emails - default False
-
-        Returns:
-            pandas.DataFrame: With all emails and the corresponding information
-        """
-        return self._db_email.get_all_emails(
-            include_deleted=include_deleted, user_id=self._db_user_id
-        )
-
-    def update_database(
-        self,
-        quick: bool = False,
-        label_lst: list[str] | None = None,
-        email_format: str | None = None,
-    ) -> None:
-        """
-        Update local email database
-
-        Args:
-            quick (boolean): Only add new emails, do not update existing labels - by default: False
-            label_lst (list): list of labels to be searched
-            email_format (str/None): Email format to download
-        """
-        if label_lst is None:
-            label_lst = []
-        if self._db_email is not None:
-            message_id_lst = self._search_email_on_server(
-                label_lst=label_lst, only_message_ids=True
-            )
-            (
-                new_messages_lst,
-                message_label_updates_lst,
-                deleted_messages_lst,
-            ) = self._db_email.get_labels_to_update(
-                message_id_lst=message_id_lst, user_id=self._db_user_id
-            )
-            if not quick:
-                self._db_email.mark_emails_as_deleted(
-                    message_id_lst=deleted_messages_lst, user_id=self._db_user_id
-                )
-                self._db_email.update_labels(
-                    message_id_lst=message_label_updates_lst,
-                    message_meta_lst=self._get_labels_for_emails(
-                        message_id_lst=message_label_updates_lst
-                    ),
-                    user_id=self._db_user_id,
-                )
-            self._store_emails_in_database(
-                message_id_lst=new_messages_lst, email_format=email_format
-            )
-
-    def _download_messages_to_dataframe(
-        self, message_id_lst: list[str], email_format: str | None = None
-    ) -> pandas.DataFrame:
-        """
-        Download a list of messages based on their email IDs and store the content in a pandas.DataFrame.
-
-        Args:
-            message_id_lst (list): list of emails IDs
-            email_format (str): Email format to download - default: "full"
-
-        Returns:
-            pandas.DataFrame: pandas.DataFrame which contains the rendered emails
-        """
-        return pandas.DataFrame(
-            [
-                message
-                for message in [
-                    get_email_dict(
-                        message=self._get_message_detail(
-                            message_id=message_id,
-                            email_format=email_format,
-                            metadata_headers=[],
-                        )
-                    )
-                    for message_id in tqdm(
-                        iterable=message_id_lst, desc="Download messages to DataFrame"
-                    )
-                ]
-                if message is not None
-            ]
-        )
-
-    def _get_labels_for_email(self, message_id: str) -> list[str]:
-        """
-        Get labels for email
-
-        Args:
-            message_id (str): email ID
-
-        Returns:
-            list: List of email labels
-        """
-        message_dict = self._get_message_detail(
-            message_id=message_id,
-            email_format="metadata",
-            metadata_headers=["labelIds"],
-        )
-        if "labelIds" in message_dict:
-            return message_dict["labelIds"]
-        else:
-            return []
-
-    def _get_labels_for_emails(self, message_id_lst: list[str]) -> list[list[str]]:
-        """
-        Get labels for a list of emails
-
-        Args:
-            message_id_lst (list): list of emails IDs
-
-        Returns:
-            list: Nested list of email labels for each email
-        """
-        return [
-            self._get_labels_for_email(message_id=message_id)
-            for message_id in tqdm(
-                iterable=message_id_lst, desc="Get labels for emails"
-            )
-        ]
 
     def _get_label_translate_dict(self) -> dict[str, str]:
         results = self._service.users().labels().list(userId=self._userid).execute()
@@ -385,20 +153,6 @@ class GoogleMailBase:
                 userId=self._userid, id=message_id, body=body_dict
             ).execute()
 
-    def _move_emails(
-        self, move_email_dict: dict[str, str | None], label_to_ignore: str
-    ) -> None:
-        label_existing = self._label_dict[label_to_ignore]
-        for message_id, label_add in tqdm(
-            iterable=move_email_dict.items(), desc="Move emails"
-        ):
-            if label_add is not None and label_add != label_existing:
-                self._modify_message_labels(
-                    message_id=message_id,
-                    label_id_remove_lst=[label_existing],
-                    label_id_add_lst=[label_add],
-                )
-
     def _search_email_on_server(
         self,
         query_string: str = "",
@@ -427,14 +181,28 @@ class GoogleMailBase:
         else:
             return [d["id"] for d in message_id_lst]
 
-    def _store_emails_in_database(
-        self, message_id_lst: list[str], email_format: str | None = None
-    ) -> None:
-        df = self._download_messages_to_dataframe(
-            message_id_lst=message_id_lst, email_format=email_format
+    def _get_labels_for_email(self, message_id: str) -> list[str]:
+        """
+        Get labels for email
+
+        Args:
+            message_id (str): email ID
+
+        Returns:
+            list: List of email labels
+        """
+        message_dict = self._get_message_detail(
+            message_id=message_id,
+            email_format="metadata",
+            metadata_headers=["labelIds"],
         )
-        if len(df) > 0:
-            self._db_email.store_dataframe(df=df, user_id=self._db_user_id)
+        if "labelIds" in message_dict:
+            return message_dict["labelIds"]
+        else:
+            return []
+
+    def _parse_message(self, message):
+        return get_email_dict(message=message)
 
     @staticmethod
     def _create_databases(connection_str: str) -> _DatabaseTriple:

@@ -47,6 +47,7 @@ Homepage = "https://github.com/jan-janssen/gmailsorter"
 gmailsorter = "gmailsorter.__main__:command_line_parser"
 gmailsorter-daemon = "gmailsorter.daemon.__main__:command_line_parser"
 gmailsorter-app = "gmailsorter.webapp.app:run_app"
+gmailsorter-imap = "gmailsorter.imap.__main__:command_line_parser"
 
 [tool.ruff.lint]
 select = [

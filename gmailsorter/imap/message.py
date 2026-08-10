@@ -111,9 +111,11 @@ class Message(AbstractMessage):
             header_value = str(header_value)
         decoded_chunks = email.header.decode_header(header_value)
         return "".join(
-            chunk.decode(charset or "utf-8", errors="replace")
-            if isinstance(chunk, bytes)
-            else chunk
+            (
+                chunk.decode(charset or "utf-8", errors="replace")
+                if isinstance(chunk, bytes)
+                else chunk
+            )
             for chunk, charset in decoded_chunks
         )
 

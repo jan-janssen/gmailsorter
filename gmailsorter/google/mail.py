@@ -1,21 +1,17 @@
 from typing import Any
 
-import pandas
 from googleapiclient.discovery import Resource
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from gmailsorter.base import get_email_database
-from gmailsorter.base.mail import AbstractMailBox
 from gmailsorter.base.database import DatabaseInterface as EmailDatabaseInterface
+from gmailsorter.base.mail import AbstractMailBox
 from gmailsorter.google.database import DatabaseInterface as TokenDatabaseInterface
 from gmailsorter.google.database import get_token_database
 from gmailsorter.google.message import get_email_dict
 from gmailsorter.ml import (
-    encode_df_for_machine_learning,
-    fit_machine_learning_models,
     get_machine_learning_database,
-    get_predictions_from_machine_learning_models,
 )
 from gmailsorter.ml.database import MachineLearningDatabase
 

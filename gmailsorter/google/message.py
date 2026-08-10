@@ -127,7 +127,7 @@ class Message(AbstractMessage):
             return ""
 
     @staticmethod
-    def _get_email_address(email):
+    def _get_email_address(email: str) -> str:
         email_split = email.split("<")
         if len(email_split) == 1:
             return email.lower()

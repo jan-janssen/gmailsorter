@@ -53,7 +53,7 @@ class GoogleMailBase(AbstractMailBox):
             email_download_format=email_download_format,
         )
 
-    def _get_label_translate_dict(self):
+    def _get_label_translate_dict(self) -> dict[str, str]:
         results = self._service.users().labels().list(userId=self._userid).execute()
         labels = results.get("labels", [])
         return {label["name"]: label["id"] for label in labels}
@@ -181,7 +181,7 @@ class GoogleMailBase(AbstractMailBox):
         else:
             return [d["id"] for d in message_id_lst]
 
-    def _get_labels_for_email(self, message_id):
+    def _get_labels_for_email(self, message_id: str) -> list[str]:
         """
         Get labels for email
 

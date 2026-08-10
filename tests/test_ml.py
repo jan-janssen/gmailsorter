@@ -23,6 +23,7 @@ from gmailsorter.ml.encoding import (
     one_hot_encoding,
 )
 from gmailsorter.ml.model import (
+    _to_sparse_matrix,
     fit_machine_learning_models,
     get_predictions_from_machine_learning_models,
     train_random_forest,
@@ -252,10 +253,52 @@ class TestMlModel(unittest.TestCase):
         self.assertIsInstance(model, RandomForestClassifier)
         self.assertTrue(hasattr(model, "predict"))
 
+    def test_train_random_forest_respects_max_depth_and_min_samples_leaf(self):
+        X = self.df_features.drop("email_id", axis=1).to_numpy()
+        y = self.df_labels.to_numpy()
+        model = train_random_forest(
+            5, 0, False, "sqrt", X, y, max_depth=3, min_samples_leaf=2
+        )
+        self.assertEqual(model.max_depth, 3)
+        self.assertEqual(model.min_samples_leaf, 2)
+
+    def test_train_random_forest_with_n_jobs(self):
+        X = self.df_features.drop("email_id", axis=1).to_numpy()
+        y = self.df_labels.to_numpy()
+        model = train_random_forest(
+            5, 0, False, "sqrt", X, y, max_depth=None, min_samples_leaf=1, n_jobs=2
+        )
+        self.assertIsInstance(model, RandomForestClassifier)
+        self.assertEqual(model.n_jobs, 2)
+
     def test_fit_machine_learning_models(self):
         self.assertEqual(set(self.label_lst), {"labels_Label_1", "labels_Label_2"})
         self.assertIsInstance(self.model, RandomForestClassifier)
         self.assertEqual(self.model.n_outputs_, 2)
+
+    def test_fit_machine_learning_models_max_depth_and_min_samples_leaf(self):
+        model, label_lst = fit_machine_learning_models(
+            self.df_features,
+            self.df_labels,
+            n_estimators=5,
+            max_depth=5,
+            min_samples_leaf=2,
+            bootstrap=False,
+        )
+        self.assertEqual(model.max_depth, 5)
+        self.assertEqual(model.min_samples_leaf, 2)
+
+    def test_fit_machine_learning_models_max_workers(self):
+        model, _ = fit_machine_learning_models(
+            self.df_features,
+            self.df_labels,
+            n_estimators=5,
+            max_depth=None,
+            min_samples_leaf=1,
+            bootstrap=False,
+            max_workers=2,
+        )
+        self.assertEqual(model.n_jobs, 2)
 
     def test_get_predictions_from_machine_learning_models(self):
         predictions = get_predictions_from_machine_learning_models(
@@ -271,6 +314,42 @@ class TestMlModel(unittest.TestCase):
             self.df_features, self.model, self.label_lst, recommendation_ratio=1.0
         )
         self.assertIsNone(predictions["id1"])
+
+    def test_get_predictions_single_output_label(self):
+        # When only one label column is present, scikit-learn squeezes the output to single-output
+        # classification. The implementation must normalise it back to the list form.
+        df_labels_single = self.df_labels[["labels_Label_1"]]
+        model, label_lst = fit_machine_learning_models(
+            self.df_features,
+            df_labels_single,
+            n_estimators=10,
+            max_depth=None,
+            min_samples_leaf=1,
+            bootstrap=False,
+        )
+        predictions = get_predictions_from_machine_learning_models(
+            self.df_features, model, label_lst
+        )
+        self.assertEqual(set(predictions.keys()), {"id1", "id2", "id3"})
+        for value in predictions.values():
+            self.assertTrue(value is None or value == "Label_1")
+
+    def test_to_sparse_matrix_dense(self):
+        df = pd.DataFrame({"a": [1, 0], "b": [0, 1]})
+        result = _to_sparse_matrix(df)
+        np.testing.assert_array_equal(result, [[1, 0], [0, 1]])
+
+    def test_to_sparse_matrix_sparse(self):
+        from scipy.sparse import issparse
+
+        df = pd.DataFrame(
+            {
+                "a": pd.arrays.SparseArray([1, 0]),
+                "b": pd.arrays.SparseArray([0, 1]),
+            }
+        )
+        result = _to_sparse_matrix(df)
+        self.assertTrue(issparse(result))
 
     def test_spam_example_csv_pipeline(self):
         csv_data = """id,from,to,cc,date,threads,labels,subject,content

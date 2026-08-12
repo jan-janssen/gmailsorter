@@ -1,33 +1,32 @@
-import unittest
-import pickle
 import ast
-import pandas as pd
+import unittest
+
 import numpy as np
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sklearn.ensemble import RandomForestClassifier
 
+from gmailsorter.ml.database import (
+    Base,
+    MachineLearningDatabase,
+    MachineLearningFeatures,
+    MachineLearningModel,
+    get_machine_learning_database,
+)
 from gmailsorter.ml.encoding import (
+    _build_red_lst,
+    _encode_multi_label,
+    _expand_with_domains,
+    _get_lst_without_none,
     encode_df_for_machine_learning,
     one_hot_encoding,
-    _build_red_lst,
-    _get_lst_without_none,
-    _single_entry_df,
-    _single_entry_email_df,
-    _list_entry_df,
-    _list_entry_email_df,
 )
 from gmailsorter.ml.model import (
-    train_random_forest,
+    _to_sparse_matrix,
     fit_machine_learning_models,
     get_predictions_from_machine_learning_models,
-)
-from gmailsorter.ml.database import (
-    MachineLearningDatabase,
-    MachineLearningLabels,
-    MachineLearningFeatures,
-    get_machine_learning_database,
-    Base,
+    train_random_forest,
 )
 
 
@@ -46,89 +45,62 @@ class TestMlDatabase(unittest.TestCase):
     def test_get_machine_learning_database(self):
         db_instance = get_machine_learning_database(self.engine, self.session)
         self.assertIsInstance(db_instance, MachineLearningDatabase)
-        self.assertEqual(self.session.query(MachineLearningLabels).count(), 0)
+        self.assertEqual(self.session.query(MachineLearningModel).count(), 0)
         self.assertEqual(self.session.query(MachineLearningFeatures).count(), 0)
 
-    def test_store_and_load_models_new(self):
-        models = {
-            "label1": RandomForestClassifier(),
-            "label2": RandomForestClassifier(),
-        }
+    def test_store_and_load_model_new(self):
+        model = RandomForestClassifier()
+        label_lst = ["labels_label1", "labels_label2"]
         features = ["feature1", "feature2", "email_id"]
-        self.db.store_models(models, features)
+        self.db.store_model(model, label_lst, features)
 
-        self.assertEqual(self.session.query(MachineLearningLabels).count(), 2)
+        self.assertEqual(self.session.query(MachineLearningModel).count(), 1)
         self.assertEqual(self.session.query(MachineLearningFeatures).count(), 2)
         self.assertEqual(len(self.db.get_features()), 2)
         self.assertNotIn("email_id", self.db.get_features())
 
-        loaded_models, loaded_features = self.db.load_models()
-        self.assertEqual(len(loaded_models), 2)
-        self.assertEqual(set(loaded_models.keys()), {"label1", "label2"})
-        self.assertIsInstance(loaded_models["label1"], RandomForestClassifier)
+        loaded_model, loaded_labels, loaded_features = self.db.load_model()
+        self.assertIsInstance(loaded_model, RandomForestClassifier)
+        self.assertEqual(loaded_labels, label_lst)
         self.assertEqual(set(loaded_features), {"feature1", "feature2"})
 
-    def test_store_models_update(self):
-        models = {"label1": RandomForestClassifier(n_estimators=10)}
+    def test_load_model_missing(self):
+        loaded_model, loaded_labels, loaded_features = self.db.load_model()
+        self.assertIsNone(loaded_model)
+        self.assertEqual(loaded_labels, [])
+        self.assertEqual(loaded_features, [])
+
+    def test_store_model_update(self):
+        model = RandomForestClassifier(n_estimators=10)
         features = ["feature1"]
-        self.db.store_models(models, features)
+        self.db.store_model(model, ["labels_label1"], features)
 
-        updated_models = {"label1": RandomForestClassifier(n_estimators=20)}
-        self.db.store_models(updated_models, features)
+        updated_model = RandomForestClassifier(n_estimators=20)
+        self.db.store_model(updated_model, ["labels_label1"], features)
 
-        loaded_models, _ = self.db.load_models()
-        self.assertEqual(loaded_models["label1"].n_estimators, 20)
-        self.assertEqual(self.session.query(MachineLearningLabels).count(), 1)
-
-    def test_store_models_delete(self):
-        models = {"label1": "model1", "label2": "model2"}
-        features = ["feature1", "feature2"]
-        self.db.store_models(models, features)
-
-        new_models = {"label1": "model1_updated"}
-        self.db.store_models(new_models, features)
-
-        loaded_models, _ = self.db.load_models()
-        self.assertEqual(set(loaded_models.keys()), {"label1"})
-        self.assertEqual(self.session.query(MachineLearningLabels).count(), 1)
+        loaded_model, _, _ = self.db.load_model()
+        self.assertEqual(loaded_model.n_estimators, 20)
+        self.assertEqual(self.session.query(MachineLearningModel).count(), 1)
 
     def test_store_features_add_and_remove(self):
-        models = {"label1": "model1"}
+        model = "model1"
         features = ["feature1", "feature2"]
-        self.db.store_models(models, features)
+        self.db.store_model(model, ["labels_label1"], features)
         self.assertEqual(set(self.db.get_features()), {"feature1", "feature2"})
 
         new_features = ["feature2", "feature3"]
-        self.db.store_models(models, new_features)
+        self.db.store_model(model, ["labels_label1"], new_features)
         self.assertEqual(set(self.db.get_features()), {"feature2", "feature3"})
         self.assertEqual(self.session.query(MachineLearningFeatures).count(), 2)
 
-    def test_store_models_no_commit(self):
-        models = {"label1": "model1"}
+    def test_store_model_no_commit(self):
+        model = "model1"
         features = ["feature1"]
-        self.db.store_models(models, features, commit=False)
+        self.db.store_model(model, ["labels_label1"], features, commit=False)
         self.session.rollback()
 
-        self.assertEqual(self.session.query(MachineLearningLabels).count(), 0)
+        self.assertEqual(self.session.query(MachineLearningModel).count(), 0)
         self.assertEqual(self.session.query(MachineLearningFeatures).count(), 0)
-
-    def test_get_labels(self):
-        labels = [
-            MachineLearningLabels(
-                label_id="label1", random_forest=pickle.dumps("test"), user_id=1
-            ),
-            MachineLearningLabels(
-                label_id="label2", random_forest=pickle.dumps("test"), user_id=1
-            ),
-            MachineLearningLabels(
-                label_id="label3", random_forest=pickle.dumps("test"), user_id=2
-            ),
-        ]
-        self.session.add_all(labels)
-        self.session.commit()
-
-        retrieved_labels = self.db._get_labels(user_id=1)
-        self.assertEqual(set(retrieved_labels), {"label1", "label2"})
 
     def test_get_features(self):
         features = [
@@ -196,8 +168,15 @@ class TestMlEncoding(unittest.TestCase):
         self.assertIn("labels_Label_1", df_encoded.columns)
         self.assertIn("cc_@test.com", df_encoded.columns)
         self.assertEqual(df_encoded["from_@another.com"].sum(), 1)
-        self.assertEqual(df_encoded["threads_thread1"].sum(), 1)
         self.assertEqual(df_encoded["to_to1@test.com"].sum(), 1)
+
+    def test_one_hot_encoding_does_not_encode_threads(self):
+        # Thread IDs are close to unique per email - one-hot encoding them would let the model memorize
+        # training threads instead of generalizing, so they are deliberately excluded.
+        df_encoded = one_hot_encoding(self.df)
+        self.assertFalse(
+            any(column.startswith("threads_") for column in df_encoded.columns)
+        )
 
     def test_one_hot_encoding_with_feature_list(self):
         features = ["labels_Label_1", "cc_@another.com", "from_@test.com"]
@@ -219,29 +198,26 @@ class TestMlEncoding(unittest.TestCase):
         result = _get_lst_without_none(lst, "col")
         self.assertEqual(result, ["col_a", "col_b"])
 
-    def test_single_entry_df(self):
-        red_lst = ["a", "b", None]
-        value_lst = ["b", "a", "c"]
-        result = _single_entry_df(red_lst, value_lst)
-        np.testing.assert_array_equal(result, [[0, 1], [1, 0], [0, 0]])
+    def test_expand_with_domains(self):
+        self.assertEqual(
+            set(_expand_with_domains(["a@b.c", "d"])), {"a@b.c", "d", "@b.c"}
+        )
 
-    def test_single_entry_email_df(self):
-        red_lst = ["a@b.c", "@b.c", None]
-        value_lst = ["a@b.c", "d@e.f", None]
-        result = _single_entry_email_df(red_lst, value_lst)
-        np.testing.assert_array_equal(result, [[1, 1], [0, 0], [0, 0]])
-
-    def test_list_entry_df(self):
+    def test_encode_multi_label_exact_match(self):
         red_lst = ["a", "b", "c"]
         value_lst = [["a", "d"], ["b"], ["c", "a"]]
-        result = _list_entry_df(red_lst, value_lst)
+        result = _encode_multi_label(value_lst, red_lst, expand_domains=False).toarray()
         np.testing.assert_array_equal(result, [[1, 0, 0], [0, 1, 0], [1, 0, 1]])
 
-    def test_list_entry_email_df(self):
+    def test_encode_multi_label_with_domain_expansion(self):
         red_lst = ["@b.c", "d@e.f"]
         value_lst = [["a@b.c"], ["x@y.z", "d@e.f"]]
-        result = _list_entry_email_df(red_lst, value_lst)
+        result = _encode_multi_label(value_lst, red_lst, expand_domains=True).toarray()
         np.testing.assert_array_equal(result, [[1, 0], [0, 1]])
+
+    def test_encode_multi_label_empty_vocabulary(self):
+        result = _encode_multi_label([[], []], [], expand_domains=False)
+        self.assertEqual(result.shape, (2, 0))
 
 
 class TestMlModel(unittest.TestCase):
@@ -259,24 +235,74 @@ class TestMlModel(unittest.TestCase):
                 "labels_Label_2": [0, 1, 0],
             }
         )
-        self.models = fit_machine_learning_models(
-            self.df_features, self.df_labels, n_estimators=10, max_workers=1
+        self.model, self.label_lst = fit_machine_learning_models(
+            self.df_features,
+            self.df_labels,
+            n_estimators=10,
+            max_depth=None,
+            min_samples_leaf=1,
+            bootstrap=False,
         )
 
     def test_train_random_forest(self):
-        X = self.df_features.drop("email_id", axis=1)
-        y = self.df_labels["labels_Label_1"]
-        model = train_random_forest(10, 42, True, 2, X, y)
+        X = self.df_features.drop("email_id", axis=1).to_numpy()
+        y = self.df_labels.to_numpy()
+        model = train_random_forest(
+            10, 42, True, 2, X, y, max_depth=None, min_samples_leaf=1
+        )
         self.assertIsInstance(model, RandomForestClassifier)
         self.assertTrue(hasattr(model, "predict"))
 
+    def test_train_random_forest_respects_max_depth_and_min_samples_leaf(self):
+        X = self.df_features.drop("email_id", axis=1).to_numpy()
+        y = self.df_labels.to_numpy()
+        model = train_random_forest(
+            5, 0, False, "sqrt", X, y, max_depth=3, min_samples_leaf=2
+        )
+        self.assertEqual(model.max_depth, 3)
+        self.assertEqual(model.min_samples_leaf, 2)
+
+    def test_train_random_forest_with_n_jobs(self):
+        X = self.df_features.drop("email_id", axis=1).to_numpy()
+        y = self.df_labels.to_numpy()
+        model = train_random_forest(
+            5, 0, False, "sqrt", X, y, max_depth=None, min_samples_leaf=1, n_jobs=2
+        )
+        self.assertIsInstance(model, RandomForestClassifier)
+        self.assertEqual(model.n_jobs, 2)
+
     def test_fit_machine_learning_models(self):
-        self.assertEqual(set(self.models.keys()), {"Label_1", "Label_2"})
-        self.assertIsInstance(self.models["Label_1"], RandomForestClassifier)
+        self.assertEqual(set(self.label_lst), {"labels_Label_1", "labels_Label_2"})
+        self.assertIsInstance(self.model, RandomForestClassifier)
+        self.assertEqual(self.model.n_outputs_, 2)
+
+    def test_fit_machine_learning_models_max_depth_and_min_samples_leaf(self):
+        model, label_lst = fit_machine_learning_models(
+            self.df_features,
+            self.df_labels,
+            n_estimators=5,
+            max_depth=5,
+            min_samples_leaf=2,
+            bootstrap=False,
+        )
+        self.assertEqual(model.max_depth, 5)
+        self.assertEqual(model.min_samples_leaf, 2)
+
+    def test_fit_machine_learning_models_max_workers(self):
+        model, _ = fit_machine_learning_models(
+            self.df_features,
+            self.df_labels,
+            n_estimators=5,
+            max_depth=None,
+            min_samples_leaf=1,
+            bootstrap=False,
+            max_workers=2,
+        )
+        self.assertEqual(model.n_jobs, 2)
 
     def test_get_predictions_from_machine_learning_models(self):
         predictions = get_predictions_from_machine_learning_models(
-            self.df_features, self.models
+            self.df_features, self.model, self.label_lst
         )
         self.assertEqual(set(predictions.keys()), {"id1", "id2", "id3"})
         self.assertEqual(predictions["id1"], "Label_1")
@@ -285,9 +311,45 @@ class TestMlModel(unittest.TestCase):
 
     def test_get_predictions_from_machine_learning_models_no_recommendation(self):
         predictions = get_predictions_from_machine_learning_models(
-            self.df_features, self.models, recommendation_ratio=1.0
+            self.df_features, self.model, self.label_lst, recommendation_ratio=1.0
         )
         self.assertIsNone(predictions["id1"])
+
+    def test_get_predictions_single_output_label(self):
+        # When only one label column is present, scikit-learn squeezes the output to single-output
+        # classification. The implementation must normalise it back to the list form.
+        df_labels_single = self.df_labels[["labels_Label_1"]]
+        model, label_lst = fit_machine_learning_models(
+            self.df_features,
+            df_labels_single,
+            n_estimators=10,
+            max_depth=None,
+            min_samples_leaf=1,
+            bootstrap=False,
+        )
+        predictions = get_predictions_from_machine_learning_models(
+            self.df_features, model, label_lst
+        )
+        self.assertEqual(set(predictions.keys()), {"id1", "id2", "id3"})
+        for value in predictions.values():
+            self.assertTrue(value is None or value == "Label_1")
+
+    def test_to_sparse_matrix_dense(self):
+        df = pd.DataFrame({"a": [1, 0], "b": [0, 1]})
+        result = _to_sparse_matrix(df)
+        np.testing.assert_array_equal(result, [[1, 0], [0, 1]])
+
+    def test_to_sparse_matrix_sparse(self):
+        from scipy.sparse import issparse
+
+        df = pd.DataFrame(
+            {
+                "a": pd.arrays.SparseArray([1, 0]),
+                "b": pd.arrays.SparseArray([0, 1]),
+            }
+        )
+        result = _to_sparse_matrix(df)
+        self.assertTrue(issparse(result))
 
     def test_spam_example_csv_pipeline(self):
         csv_data = """id,from,to,cc,date,threads,labels,subject,content
@@ -332,8 +394,10 @@ class TestMlModel(unittest.TestCase):
         self.assertIn("email_id", df_features.columns)
         self.assertEqual(set(df_labels.columns), {"labels_Label_7891913576640435048"})
 
-        models = fit_machine_learning_models(
-            df_features, df_labels, n_estimators=10, max_features=2, max_workers=1
+        model, label_lst = fit_machine_learning_models(
+            df_features, df_labels, n_estimators=10, max_features=2
         )
-        predictions = get_predictions_from_machine_learning_models(df_features, models)
+        predictions = get_predictions_from_machine_learning_models(
+            df_features, model, label_lst
+        )
         self.assertEqual(set(predictions.values()), {"Label_7891913576640435048"})

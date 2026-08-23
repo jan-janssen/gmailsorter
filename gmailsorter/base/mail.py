@@ -66,6 +66,7 @@ class AbstractMailBox(ABC):
         self,
         label,
         recommendation_ratio=0.9,
+        label_prefix: str="labels_",
     ):
         """
         Filter new emails based on machine learning model recommendations.
@@ -82,6 +83,7 @@ class AbstractMailBox(ABC):
                 feature_lst=feature_reload_lst,
                 label_lst=list(model_reload_dict.keys()),
                 return_labels=False,
+                label_prefix=label_prefix,
             )
             df_partial_features = df_partial_features.reindex(
                 sorted(df_partial_features.columns), axis=1

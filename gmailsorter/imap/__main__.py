@@ -88,7 +88,7 @@ def command_line_parser():
                 include_deleted=False,
             )
         elif args.label:
-            imap.filter_messages_from_server(label=args.label, recommendation_ratio=0.9)
+            imap.filter_messages_from_server(label=args.label, recommendation_ratio=0.9, label_prefix="labels_")
         else:
             parser.print_help()
 

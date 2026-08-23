@@ -79,7 +79,7 @@ def command_line_parser() -> None:
             )
         elif args.label:
             gmail.filter_messages_from_server(
-                label=args.label, recommendation_ratio=0.9
+                label=args.label, recommendation_ratio=0.9, label_prefix="labels_Label_",
             )
         else:
             parser.print_help()

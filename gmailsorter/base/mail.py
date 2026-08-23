@@ -66,7 +66,7 @@ class AbstractMailBox(ABC):
         self,
         label,
         recommendation_ratio=0.9,
-        label_prefix: str="labels_",
+        label_prefix: str = "labels_",
     ):
         """
         Filter new emails based on machine learning model recommendations.

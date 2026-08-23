@@ -72,6 +72,27 @@ def one_hot_encoding(
     """
     if feature_lst is None:
         feature_lst = []
+    all_binary_values, all_labels = _encoding_helper(df=df)
+    if len(feature_lst) == 0:
+        df_new = pandas.DataFrame(all_binary_values, columns=all_labels)
+    else:
+        labels_to_drop = [label for label in all_labels if label not in feature_lst]
+        labels_to_add = [label for label in feature_lst if label not in all_labels]
+        data_stack = np.hstack(
+            (all_binary_values, np.zeros((len(df), len(labels_to_add))))
+        )
+        columns = np.array(all_labels + labels_to_add)
+        df_new = pandas.DataFrame(
+            data_stack,
+            columns=columns,
+        )
+        df_new.drop(labels_to_drop, inplace=True, axis=1)
+    df_new["email_id"] = df.id.values
+    return df_new.sort_index(axis=1)
+
+
+# Helper functions for one hot encoding
+def _encoding_helper(df: pandas.DataFrame) -> tuple[np.ndarray, list[str]]:
     labels_red_lst = _build_red_lst(df_column=df.labels.values)
     cc_red_lst = _build_red_lst(df_column=df.cc.values)
     thread_red_lst = df["threads"].unique()
@@ -104,25 +125,9 @@ def one_hot_encoding(
         + _get_lst_without_none(lst=thread_red_lst, column="threads")
         + _get_lst_without_none(lst=to_red_lst, column="to")
     )
-    if len(feature_lst) == 0:
-        df_new = pandas.DataFrame(all_binary_values, columns=all_labels)
-    else:
-        labels_to_drop = [label for label in all_labels if label not in feature_lst]
-        labels_to_add = [label for label in feature_lst if label not in all_labels]
-        data_stack = np.hstack(
-            (all_binary_values, np.zeros((len(df), len(labels_to_add))))
-        )
-        columns = np.array(all_labels + labels_to_add)
-        df_new = pandas.DataFrame(
-            data_stack,
-            columns=columns,
-        )
-        df_new.drop(labels_to_drop, inplace=True, axis=1)
-    df_new["email_id"] = df.id.values
-    return df_new.sort_index(axis=1)
+    return all_binary_values, all_labels
 
 
-# Helper functions for one hot encoding
 def _build_red_lst(df_column: np.ndarray) -> list[str]:
     collect_lst = []
     for lst in df_column:

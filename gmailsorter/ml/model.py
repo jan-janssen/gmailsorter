@@ -72,7 +72,8 @@ def fit_machine_learning_models(
                 y=df_all_labels[to_learn],
             )
             for to_learn in tqdm(
-                iterable=df_all_labels.columns.tolist(), desc="Train machinelearning models"
+                iterable=df_all_labels.columns.tolist(),
+                desc="Train machinelearning models",
             )
         }
     else:

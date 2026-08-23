@@ -107,7 +107,7 @@ class TestMainCommandLineParser(unittest.TestCase):
         gmail_instance.filter_messages_from_server.assert_called_once_with(
             label="Inbox",
             recommendation_ratio=0.9,
-            label_prefix="labels_",
+            label_prefix="labels_Label_",
         )
         gmail_instance.update_database.assert_not_called()
 

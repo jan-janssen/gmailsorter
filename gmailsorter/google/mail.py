@@ -97,6 +97,7 @@ class GoogleMailBase:
                 feature_lst=feature_reload_lst,
                 label_lst=list(model_reload_dict.keys()),
                 return_labels=False,
+                label_prefix="labels_Label_",
             )
             df_partial_features = df_partial_features.reindex(
                 sorted(df_partial_features.columns), axis=1
@@ -134,7 +135,11 @@ class GoogleMailBase:
         """
         df_all = self.get_all_emails_in_database(include_deleted=include_deleted)
         df_all_features, df_all_labels = encode_df_for_machine_learning(
-            df=df_all, feature_lst=[], label_lst=[], return_labels=True
+            df=df_all,
+            feature_lst=[],
+            label_lst=[],
+            return_labels=True,
+            label_prefix="labels_Label_",
         )
         df_all_features = df_all_features.loc[
             :, ~df_all_features.columns.duplicated()

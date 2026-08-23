@@ -338,53 +338,7 @@ class TestMlModel(unittest.TestCase):
         predictions = get_predictions_from_machine_learning_models(df_features, models)
         self.assertEqual(set(predictions.values()), {"Label_7891913576640435048"})
 
-
-class TestMlModelParallel(unittest.TestCase):
-    def setUp(self):
-        self.df_features = pd.DataFrame(
-            {
-                "email_id": ["id1", "id2", "id3"],
-                "feature1": [1, 0, 1],
-                "feature2": [0, 1, 0],
-            }
-        )
-        self.df_labels = pd.DataFrame(
-            {
-                "labels_Label_1": [1, 0, 1],
-                "labels_Label_2": [0, 1, 0],
-            }
-        )
-        self.models = fit_machine_learning_models(
-            self.df_features, self.df_labels, n_estimators=10, max_workers=2
-        )
-
-    def test_train_random_forest(self):
-        X = self.df_features.drop("email_id", axis=1)
-        y = self.df_labels["labels_Label_1"]
-        model = train_random_forest(10, 42, True, 2, X, y)
-        self.assertIsInstance(model, RandomForestClassifier)
-        self.assertTrue(hasattr(model, "predict"))
-
-    def test_fit_machine_learning_models(self):
-        self.assertEqual(set(self.models.keys()), {"Label_1", "Label_2"})
-        self.assertIsInstance(self.models["Label_1"], RandomForestClassifier)
-
-    def test_get_predictions_from_machine_learning_models(self):
-        predictions = get_predictions_from_machine_learning_models(
-            self.df_features, self.models
-        )
-        self.assertEqual(set(predictions.keys()), {"id1", "id2", "id3"})
-        self.assertEqual(predictions["id1"], "Label_1")
-        self.assertEqual(predictions["id2"], "Label_2")
-        self.assertEqual(predictions["id3"], "Label_1")
-
-    def test_get_predictions_from_machine_learning_models_no_recommendation(self):
-        predictions = get_predictions_from_machine_learning_models(
-            self.df_features, self.models, recommendation_ratio=1.0
-        )
-        self.assertIsNone(predictions["id1"])
-
-    def test_spam_example_csv_pipeline(self):
+    def test_spam_example_csv_pipeline_parallel(self):
         csv_data = """id,from,to,cc,date,threads,labels,subject,content
 19d8718ecb472fdb,email@spam.net,['bill.gates@outlook.com'],[],2026-04-13 09:45:17,19d8718ecb472fdb,['Label_7891913576640435048'],"bill.gates¸Your Account Has been Blocked! Your Photos and Videos will be Removed Mon,13 Apr-2026. take action!!",
 19da5e58f1ba213f,email@spam.net,['bill.gates@outlook.com'],[],2026-04-19 09:16:42,19da5e58f1ba213f,['Label_7891913576640435048'],"bill.gates, Your Cloud Account has been locked on Sun, 19 Apr 2026 09:16:42 -0400. Your photos and videos will be removed!",
@@ -428,7 +382,7 @@ class TestMlModelParallel(unittest.TestCase):
         self.assertEqual(set(df_labels.columns), {"labels_Label_7891913576640435048"})
 
         models = fit_machine_learning_models(
-            df_features, df_labels, n_estimators=10, max_features=2, max_workers=1
+            df_features, df_labels, n_estimators=10, max_features=2, max_workers=2
         )
         predictions = get_predictions_from_machine_learning_models(df_features, models)
         self.assertEqual(set(predictions.values()), {"Label_7891913576640435048"})

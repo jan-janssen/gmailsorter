@@ -61,10 +61,9 @@ def fit_machine_learning_models(
         dict: dictionary with machine learning models with labels as keys
     """
     df_training = df_all_features.drop(["email_id"], axis=1)
-    with ProcessPoolExecutor(max_workers=max_workers) as exe:
-        futures_dict = {
-            to_learn.split("labels_")[-1]: exe.submit(
-                train_random_forest,
+    if max_workers == 1:
+        return {
+            to_learn.split("labels_")[-1]: train_random_forest(
                 n_estimators=n_estimators,
                 random_state=random_state,
                 bootstrap=bootstrap,
@@ -72,14 +71,31 @@ def fit_machine_learning_models(
                 X=df_training,
                 y=df_all_labels[to_learn],
             )
-            for to_learn in df_all_labels.columns.tolist()
-        }
-        return {
-            k: v.result()
-            for k, v in tqdm(
-                iterable=futures_dict.items(), desc="Train machinelearning models"
+            for to_learn in tqdm(
+                iterable=df_all_labels.columns.tolist(),
+                desc="Train machinelearning models",
             )
         }
+    else:
+        with ProcessPoolExecutor(max_workers=max_workers) as exe:
+            futures_dict = {
+                to_learn.split("labels_")[-1]: exe.submit(
+                    train_random_forest,
+                    n_estimators=n_estimators,
+                    random_state=random_state,
+                    bootstrap=bootstrap,
+                    max_features=max_features,
+                    X=df_training,
+                    y=df_all_labels[to_learn],
+                )
+                for to_learn in df_all_labels.columns.tolist()
+            }
+            return {
+                k: v.result()
+                for k, v in tqdm(
+                    iterable=futures_dict.items(), desc="Train machinelearning models"
+                )
+            }
 
 
 def get_predictions_from_machine_learning_models(

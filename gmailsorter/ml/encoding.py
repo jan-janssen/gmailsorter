@@ -51,9 +51,7 @@ def encode_df_for_machine_learning(
     else:
         if len(label_lst) == 0:
             label_lst = [
-                label
-                for label in df_all_encode.columns.values
-                if label_prefix in label
+                label for label in df_all_encode.columns.values if label_prefix in label
             ]
         return df_all_features, df_all_encode[label_lst]
 

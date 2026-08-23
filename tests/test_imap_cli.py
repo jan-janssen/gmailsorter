@@ -73,7 +73,9 @@ class ImapCliTest(TestCase):
             del os.environ["IMAP_PASSWORD"]
 
         imap_instance.filter_messages_from_server.assert_called_once_with(
-            label="MailSortInbox", recommendation_ratio=0.9, label_prefix='labels_',
+            label="MailSortInbox",
+            recommendation_ratio=0.9,
+            label_prefix="labels_",
         )
 
     @patch("gmailsorter.imap.__main__.Imap")

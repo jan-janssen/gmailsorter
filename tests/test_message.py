@@ -1,6 +1,10 @@
 from unittest import TestCase
 from datetime import datetime
-from gmailsorter.base.message import email_date_converter, AbstractMessage
+from gmailsorter.base.message import (
+    email_date_converter,
+    AbstractMessage,
+    strip_html_tags,
+)
 
 
 class MessageTest(TestCase):
@@ -76,3 +80,9 @@ class MessageTest(TestCase):
             datetime.strptime("24-01-2022", "%d-%m-%Y"),
         )
         self.assertEqual(email_date_converter(None), None)
+
+    def test_strip_html_tags(self):
+        self.assertEqual(
+            strip_html_tags("<p>Hello <b>World</b></p>"),
+            "Hello World",
+        )

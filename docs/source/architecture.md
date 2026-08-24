@@ -9,9 +9,12 @@ machine learning knowledge required. If you are looking for setup instructions i
 Regardless of whether you use the hosted [gmailsorter.com](https://gmailsorter.com) service, the Docker container or
 the plain Python package, `gmailsorter` is built from the same three building blocks:
 
-* **Your Google Mail account** - the source of truth for your emails and labels, accessed exclusively through the
-  official [Gmail API](https://developers.google.com/gmail/api/guides). `gmailsorter` never reads your mailbox
-  through any other channel and never stores your Google password.
+* **Your email account** - the source of truth for your emails and labels, accessed either through the official
+  [Gmail API](https://developers.google.com/gmail/api/guides) or, for any other IMAP-capable provider, through a
+  plain IMAP connection. `gmailsorter` never stores your Google password, and for IMAP accounts the password you
+  provide is used only to log in - it is not persisted anywhere. When talking to a plain IMAP server, each mailbox
+  folder plays the role a Gmail label plays throughout the rest of this page - "moving" an email between labels
+  means moving it between IMAP folders.
 * **A local database** - a SQL database (SQLite by default, though any database supported by
   [SQLAlchemy](https://www.sqlalchemy.org/) works) that keeps a private copy of your email metadata, your login
   token and your trained models. In the Docker container and the plain Python package this database lives entirely

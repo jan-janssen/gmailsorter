@@ -138,6 +138,7 @@ def iterate_over_users(
                     gmail.filter_messages_from_server(
                         label=MAILSORT_LABEL,
                         recommendation_ratio=recommendation_ratio,
+                        label_prefix="labels_Label_",
                     )
                 except HttpError:
                     update_task_status(

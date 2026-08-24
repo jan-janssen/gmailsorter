@@ -39,3 +39,40 @@ jobs:
       run: |
         pip install --no-deps .
         coverage run --omit gmailsorter/_version.py -m unittest discover tests
+
+  imap-integration:
+    runs-on: ubuntu-latest
+
+    services:
+      greenmail:
+        image: greenmail/standalone:2.1.11
+        env:
+          GREENMAIL_OPTS: >-
+            -Dgreenmail.setup.test.smtp
+            -Dgreenmail.setup.test.imap
+            -Dgreenmail.hostname=0.0.0.0
+            -Dgreenmail.users=testuser:secret@example.test
+        ports:
+          - 3025:3025
+          - 3143:3143
+
+    env:
+      TEST_SMTP_HOST: localhost
+      TEST_SMTP_PORT: "3025"
+      TEST_IMAP_HOST: localhost
+      TEST_IMAP_PORT: "3143"
+      TEST_IMAP_USERNAME: testuser
+      TEST_EMAIL: testuser@example.test
+      TEST_EMAIL_PASSWORD: secret
+      # fail this job rather than skip it if the greenmail service never came up
+      IMAP_INTEGRATION_REQUIRED: "true"
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - name: Install package
+      run: pip install .
+    - name: Run IMAP integration test
+      run: python -m unittest tests.test_imap_service_integration -v

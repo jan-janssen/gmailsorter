@@ -60,6 +60,34 @@ a selected label `"MyLabel"`. Then reloads the machine learning model from the l
 the correct labels for these emails. The `recommendation_ratio` defines the level of certainty required to actually move
 the email, with `0.9` equalling a certainty of 90%. 
 
+## IMAP accounts
+`gmailsorter` also supports plain IMAP accounts (username and password, e.g. an app
+password), for mail servers other than Google Mail. Import the `Imap` class instead of
+`Gmail`:
+```
+from gmailsorter import Imap
+```
+```
+imap = Imap(
+    host="imap.example.com",
+    port=993,
+    username="user@example.com",
+    password="app-password",
+    connection_str="sqlite:////absolute/path/to/email.db",
+)
+```
+`Imap` exposes the exact same `update_database()`, `get_all_emails_in_database()` and
+`filter_messages_from_server()` methods as `Gmail` - the only difference is that IMAP
+folders play the role Gmail labels play elsewhere in this document: each folder is
+treated as one label, and moving an email means moving it from one IMAP folder to
+another. A command line interface is also available as `gmailsorter-imap`, reading the
+account password from an environment variable (`IMAP_PASSWORD` by default) rather than
+accepting it as a command line argument:
+```
+export IMAP_PASSWORD=app-password
+gmailsorter-imap --host imap.example.com --username user@example.com -d sqlite:///email.db -u
+```
+
 ## Future directions
 The current machine learning model is limited in the precision and memory usage. So there is a great interest to replace
 it with a computationally more efficient model. All suggestions and feedback are welcome. Beyond the optimization of the

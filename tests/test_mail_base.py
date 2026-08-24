@@ -127,8 +127,9 @@ class AbstractMailBoxTest(TestCase):
         features = pd.DataFrame([{"email_id": "x", "f1": 1}])
         labels = pd.DataFrame([{"labels_Inbox": 1}])
         encode_mock.return_value = (features, labels)
-        fit_mock.return_value = {"Inbox": MagicMock()}
+        mock_model = MagicMock()
+        fit_mock.return_value = (mock_model, ["labels_Inbox"])
 
         mailbox.fit_machine_learning_model_to_database(n_estimators=5, max_features=2)
 
-        db_ml.store_models.assert_called_once()
+        db_ml.store_model.assert_called_once()

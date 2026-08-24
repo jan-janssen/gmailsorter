@@ -2,7 +2,8 @@ import base64
 from unittest import TestCase
 from datetime import datetime
 from datetime import datetime, timezone, timedelta
-from gmailsorter.google.message import Message, MLStripper, get_email_dict
+from gmailsorter.base.message import strip_html_tags
+from gmailsorter.google.message import Message, get_email_dict
 
 
 class MessageTest(TestCase):
@@ -198,9 +199,9 @@ class MessageTest(TestCase):
         self.assertEqual(message.get_content(), "")
 
     def test_mlstripper_removes_tags(self):
-        stripper = MLStripper()
-        stripper.feed("<div>Hello <span>World</span></div>")
-        self.assertEqual(stripper.get_data(), "Hello World")
+        self.assertEqual(
+            strip_html_tags("<div>Hello <span>World</span></div>"), "Hello World"
+        )
 
     def test_get_email_dict_catches_value_error_and_returns_none(self):
         message_dict = {

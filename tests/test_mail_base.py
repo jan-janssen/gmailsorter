@@ -133,3 +133,94 @@ class AbstractMailBoxTest(TestCase):
         mailbox.fit_machine_learning_model_to_database(n_estimators=5, max_features=2)
 
         db_ml.store_model.assert_called_once()
+
+    @patch("gmailsorter.base.mail.fit_machine_learning_models")
+    @patch("gmailsorter.base.mail.encode_df_for_machine_learning")
+    def test_fit_machine_learning_model_forwards_max_depth_and_min_samples_leaf(
+        self, encode_mock, fit_mock
+    ):
+        db_email = MagicMock()
+        db_email.get_all_emails.return_value = pd.DataFrame(
+            [
+                {
+                    "id": "x",
+                    "from": "a@b.com",
+                    "to": [],
+                    "cc": [],
+                    "labels": [],
+                    "threads": "t",
+                }
+            ]
+        )
+        db_ml = MagicMock()
+        mailbox = _StubMailBox(database_email=db_email, database_ml=db_ml)
+        features = pd.DataFrame([{"email_id": "x", "f1": 1}])
+        labels = pd.DataFrame([{"labels_Inbox": 1}])
+        encode_mock.return_value = (features, labels)
+        fit_mock.return_value = (MagicMock(), ["labels_Inbox"])
+
+        mailbox.fit_machine_learning_model_to_database(
+            n_estimators=5, max_features=2, max_depth=10, min_samples_leaf=3
+        )
+
+        call_kwargs = fit_mock.call_args.kwargs
+        self.assertEqual(call_kwargs["max_depth"], 10)
+        self.assertEqual(call_kwargs["min_samples_leaf"], 3)
+
+    @patch("gmailsorter.base.mail.get_predictions_from_machine_learning_models")
+    @patch("gmailsorter.base.mail.encode_df_for_machine_learning")
+    def test_filter_messages_from_server_no_model_skips(
+        self, encode_mock, predict_mock
+    ):
+        db_ml = MagicMock()
+        db_ml.load_model.return_value = (None, [], [])
+        mailbox = _StubMailBox(database_ml=db_ml)
+        df = pd.DataFrame(
+            [{"id": "x", "from": "a", "to": [], "cc": [], "labels": [], "threads": "t"}]
+        )
+        with patch.object(mailbox, "download_emails_for_label", return_value=df):
+            mailbox.filter_messages_from_server("Inbox")
+
+        encode_mock.assert_not_called()
+        predict_mock.assert_not_called()
+
+    @patch("gmailsorter.base.mail.get_predictions_from_machine_learning_models")
+    @patch("gmailsorter.base.mail.encode_df_for_machine_learning")
+    def test_filter_messages_from_server_empty_df_skips(
+        self, encode_mock, predict_mock
+    ):
+        db_ml = MagicMock()
+        mailbox = _StubMailBox(database_ml=db_ml)
+        with patch.object(
+            mailbox, "download_emails_for_label", return_value=pd.DataFrame()
+        ):
+            mailbox.filter_messages_from_server("Inbox")
+
+        encode_mock.assert_not_called()
+        predict_mock.assert_not_called()
+
+    @patch("gmailsorter.base.mail.get_predictions_from_machine_learning_models")
+    @patch("gmailsorter.base.mail.encode_df_for_machine_learning")
+    def test_filter_messages_from_server_with_model(self, encode_mock, predict_mock):
+        db_ml = MagicMock()
+        mock_model = MagicMock()
+        db_ml.load_model.return_value = (mock_model, ["labels_Inbox"], ["f1"])
+        mailbox = _StubMailBox(database_ml=db_ml)
+        df = pd.DataFrame(
+            [{"id": "x", "from": "a", "to": [], "cc": [], "labels": [], "threads": "t"}]
+        )
+        encoded = pd.DataFrame([{"email_id": "x", "f1": 1}])
+        encode_mock.return_value = encoded
+        predict_mock.return_value = {"x": "Spam"}
+
+        with (
+            patch.object(mailbox, "download_emails_for_label", return_value=df),
+            patch.object(mailbox, "_move_emails") as move_mock,
+        ):
+            mailbox.filter_messages_from_server("Inbox", recommendation_ratio=0.7)
+
+        encode_mock.assert_called_once()
+        predict_mock.assert_called_once()
+        move_mock.assert_called_once_with(
+            move_email_dict={"x": "Spam"}, label_to_ignore="Inbox"
+        )

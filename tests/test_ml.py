@@ -102,6 +102,30 @@ class TestMlDatabase(unittest.TestCase):
         self.assertEqual(self.session.query(MachineLearningModel).count(), 0)
         self.assertEqual(self.session.query(MachineLearningFeatures).count(), 0)
 
+    def test_store_model_user_isolation(self):
+        model1 = RandomForestClassifier(n_estimators=5)
+        model2 = RandomForestClassifier(n_estimators=10)
+        self.db.store_model(model1, ["labels_A"], ["f1"], user_id=1)
+        self.db.store_model(model2, ["labels_B"], ["f2"], user_id=2)
+
+        loaded1, labels1, features1 = self.db.load_model(user_id=1)
+        loaded2, labels2, features2 = self.db.load_model(user_id=2)
+        self.assertEqual(loaded1.n_estimators, 5)
+        self.assertEqual(loaded2.n_estimators, 10)
+        self.assertEqual(labels1, ["labels_A"])
+        self.assertEqual(labels2, ["labels_B"])
+        self.assertEqual(features1, ["f1"])
+        self.assertEqual(features2, ["f2"])
+
+    def test_load_model_missing_returns_empty_features_when_features_exist(self):
+        self.session.add(MachineLearningFeatures(feature="f1", user_id=99))
+        self.session.commit()
+
+        loaded_model, loaded_labels, loaded_features = self.db.load_model(user_id=99)
+        self.assertIsNone(loaded_model)
+        self.assertEqual(loaded_labels, [])
+        self.assertEqual(loaded_features, ["f1"])
+
     def test_get_features(self):
         features = [
             MachineLearningFeatures(feature="feature1", user_id=1),

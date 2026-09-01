@@ -77,11 +77,15 @@ class AbstractMailBox(ABC):
         """
         df_partial = self.download_emails_for_label(label=label)
         if len(df_partial) > 0:
-            model_reload_dict, feature_reload_lst = self._db_ml.load_models()
+            model_reload, label_reload_lst, feature_reload_lst = (
+                self._db_ml.load_model()
+            )
+            if model_reload is None:
+                return
             df_partial_features = encode_df_for_machine_learning(
                 df=df_partial,
                 feature_lst=feature_reload_lst,
-                label_lst=list(model_reload_dict.keys()),
+                label_lst=label_reload_lst,
                 return_labels=False,
                 label_prefix=label_prefix,
             )
@@ -90,7 +94,8 @@ class AbstractMailBox(ABC):
             )
             model_recommendation_dict = get_predictions_from_machine_learning_models(
                 df_features=df_partial_features,
-                model_dict=model_reload_dict,
+                model=model_reload,
+                label_lst=label_reload_lst,
                 recommendation_ratio=recommendation_ratio,
             )
             self._move_emails(
@@ -100,24 +105,28 @@ class AbstractMailBox(ABC):
     def fit_machine_learning_model_to_database(
         self,
         n_estimators=100,
-        max_features=400,
+        max_features="sqrt",
         random_state=42,
         bootstrap=True,
+        max_depth=20,
+        min_samples_leaf=2,
         include_deleted=False,
         max_workers=None,
     ):
         """
-        Fit machine learning models to emails stored in database and afterwards store machine learning models in
-        database.
+        Fit a single multi-output machine learning model to emails stored in database and afterwards store it in
+        the database.
 
         Args:
             n_estimators (int): Number of estimators
-            max_features (int): Number of features
+            max_features (int, float, str): Number of features considered per split
             random_state (int): Random state
             bootstrap (boolean): Whether bootstrap samples are used when building trees. If False, the whole dataset is
                                  used to build each tree. (default: true)
+            max_depth (int): maximum tree depth, bounds memory and reduces overfitting
+            min_samples_leaf (int): minimum number of samples required at a leaf node
             include_deleted (bool): Flag to include deleted emails - default False
-            max_workers (int): maximum number of workers for the machine learning models
+            max_workers (int): maximum number of parallel jobs used internally to build the trees
         """
         df_all = self.get_all_emails_in_database(include_deleted=include_deleted)
         df_all_features, df_all_labels = encode_df_for_machine_learning(
@@ -129,17 +138,20 @@ class AbstractMailBox(ABC):
         df_all_features = df_all_features.reindex(
             sorted(df_all_features.columns), axis=1
         )
-        model_dict = fit_machine_learning_models(
+        model, label_lst = fit_machine_learning_models(
             df_all_features=df_all_features,
             df_all_labels=df_all_labels,
             n_estimators=n_estimators,
             max_features=max_features,
             random_state=random_state,
             bootstrap=bootstrap,
+            max_depth=max_depth,
+            min_samples_leaf=min_samples_leaf,
             max_workers=max_workers,
         )
-        self._db_ml.store_models(
-            model_dict=model_dict,
+        self._db_ml.store_model(
+            model=model,
+            label_lst=label_lst,
             feature_lst=df_all_features.columns.values.tolist(),
             user_id=self._db_user_id,
             commit=True,

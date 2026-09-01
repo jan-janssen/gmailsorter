@@ -19,8 +19,9 @@ the plain Python package, `gmailsorter` is built from the same three building bl
   [SQLAlchemy](https://www.sqlalchemy.org/) works) that keeps a private copy of your email metadata, your login
   token and your trained models. In the Docker container and the plain Python package this database lives entirely
   on your own machine.
-* **One machine learning model per label** - a small classifier trained purely on your own historic emails, which
-  is used to recommend a label for each new email that arrives in your `mailsortinbox` folder.
+* **One shared machine learning model** - a single classifier trained purely on your own historic emails, which
+  predicts every label at once and is used to recommend a label for each new email that arrives in your
+  `mailsortinbox` folder.
 
 A background job (the `gmailsorter-daemon`, packaged as a cron job in the Docker container, or triggered manually
 from the command line) repeats a simple loop every few minutes: fetch, store, train, predict, move.
@@ -47,28 +48,36 @@ have already sorted:
 
 * who sent it, and the domain of the sender (e.g. `@newsletter.example.com`),
 * everyone it was addressed to or copied on,
-* which email thread it belongs to,
 * and which labels you have assigned to it.
 
 Each of these values is turned into a binary "yes/no" column through
 [one-hot encoding](https://en.wikipedia.org/wiki/One-hot) (implemented in
 [`gmailsorter/ml/encoding.py`](https://github.com/jan-janssen/gmailsorter/blob/main/gmailsorter/ml/encoding.py)) -
-so instead of one column "sender", you get one column per sender that is either `1` or `0`. `gmailsorter` then
-trains one [random forest classifier](https://en.wikipedia.org/wiki/Random_forest) per label
-(see [`gmailsorter/ml/model.py`](https://github.com/jan-janssen/gmailsorter/blob/main/gmailsorter/ml/model.py)) to
-answer the question "does this email belong to label X, based on who sent it, who else received it and what other
-labels tend to go together?". In practice this captures the intuition most people actually sort emails by - the
-sender, the mailing list or the group of people involved - rather than trying to summarize free text.
+so instead of one column "sender", you get one column per sender that is either `1` or `0`. Because most of these
+columns are `0` for any given email, they are kept as a sparse matrix rather than a dense table, which keeps memory
+use low even for large mailboxes. The email thread is deliberately left out of this encoding: a thread ID is close
+to unique per email, so turning it into a column would let the model memorize individual training threads instead
+of learning a pattern that generalizes to new mail.
 
-The trained models are serialized and stored back in your local database, together with the exact list of columns
-they were trained on, so they can be reloaded without retraining every time.
+`gmailsorter` then trains a single [random forest classifier](https://en.wikipedia.org/wiki/Random_forest) that
+predicts every label at once (see
+[`gmailsorter/ml/model.py`](https://github.com/jan-janssen/gmailsorter/blob/main/gmailsorter/ml/model.py)), answering
+the question "which of my labels does this email belong to, based on who sent it, who else received it and what
+other labels tend to go together?". Training one shared model instead of a separate model per label lets related
+labels (e.g. several senders from the same domain) reinforce each other during training, and keeps both memory use
+and the size of the model stored in the database roughly constant as you add more labels. In practice this captures
+the intuition most people actually sort emails by - the sender, the mailing list or the group of people involved -
+rather than trying to summarize free text.
+
+The trained model is serialized and stored back in your local database, together with the exact list of columns
+it was trained on, so it can be reloaded without retraining every time.
 
 ### 4. Predict
 When a new email lands in your `mailsortinbox` folder, `gmailsorter` encodes it using the very same columns the
-models were trained on and asks every stored model "how confident are you that this email belongs to your label?".
-The label with the highest confidence wins, but only if that confidence clears the `recommendation_ratio` threshold
+model was trained on and asks it "how confident are you that this email belongs to each of your labels?". The
+label with the highest confidence wins, but only if that confidence clears the `recommendation_ratio` threshold
 (90% by default). If no label is confident enough, the email is simply left where it is until the next run, once
-more training data has made the models more confident.
+more training data has made the model more confident.
 
 ### 5. Move
 If a label was recommended with sufficient confidence, `gmailsorter` calls the Gmail API to remove the
@@ -90,7 +99,7 @@ The local database contains:
   row is scoped to a `user_id`, so a single database can serve multiple accounts without mixing their data.
 * your Google OAuth token (access token, refresh token and expiry), so you do not have to sign in again every few
   minutes.
-* your trained models, serialized with [pickle](https://docs.python.org/3/library/pickle.html).
+* your trained model, serialized with [pickle](https://docs.python.org/3/library/pickle.html).
 
 When you run the Docker container or the plain Python package yourself, this database lives exclusively in the
 `tmp` folder on your own machine - nothing is shared with the [gmailsorter.com](https://gmailsorter.com) service or
@@ -103,5 +112,5 @@ the deployment that matches your comfort level.
   it will rarely reach the 90% confidence needed to be suggested - this is intentional, to avoid confidently wrong
   guesses, but it does mean new folders take a little time to "warm up".
 * Because the model deliberately ignores email body text, two emails with very similar content but no overlapping
-  sender, recipients or thread will not be linked by `gmailsorter` today. See
+  sender or recipients will not be linked by `gmailsorter` today. See
   [Developer - Future directions](developer) for the direction this may take next.

@@ -366,7 +366,7 @@ class TestGoogleMailBase(unittest.TestCase):
     def test_filter_messages_from_server(self, encode_mock, predict_mock):
         service = self._create_mock_service_with_labels()
         db_ml = MagicMock()
-        db_ml.load_models.return_value = ({"LBL_SPAM": MagicMock()}, ["f1"])
+        db_ml.load_model.return_value = (MagicMock(), ["labels_LBL_SPAM"], ["f1"])
         mail = GoogleMailBase(google_mail_service=service, database_ml=db_ml)
 
         df = pd.DataFrame(
@@ -395,6 +395,25 @@ class TestGoogleMailBase(unittest.TestCase):
             mail.filter_messages_from_server("Inbox")
         encode_mock.assert_not_called()
 
+    @patch("gmailsorter.base.mail.get_predictions_from_machine_learning_models")
+    @patch("gmailsorter.base.mail.encode_df_for_machine_learning")
+    def test_filter_messages_from_server_no_model_skips(
+        self, encode_mock, predict_mock
+    ):
+        service = self._create_mock_service_with_labels()
+        db_ml = MagicMock()
+        db_ml.load_model.return_value = (None, [], [])
+        mail = GoogleMailBase(google_mail_service=service, database_ml=db_ml)
+
+        df = pd.DataFrame(
+            [{"id": "x", "from": "a", "to": [], "cc": [], "labels": [], "threads": "t"}]
+        )
+        with patch.object(mail, "download_emails_for_label", return_value=df):
+            mail.filter_messages_from_server("Inbox")
+
+        encode_mock.assert_not_called()
+        predict_mock.assert_not_called()
+
     @patch("gmailsorter.base.mail.fit_machine_learning_models")
     @patch("gmailsorter.base.mail.encode_df_for_machine_learning")
     def test_fit_machine_learning_model_to_database(self, encode_mock, fit_mock):
@@ -421,7 +440,7 @@ class TestGoogleMailBase(unittest.TestCase):
         features = pd.DataFrame([{"email_id": "x", "f1": 1, "f2": 1}])
         labels = pd.DataFrame([{"labels_LBL_INBOX": 1}])
         encode_mock.return_value = (features, labels)
-        fit_mock.return_value = {"LBL_INBOX": MagicMock()}
+        fit_mock.return_value = (MagicMock(), ["labels_LBL_INBOX"])
 
         mail.fit_machine_learning_model_to_database(n_estimators=5, max_features=2)
 
@@ -436,8 +455,10 @@ class TestGoogleMailBase(unittest.TestCase):
         self.assertEqual(fit_mock.call_args.kwargs["max_features"], 2)
         self.assertEqual(fit_mock.call_args.kwargs["random_state"], 42)
         self.assertTrue(fit_mock.call_args.kwargs["bootstrap"])
+        self.assertEqual(fit_mock.call_args.kwargs["max_depth"], 20)
+        self.assertEqual(fit_mock.call_args.kwargs["min_samples_leaf"], 2)
         self.assertIsNone(fit_mock.call_args.kwargs["max_workers"])
-        db_ml.store_models.assert_called_once()
+        db_ml.store_model.assert_called_once()
         self.assertEqual(mail.get_all_emails_in_database().iloc[0]["id"], "x")
 
     @patch("gmailsorter.base.mail.fit_machine_learning_models")
@@ -468,7 +489,7 @@ class TestGoogleMailBase(unittest.TestCase):
             pd.DataFrame([{"email_id": "x", "f1": 1}]),
             pd.DataFrame([{"labels_LBL_INBOX": 1}]),
         )
-        fit_mock.return_value = {"LBL_INBOX": MagicMock()}
+        fit_mock.return_value = (MagicMock(), ["labels_LBL_INBOX"])
 
         mail.fit_machine_learning_model_to_database(max_workers=3)
 

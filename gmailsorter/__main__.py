@@ -71,9 +71,11 @@ def command_line_parser() -> None:
             gmail.update_database(quick=False)
             gmail.fit_machine_learning_model_to_database(
                 n_estimators=100,
-                max_features=400,
+                max_features="sqrt",
                 random_state=42,
                 bootstrap=True,
+                max_depth=20,
+                min_samples_leaf=2,
                 include_deleted=False,
                 max_workers=tasks,
             )

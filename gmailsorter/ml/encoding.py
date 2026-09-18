@@ -2,6 +2,8 @@ from typing import Any
 
 import numpy as np
 import pandas
+from scipy import sparse
+from sklearn.preprocessing import MultiLabelBinarizer
 
 
 def encode_df_for_machine_learning(
@@ -60,41 +62,49 @@ def one_hot_encoding(
     df: pandas.DataFrame, feature_lst: list[str] | None = None
 ) -> pandas.DataFrame:
     """
-    Binary one hot encoding of features in a pandas DataFrame
+    Sparse binary one hot encoding of features in a pandas DataFrame.
+
+    Note: the email thread is deliberately not one-hot encoded. Thread IDs are close to unique per email, so
+    encoding them turns into a near-identity column that lets a random forest memorize training threads instead
+    of generalizing - expensive in memory and harmful to accuracy on emails from new threads.
 
     Args:
         df (pandas.DataFrame): DataFrame with emails
         feature_lst (list): list of features to encode
 
     Returns:
-        pandas.DataFrame: hot encoding of features in a pandas DataFrame
+        pandas.DataFrame: sparse hot encoding of features in a pandas DataFrame
     """
     if feature_lst is None:
         feature_lst = []
-    all_binary_values, all_labels = _encoding_helper(df=df)
+    all_binary_sparse, all_labels = _encoding_helper(df=df)
     if len(feature_lst) == 0:
-        df_new = pandas.DataFrame(all_binary_values, columns=all_labels)
+        df_new = pandas.DataFrame.sparse.from_spmatrix(
+            all_binary_sparse, columns=all_labels
+        )
     else:
         labels_to_drop = [label for label in all_labels if label not in feature_lst]
         labels_to_add = [label for label in feature_lst if label not in all_labels]
-        data_stack = np.hstack(
-            (all_binary_values, np.zeros((len(df), len(labels_to_add))))
-        )
+        if len(labels_to_add) > 0:
+            pad_sparse = sparse.csr_matrix(
+                (len(df), len(labels_to_add)), dtype=np.uint8
+            )
+            data_stack = sparse.hstack(
+                [all_binary_sparse, pad_sparse], format="csr", dtype=np.uint8
+            )
+        else:
+            data_stack = all_binary_sparse
         columns = np.array(all_labels + labels_to_add)
-        df_new = pandas.DataFrame(
-            data_stack,
-            columns=columns,
-        )
+        df_new = pandas.DataFrame.sparse.from_spmatrix(data_stack, columns=columns)
         df_new.drop(labels_to_drop, inplace=True, axis=1)
     df_new["email_id"] = df.id.values
     return df_new.sort_index(axis=1)
 
 
 # Helper functions for one hot encoding
-def _encoding_helper(df: pandas.DataFrame) -> tuple[np.ndarray, list[str]]:
+def _encoding_helper(df: pandas.DataFrame) -> tuple[sparse.csr_matrix, list[str]]:
     labels_red_lst = _build_red_lst(df_column=df.labels.values)
     cc_red_lst = _build_red_lst(df_column=df.cc.values)
-    thread_red_lst = df["threads"].unique()
     to_red_lst = _build_red_lst(df_column=df.to.values)
     from_red_lst = [email for email in df["from"].unique() if email is not None] + list(
         {
@@ -103,28 +113,30 @@ def _encoding_helper(df: pandas.DataFrame) -> tuple[np.ndarray, list[str]]:
             if email is not None and isinstance(email, str) and "@" in email
         }
     )
-    dict_labels_lst = _list_entry_df(
-        red_lst=labels_red_lst, value_lst=df["labels"].values
+    labels_sp = _encode_multi_label(
+        value_lst=df["labels"].values, red_lst=labels_red_lst, expand_domains=False
     )
-    dict_cc_lst = _list_entry_email_df(red_lst=cc_red_lst, value_lst=df["cc"].values)
-    dict_from_lst = _single_entry_email_df(
-        red_lst=from_red_lst, value_lst=df["from"].values
+    cc_sp = _encode_multi_label(
+        value_lst=df["cc"].values, red_lst=cc_red_lst, expand_domains=True
     )
-    dict_threads_lst = _single_entry_df(
-        red_lst=thread_red_lst, value_lst=df["threads"].values
+    from_sp = _encode_multi_label(
+        value_lst=[[v] if isinstance(v, str) else [] for v in df["from"].values],
+        red_lst=from_red_lst,
+        expand_domains=True,
     )
-    dict_to_lst = _list_entry_email_df(red_lst=to_red_lst, value_lst=df["to"].values)
-    all_binary_values = np.hstack(
-        (dict_labels_lst, dict_cc_lst, dict_from_lst, dict_threads_lst, dict_to_lst)
+    to_sp = _encode_multi_label(
+        value_lst=df["to"].values, red_lst=to_red_lst, expand_domains=True
+    )
+    all_binary_sparse = sparse.hstack(
+        [labels_sp, cc_sp, from_sp, to_sp], format="csr", dtype=np.uint8
     )
     all_labels = (
         _get_lst_without_none(lst=labels_red_lst, column="labels")
         + _get_lst_without_none(lst=cc_red_lst, column="cc")
         + _get_lst_without_none(lst=from_red_lst, column="from")
-        + _get_lst_without_none(lst=thread_red_lst, column="threads")
         + _get_lst_without_none(lst=to_red_lst, column="to")
     )
-    return all_binary_values, all_labels
+    return all_binary_sparse, all_labels
 
 
 def _build_red_lst(df_column: np.ndarray) -> list[str]:
@@ -148,51 +160,36 @@ def _get_lst_without_none(lst: list[Any], column: str) -> list[str]:
     ]
 
 
-def _single_entry_df(red_lst: np.ndarray, value_lst: np.ndarray) -> np.ndarray:
-    return np.array(
-        [
-            [
-                1 if email == red_entry else 0
-                for red_entry in red_lst
-                if not pandas.isna(red_entry)
-            ]
-            for email in value_lst
-        ]
-    ).astype("float64")
+def _encode_multi_label(
+    value_lst: np.ndarray, red_lst: list[str], expand_domains: bool
+) -> sparse.csr_matrix:
+    """
+    Vectorized replacement for the previous per-cell python-loop one hot encoding. Builds a sparse binary
+    indicator matrix of shape (len(value_lst), len(red_lst)) marking which of the vocabulary entries in red_lst
+    are present in each row - optionally also matching an address' domain (e.g. "@example.com") against the
+    corresponding domain vocabulary entry, mirroring the previous substring-matching behaviour.
+
+    Args:
+        value_lst (np.ndarray): per row list of raw string entries (e.g. cc addresses, label names)
+        red_lst (list): vocabulary of columns to encode, as produced by _build_red_lst
+        expand_domains (boolean): also match each entry's "@domain" fragment against the vocabulary
+
+    Returns:
+        scipy.sparse.csr_matrix: sparse binary indicator matrix
+    """
+    if len(red_lst) == 0:
+        return sparse.csr_matrix((len(value_lst), 0), dtype=np.uint8)
+    if expand_domains:
+        rows = [_expand_with_domains(entries=entries) for entries in value_lst]
+    else:
+        rows = list(value_lst)
+    binarizer = MultiLabelBinarizer(classes=red_lst, sparse_output=True)
+    return binarizer.fit_transform(rows).astype(np.uint8)
 
 
-def _single_entry_email_df(red_lst: list[str], value_lst: np.ndarray) -> np.ndarray:
-    return np.array(
-        [
-            [
-                (
-                    1
-                    if email is not None
-                    and isinstance(email, str)
-                    and red_entry in email
-                    else 0
-                )
-                for red_entry in red_lst
-                if not pandas.isna(red_entry)
-            ]
-            for email in value_lst
-        ]
-    ).astype("float64")
-
-
-def _list_entry_df(red_lst: list[str], value_lst: np.ndarray) -> np.ndarray:
-    return np.array(
-        [
-            [1 if red_entry in email else 0 for red_entry in red_lst]
-            for email in value_lst
-        ]
-    ).astype("float64")
-
-
-def _list_entry_email_df(red_lst: list[str], value_lst: np.ndarray) -> np.ndarray:
-    return np.array(
-        [
-            [1 if any(red_entry in e for e in email) else 0 for red_entry in red_lst]
-            for email in value_lst
-        ]
-    ).astype("float64")
+def _expand_with_domains(entries: list[str]) -> list[str]:
+    expanded = list(entries)
+    for entry in entries:
+        if isinstance(entry, str) and "@" in entry:
+            expanded.append("@" + entry.split("@")[-1])
+    return expanded

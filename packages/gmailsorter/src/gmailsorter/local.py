@@ -1,6 +1,12 @@
+import json
 from typing import Any
 
 from gmailsorter.google import GoogleMailBase, create_service
+
+
+def load_client_secrets_file(client_secrets_file: str) -> dict[str, Any]:
+    with open(client_secrets_file) as json_file:
+        return json.load(json_file)
 
 
 class Gmail(GoogleMailBase):

@@ -1,13 +1,5 @@
-import json
-from typing import Any
-
 from mailsort.imap import ImapMailBase
 from mailsort.imap import create_service as create_imap_service
-
-
-def load_client_secrets_file(client_secrets_file: str) -> dict[str, Any]:
-    with open(client_secrets_file) as json_file:
-        return json.load(json_file)
 
 
 class Imap(ImapMailBase):

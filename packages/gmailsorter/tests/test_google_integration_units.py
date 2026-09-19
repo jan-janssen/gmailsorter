@@ -18,8 +18,7 @@ from gmailsorter.google.database import (
     get_token_database,
 )
 from gmailsorter.google.mail import GoogleMailBase
-from gmailsorter.local import Gmail
-from mailsort import load_client_secrets_file
+from gmailsorter.local import Gmail, load_client_secrets_file
 
 
 class TestGoogleAuthentication(unittest.TestCase):

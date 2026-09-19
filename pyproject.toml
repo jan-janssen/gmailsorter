@@ -81,25 +81,25 @@ ignore = [
 
 [tool.hatch.build]
 include = [
-    "gmailsorter"
+    "src/gmailsorter"
 ]
 
 [tool.hatch.build.hooks.vcs]
-version-file = "gmailsorter/_version.py"
+version-file = "src/gmailsorter/_version.py"
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "gmailsorter"
+    "src/gmailsorter"
 ]
 
 [tool.hatch.build.targets.wheel]
 packages = [
-    "gmailsorter"
+    "src/gmailsorter"
 ]
 
 [tool.hatch.version]
 source = "vcs"
-path = "gmailsorter/_version.py"
+path = "src/gmailsorter/_version.py"
 
 [tool.coverage.run]
 source = ["gmailsorter"]

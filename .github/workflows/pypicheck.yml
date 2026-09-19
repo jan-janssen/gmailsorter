@@ -24,6 +24,5 @@ jobs:
     - name: Setup
       shell: bash -l {0}
       run: |
-        pip install --no-deps git+https://github.com/jan-janssen/mailsort.git@main
         pip install --no-deps .
         pip check

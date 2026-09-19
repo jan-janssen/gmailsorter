@@ -62,10 +62,10 @@ the email, with `0.9` equalling a certainty of 90%.
 
 ## IMAP accounts
 Plain IMAP accounts (username and password, e.g. an app password), for mail servers other than Google
-Mail, are handled by the [`mailsort`](https://github.com/jan-janssen/gmailsorter/tree/main/packages/mailsort)
-package - the IMAP and machine learning core that `gmailsorter` itself depends on. It has no Google
-dependencies, so it can be installed and used on its own. Import the `Imap` class from `mailsort` (it is
-also re-exported from `gmailsorter` for convenience):
+Mail, are handled by the [`mailsort`](https://github.com/jan-janssen/mailsort) package - the IMAP and
+machine learning core that `gmailsorter` itself depends on. It has no Google dependencies, so it can be
+installed and used on its own. Import the `Imap` class from `mailsort` (it is also re-exported from
+`gmailsorter` for convenience):
 ```
 from mailsort import Imap
 ```

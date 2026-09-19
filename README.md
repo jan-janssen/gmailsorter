@@ -3,12 +3,10 @@
 [![codecov](https://codecov.io/github/jan-janssen/gmailsorter/graph/badge.svg?token=NWN0UINECM)](https://codecov.io/github/jan-janssen/gmailsorter)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-# Repository layout
-This repository hosts two separate Python packages:
-* [`mailsort`](packages/mailsort) - the IMAP and machine learning core, with no Google dependencies. Use it
-  directly to sort emails on any IMAP mail server.
-* [`gmailsorter`](packages/gmailsorter) - the Gmail-specific parts (Gmail API, daemon, web UI), which depends
-  on `mailsort` for the shared IMAP/ML functionality.
+`gmailsorter` provides the Gmail-specific parts (Gmail API, OAuth, the sync daemon and web UI) and
+depends on [`mailsort`](https://github.com/jan-janssen/mailsort) for the shared IMAP client and
+machine learning core, which has no Google dependencies and can also be used on its own to sort
+emails on any IMAP mail server.
 
 # Update
 [gmailsorter.com](https://gmailsorter.com) web service launched as private beta - request access now:

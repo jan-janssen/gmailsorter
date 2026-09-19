@@ -26,10 +26,9 @@ jobs:
     - name: Test
       shell: bash -l {0}
       run: |
-        pip install --no-deps ./packages/mailsort
-        pip install --no-deps ./packages/gmailsorter
-        coverage run --omit "*/_version.py" -m unittest discover -s packages/mailsort/tests -t packages/mailsort
-        coverage run -a --omit "*/_version.py" -m unittest discover -s packages/gmailsorter/tests -t packages/gmailsorter
+        pip install --no-deps git+https://github.com/jan-janssen/mailsort.git@main
+        pip install --no-deps .
+        coverage run -a
         coverage xml
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5

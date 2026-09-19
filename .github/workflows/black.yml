@@ -15,4 +15,4 @@ jobs:
     - uses: psf/black@stable
       with:
         options: "--check --diff"
-        src: "./packages/mailsort/src/mailsort ./packages/gmailsorter/src/gmailsorter"
+        src: "./src/gmailsorter"

@@ -5,6 +5,6 @@ repos:
       - id: ruff
         name: ruff lint
         args: ["--fix"]
-        files: ^packages/(mailsort|gmailsorter)/src/
+        files: ^src/
       - id: ruff-format
         name: ruff format

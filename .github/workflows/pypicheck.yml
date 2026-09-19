@@ -24,5 +24,6 @@ jobs:
     - name: Setup
       shell: bash -l {0}
       run: |
-        pip install --no-deps .
+        pip install --no-deps ./packages/mailsort
+        pip install --no-deps ./packages/gmailsorter
         pip check

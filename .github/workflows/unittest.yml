@@ -33,12 +33,23 @@ jobs:
         miniforge-version: latest
         condarc-file: .condarc
         environment-file: .ci_support/environment.yml
-    - name: Test
+    - name: Install
       shell: bash -l {0}
-      timeout-minutes: 30
       run: |
-        pip install --no-deps .
-        coverage run --omit src/gmailsorter/_version.py -m unittest discover tests
+        pip install --no-deps ./packages/mailsort
+        pip install --no-deps ./packages/gmailsorter
+    - name: Test mailsort
+      shell: bash -l {0}
+      timeout-minutes: 15
+      run: |
+        cd packages/mailsort
+        coverage run --omit "*/_version.py" -m unittest discover tests
+    - name: Test gmailsorter
+      shell: bash -l {0}
+      timeout-minutes: 15
+      run: |
+        cd packages/gmailsorter
+        coverage run --omit "*/_version.py" -m unittest discover tests
 
   imap-integration:
     runs-on: ubuntu-latest
@@ -73,6 +84,6 @@ jobs:
       with:
         python-version: '3.12'
     - name: Install package
-      run: pip install .
+      run: pip install ./packages/mailsort
     - name: Run IMAP integration test
-      run: python -m unittest tests.test_imap_service_integration -v
+      run: cd packages/mailsort && python -m unittest tests.test_imap_service_integration -v

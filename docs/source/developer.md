@@ -61,11 +61,13 @@ the correct labels for these emails. The `recommendation_ratio` defines the leve
 the email, with `0.9` equalling a certainty of 90%. 
 
 ## IMAP accounts
-`gmailsorter` also supports plain IMAP accounts (username and password, e.g. an app
-password), for mail servers other than Google Mail. Import the `Imap` class instead of
-`Gmail`:
+Plain IMAP accounts (username and password, e.g. an app password), for mail servers other than Google
+Mail, are handled by the [`mailsort`](https://github.com/jan-janssen/gmailsorter/tree/main/packages/mailsort)
+package - the IMAP and machine learning core that `gmailsorter` itself depends on. It has no Google
+dependencies, so it can be installed and used on its own. Import the `Imap` class from `mailsort` (it is
+also re-exported from `gmailsorter` for convenience):
 ```
-from gmailsorter import Imap
+from mailsort import Imap
 ```
 ```
 imap = Imap(
@@ -80,12 +82,12 @@ imap = Imap(
 `filter_messages_from_server()` methods as `Gmail` - the only difference is that IMAP
 folders play the role Gmail labels play elsewhere in this document: each folder is
 treated as one label, and moving an email means moving it from one IMAP folder to
-another. A command line interface is also available as `gmailsorter-imap`, reading the
+another. A command line interface is also available as `mailsort`, reading the
 account password from an environment variable (`IMAP_PASSWORD` by default) rather than
 accepting it as a command line argument:
 ```
 export IMAP_PASSWORD=app-password
-gmailsorter-imap --host imap.example.com --username user@example.com -d sqlite:///email.db -u
+mailsort --host imap.example.com --username user@example.com -d sqlite:///email.db -u
 ```
 
 ## Future directions

@@ -2,6 +2,8 @@ name: PyPi Release
 
 on:
     push:
+      tags:
+        - 'gmailsorter-v*'
     pull_request:
 
 # based on https://github.com/pypa/gh-action-pypi-publish
@@ -11,21 +13,26 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/g/${{ github.event.repository.name }}
+      url: https://pypi.org/p/gmailsorter
     permissions:
       id-token: write
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
     - uses: actions/setup-python@v5
       with:
         python-version: "3.13"
     - name: Convert dependencies
       run: |
-        sed -i 's/==/>=/g' pyproject.toml; cat pyproject.toml
-        git update-index --assume-unchanged pyproject.toml src/gmailsorter/_version.py
+        sed -i 's/==/>=/g' packages/gmailsorter/pyproject.toml; cat packages/gmailsorter/pyproject.toml
+        git update-index --assume-unchanged packages/gmailsorter/pyproject.toml packages/gmailsorter/src/gmailsorter/_version.py
     - name: Install Hatch
       run: pip install hatchling hatch-vcs
     - name: Build
+      working-directory: packages/gmailsorter
       run: hatchling build -t sdist -t wheel
     - name: Publish distribution 📦 to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        packages-dir: packages/gmailsorter/dist

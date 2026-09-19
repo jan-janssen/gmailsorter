@@ -1,0 +1,95 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mailsort"
+dynamic = ["version"]
+description = "Assign labels to emails on any IMAP mail server based on their similarity to other emails assigned to the same label."
+readme = "README.md"
+license = "BSD-3-Clause"
+authors = [
+    { name = "Jan Janssen", email = "jan.janssen@outlook.com" },
+]
+requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "numpy==2.5.1",
+    "tqdm==4.70.1",
+    "pandas==3.0.5",
+    "scikit-learn==1.9.0",
+    "sqlalchemy==2.0.52",
+]
+
+[project.urls]
+Homepage = "https://github.com/jan-janssen/gmailsorter"
+
+[project.scripts]
+mailsort = "mailsort.__main__:command_line_parser"
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+    # flake8-comprehensions
+    "C4",
+    # eradicate
+    "ERA",
+    # pylint
+    "PL",
+]
+ignore = [
+    # ignore line-length violations
+    "E501",
+    # Too many arguments in function definition
+    "PLR0913",
+    # Too many not-keyword-only arguments,
+    "PLR0917",
+]
+
+[tool.hatch.build]
+include = [
+    "src/mailsort"
+]
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/mailsort/_version.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/mailsort",
+    "LICENSE"
+]
+
+[tool.hatch.build.targets.wheel]
+packages = [
+    "src/mailsort"
+]
+
+[tool.hatch.version]
+source = "vcs"
+path = "src/mailsort/_version.py"
+raw-options = { root = "../..", tag_regex = "^mailsort-v(?P<version>.*)$", git_describe_command = ["git", "describe", "--dirty", "--tags", "--long", "--match", "mailsort-v*"] }
+
+[tool.coverage.run]
+source = ["mailsort"]
+command_line = "-m unittest discover tests"

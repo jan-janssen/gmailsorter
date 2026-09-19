@@ -52,10 +52,10 @@ have already sorted:
 
 Each of these values is turned into a binary "yes/no" column through
 [one-hot encoding](https://en.wikipedia.org/wiki/One-hot) (implemented in
-[`src/gmailsorter/ml/encoding.py`](https://github.com/jan-janssen/gmailsorter/blob/main/src/gmailsorter/ml/encoding.py)) -
+[`packages/mailsort/src/mailsort/ml/encoding.py`](https://github.com/jan-janssen/gmailsorter/blob/main/packages/mailsort/src/mailsort/ml/encoding.py)) -
 so instead of one column "sender", you get one column per sender that is either `1` or `0`. `gmailsorter` then
 trains one [random forest classifier](https://en.wikipedia.org/wiki/Random_forest) per label
-(see [`src/gmailsorter/ml/model.py`](https://github.com/jan-janssen/gmailsorter/blob/main/src/gmailsorter/ml/model.py)) to
+(see [`packages/mailsort/src/mailsort/ml/model.py`](https://github.com/jan-janssen/gmailsorter/blob/main/packages/mailsort/src/mailsort/ml/model.py)) to
 answer the question "does this email belong to label X, based on who sent it, who else received it and what other
 labels tend to go together?". In practice this captures the intuition most people actually sort emails by - the
 sender, the mailing list or the group of people involved - rather than trying to summarize free text.

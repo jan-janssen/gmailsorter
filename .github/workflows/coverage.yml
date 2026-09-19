@@ -26,7 +26,6 @@ jobs:
     - name: Test
       shell: bash -l {0}
       run: |
-        pip install --no-deps git+https://github.com/jan-janssen/mailsort.git@main
         pip install --no-deps .
         coverage run -a
         coverage xml

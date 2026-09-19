@@ -1,10 +1,9 @@
 from typing import Any
 
 from google.oauth2.credentials import Credentials
+from mailsort.base.database import DatabaseTemplate
 from sqlalchemy import Column, DateTime, Engine, Integer, String
 from sqlalchemy.orm import Session, declarative_base
-
-from gmailsorter.base.database import DatabaseTemplate
 
 Base = declarative_base()
 

@@ -2,7 +2,7 @@ import base64
 from unittest import TestCase
 from datetime import datetime
 from datetime import datetime, timezone, timedelta
-from gmailsorter.base.message import strip_html_tags
+from mailsort.base.message import strip_html_tags
 from gmailsorter.google.message import Message, get_email_dict
 
 

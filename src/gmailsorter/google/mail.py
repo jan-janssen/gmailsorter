@@ -1,19 +1,19 @@
 from typing import Any
 
 from googleapiclient.discovery import Resource
+from mailsort.base import get_email_database
+from mailsort.base.database import DatabaseInterface as EmailDatabaseInterface
+from mailsort.base.mail import AbstractMailBox
+from mailsort.ml import (
+    get_machine_learning_database,
+)
+from mailsort.ml.database import MachineLearningDatabase
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from gmailsorter.base import get_email_database
-from gmailsorter.base.database import DatabaseInterface as EmailDatabaseInterface
-from gmailsorter.base.mail import AbstractMailBox
 from gmailsorter.google.database import DatabaseInterface as TokenDatabaseInterface
 from gmailsorter.google.database import get_token_database
 from gmailsorter.google.message import get_email_dict
-from gmailsorter.ml import (
-    get_machine_learning_database,
-)
-from gmailsorter.ml.database import MachineLearningDatabase
 
 _DatabaseTriple = tuple[
     EmailDatabaseInterface, MachineLearningDatabase, TokenDatabaseInterface
@@ -36,8 +36,8 @@ class GoogleMailBase(AbstractMailBox):
 
         Args:
             google_mail_service: A Resource object with methods for interacting with the service.
-            database_email (gmailsorter.base.database.DatabaseInterface): SQLalchemy interface for email database
-            database_ml (gmailsorter.ml.database.DatabaseInterface): SQLalchemy interface for machine learning database
+            database_email (mailsort.base.database.DatabaseInterface): SQLalchemy interface for email database
+            database_ml (mailsort.ml.database.DatabaseInterface): SQLalchemy interface for machine learning database
             database_token (gmailsorter.google.database.DatabaseInterface): SQLalchemy interface for google database
             user_id (str): in most cases this should be simply "me"
             db_user_id (int): Default 1 - set a user id when sharing a database with multiple users

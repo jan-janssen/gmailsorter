@@ -4,16 +4,16 @@ from typing import Any
 
 import google.oauth2.credentials
 import googleapiclient.discovery
+from mailsort.base import get_email_database
+from mailsort.base.database import DatabaseInterface as EmailDatabaseInterface
+from mailsort.ml import get_machine_learning_database
+from mailsort.ml.database import MachineLearningDatabase
 from sqlalchemy import Column, DateTime, Engine, Integer, String, create_engine
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
-from gmailsorter.base import get_email_database
-from gmailsorter.base.database import DatabaseInterface as EmailDatabaseInterface
 from gmailsorter.google import GoogleMailBase
 from gmailsorter.google.database import DatabaseInterface as TokenDatabaseInterface
 from gmailsorter.google.database import get_token_database
-from gmailsorter.ml import get_machine_learning_database
-from gmailsorter.ml.database import MachineLearningDatabase
 
 # Modifying the labels of emails requires /auth/gmail.modify
 # https://developers.google.com/gmail/api/reference/rest/v1/users.messages/modify

@@ -298,7 +298,11 @@ class TestGoogleMailBase(unittest.TestCase):
 
         with patch.object(mail, "_modify_message_labels") as modify_mock:
             mail._move_emails(
-                {"id1": None, "id2": "LBL_INBOX", "id3": "LBL_SPAM"},
+                [
+                    MagicMock(message_id="id1", recommended_folder=None),
+                    MagicMock(message_id="id2", recommended_folder="LBL_INBOX"),
+                    MagicMock(message_id="id3", recommended_folder="LBL_SPAM"),
+                ],
                 label_to_ignore="Inbox",
             )
         modify_mock.assert_called_once_with(
@@ -361,7 +365,7 @@ class TestGoogleMailBase(unittest.TestCase):
         db_email.update_labels.assert_not_called()
         store_mock.assert_called_once_with(message_id_lst=["new2"], email_format=None)
 
-    @patch("mailsort.base.mail.get_predictions_from_machine_learning_models")
+    @patch("mailsort.base.mail.score_messages_with_machine_learning_models")
     @patch("mailsort.base.mail.encode_df_for_machine_learning")
     def test_filter_messages_from_server(self, encode_mock, predict_mock):
         service = self._create_mock_service_with_labels()
@@ -370,11 +374,45 @@ class TestGoogleMailBase(unittest.TestCase):
         mail = GoogleMailBase(google_mail_service=service, database_ml=db_ml)
 
         df = pd.DataFrame(
-            [{"id": "x", "from": "a", "to": [], "cc": [], "labels": [], "threads": "t"}]
+            [
+                {
+                    "id": "x",
+                    "from": "a",
+                    "to": [],
+                    "cc": [],
+                    "labels": [],
+                    "threads": "t",
+                    "subject": "test-subject",
+                },
+                {
+                    "id": "y",
+                    "from": "b",
+                    "to": [],
+                    "cc": [],
+                    "labels": [],
+                    "threads": "u",
+                    "subject": "ignored-subject",
+                },
+            ]
         )
-        encoded = pd.DataFrame([{"email_id": "x", "f1": 1}])
+        encoded = pd.DataFrame([{"email_id": "x", "f1": 1}, {"email_id": "y", "f1": 1}])
         encode_mock.return_value = encoded
-        predict_mock.return_value = {"x": "LBL_SPAM"}
+        predict_mock.return_value = [
+            {
+                "email_id": "x",
+                "recommended_label": "LBL_SPAM",
+                "score": 0.9,
+                "threshold_reached": True,
+                "calibrated": False,
+            },
+            {
+                "email_id": "y",
+                "recommended_label": "LBL_SPAM",
+                "score": 0.4,
+                "threshold_reached": False,
+                "calibrated": False,
+            },
+        ]
 
         with (
             patch.object(mail, "download_emails_for_label", return_value=df),
@@ -384,9 +422,12 @@ class TestGoogleMailBase(unittest.TestCase):
 
         encode_mock.assert_called_once()
         predict_mock.assert_called_once()
-        move_mock.assert_called_once_with(
-            move_email_dict={"x": "LBL_SPAM"}, label_to_ignore="Inbox"
-        )
+        move_call = move_mock.call_args.kwargs
+        self.assertEqual(move_call["label_to_ignore"], "Inbox")
+        self.assertEqual(len(move_call["prediction_lst"]), 1)
+        self.assertEqual(move_call["prediction_lst"][0].message_id, "x")
+        self.assertEqual(move_call["prediction_lst"][0].recommended_folder, "LBL_SPAM")
+        self.assertTrue(move_call["prediction_lst"][0].accepted)
 
         encode_mock.reset_mock()
         with patch.object(

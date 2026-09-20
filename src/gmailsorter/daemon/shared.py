@@ -4,10 +4,10 @@ from typing import Any
 
 import google.oauth2.credentials
 import googleapiclient.discovery
-from mailsort.base import get_email_database
-from mailsort.base.database import DatabaseInterface as EmailDatabaseInterface
-from mailsort.ml import get_machine_learning_database
-from mailsort.ml.database import MachineLearningDatabase
+from mailsort.api import get_email_database
+from mailsort.api import DatabaseInterface as EmailDatabaseInterface
+from mailsort.api import get_machine_learning_database
+from mailsort.api import MachineLearningDatabase
 from sqlalchemy import Column, DateTime, Engine, Integer, String, create_engine
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 

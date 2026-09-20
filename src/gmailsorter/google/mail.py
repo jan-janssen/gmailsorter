@@ -1,13 +1,13 @@
 from typing import Any
 
 from googleapiclient.discovery import Resource
-from mailsort.base import get_email_database
-from mailsort.base.database import DatabaseInterface as EmailDatabaseInterface
-from mailsort.base.mail import AbstractMailBox
-from mailsort.ml import (
+from mailsort.api import get_email_database
+from mailsort.api import DatabaseInterface as EmailDatabaseInterface
+from mailsort.api import AbstractMailBox
+from mailsort.api import (
     get_machine_learning_database,
 )
-from mailsort.ml.database import MachineLearningDatabase
+from mailsort.api import MachineLearningDatabase
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -36,8 +36,8 @@ class GoogleMailBase(AbstractMailBox):
 
         Args:
             google_mail_service: A Resource object with methods for interacting with the service.
-            database_email (mailsort.base.database.DatabaseInterface): SQLalchemy interface for email database
-            database_ml (mailsort.ml.database.DatabaseInterface): SQLalchemy interface for machine learning database
+            database_email (mailsort.api.DatabaseInterface): SQLalchemy interface for email database
+            database_ml (mailsort.api.DatabaseInterface): SQLalchemy interface for machine learning database
             database_token (gmailsorter.google.database.DatabaseInterface): SQLalchemy interface for google database
             user_id (str): in most cases this should be simply "me"
             db_user_id (int): Default 1 - set a user id when sharing a database with multiple users

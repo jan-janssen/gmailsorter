@@ -27,7 +27,7 @@ dependencies = [
     "google-auth==2.58.0",
     "google-auth-oauthlib==1.4.1",
     "mailsort==0.0.2",
-    "sqlalchemy==2.0.52",
+    "sqlalchemy==2.0.53",
 ]
 
 [project.optional-dependencies]

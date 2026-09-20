@@ -26,10 +26,7 @@ dependencies = [
     "google-api-python-client==2.200.0",
     "google-auth==2.58.0",
     "google-auth-oauthlib==1.4.1",
-    "numpy==2.5.1",
-    "tqdm==4.70.1",
-    "pandas==3.0.5",
-    "scikit-learn==1.9.0",
+    "mailsort==0.0.2",
     "sqlalchemy==2.0.53",
 ]
 
@@ -47,7 +44,6 @@ Homepage = "https://github.com/jan-janssen/gmailsorter"
 gmailsorter = "gmailsorter.__main__:command_line_parser"
 gmailsorter-daemon = "gmailsorter.daemon.__main__:command_line_parser"
 gmailsorter-app = "gmailsorter.webapp.app:run_app"
-gmailsorter-imap = "gmailsorter.imap.__main__:command_line_parser"
 
 [tool.ruff.lint]
 select = [
@@ -81,25 +77,26 @@ ignore = [
 
 [tool.hatch.build]
 include = [
-    "gmailsorter"
+    "src/gmailsorter"
 ]
 
 [tool.hatch.build.hooks.vcs]
-version-file = "gmailsorter/_version.py"
+version-file = "src/gmailsorter/_version.py"
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "gmailsorter"
+    "src/gmailsorter",
+    "LICENSE"
 ]
 
 [tool.hatch.build.targets.wheel]
 packages = [
-    "gmailsorter"
+    "src/gmailsorter"
 ]
 
 [tool.hatch.version]
 source = "vcs"
-path = "gmailsorter/_version.py"
+path = "src/gmailsorter/_version.py"
 
 [tool.coverage.run]
 source = ["gmailsorter"]

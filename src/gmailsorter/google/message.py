@@ -2,7 +2,7 @@ import base64
 from datetime import datetime
 from typing import Any
 
-from mailsort.api import (
+from mailsort.base.message import (
     AbstractMessage,
     email_date_converter,
     strip_html_tags,

@@ -383,10 +383,19 @@ class TestGoogleMailBase(unittest.TestCase):
                     "labels": [],
                     "threads": "t",
                     "subject": "test-subject",
-                }
+                },
+                {
+                    "id": "y",
+                    "from": "b",
+                    "to": [],
+                    "cc": [],
+                    "labels": [],
+                    "threads": "u",
+                    "subject": "ignored-subject",
+                },
             ]
         )
-        encoded = pd.DataFrame([{"email_id": "x", "f1": 1}])
+        encoded = pd.DataFrame([{"email_id": "x", "f1": 1}, {"email_id": "y", "f1": 1}])
         encode_mock.return_value = encoded
         predict_mock.return_value = [
             {
@@ -394,6 +403,13 @@ class TestGoogleMailBase(unittest.TestCase):
                 "recommended_label": "LBL_SPAM",
                 "score": 0.9,
                 "threshold_reached": True,
+                "calibrated": False,
+            },
+            {
+                "email_id": "y",
+                "recommended_label": "LBL_SPAM",
+                "score": 0.4,
+                "threshold_reached": False,
                 "calibrated": False,
             }
         ]
@@ -413,6 +429,7 @@ class TestGoogleMailBase(unittest.TestCase):
         self.assertEqual(
             move_call["prediction_lst"][0].recommended_folder, "LBL_SPAM"
         )
+        self.assertTrue(move_call["prediction_lst"][0].accepted)
 
         encode_mock.reset_mock()
         with patch.object(

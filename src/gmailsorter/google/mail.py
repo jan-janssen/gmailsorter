@@ -1,13 +1,13 @@
 from typing import Any
 
 from googleapiclient.discovery import Resource
-from mailsort.api import get_email_database
-from mailsort.api import DatabaseInterface as EmailDatabaseInterface
-from mailsort.api import AbstractMailBox
 from mailsort.api import (
+    AbstractMailBox,
+    MachineLearningDatabase,
+    get_email_database,
     get_machine_learning_database,
 )
-from mailsort.api import MachineLearningDatabase
+from mailsort.api import DatabaseInterface as EmailDatabaseInterface
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 

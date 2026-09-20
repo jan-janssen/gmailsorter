@@ -411,7 +411,7 @@ class TestGoogleMailBase(unittest.TestCase):
                 "score": 0.4,
                 "threshold_reached": False,
                 "calibrated": False,
-            }
+            },
         ]
 
         with (
@@ -426,9 +426,7 @@ class TestGoogleMailBase(unittest.TestCase):
         self.assertEqual(move_call["label_to_ignore"], "Inbox")
         self.assertEqual(len(move_call["prediction_lst"]), 1)
         self.assertEqual(move_call["prediction_lst"][0].message_id, "x")
-        self.assertEqual(
-            move_call["prediction_lst"][0].recommended_folder, "LBL_SPAM"
-        )
+        self.assertEqual(move_call["prediction_lst"][0].recommended_folder, "LBL_SPAM")
         self.assertTrue(move_call["prediction_lst"][0].accepted)
 
         encode_mock.reset_mock()

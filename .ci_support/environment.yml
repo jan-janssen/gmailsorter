@@ -3,7 +3,7 @@ channels:
 dependencies:
 - coverage
 - google-api-python-client =2.200.0
-- google-auth =2.58.1
+- google-auth =2.59.1
 - google-auth-oauthlib =1.4.1
 - mailsort =0.0.3
 - numpy =2.5.1

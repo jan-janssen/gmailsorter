@@ -1,6 +1,7 @@
 from typing import Any
 
 from googleapiclient.discovery import Resource
+from google.auth.exceptions import RefreshError
 from mailsort.api import DatabaseInterface as EmailDatabaseInterface
 from mailsort.api import (
     MachineLearningDatabase,
@@ -79,17 +80,20 @@ class GoogleMailBase(AbstractMailBox):
             email_format = self._email_download_format
         if metadata_headers is None:
             metadata_headers = []
-        return (
-            self._service.users()
-            .messages()
-            .get(
-                userId=self._userid,
-                id=message_id,
-                format=email_format,
-                metadataHeaders=metadata_headers,
+        try:
+            return (
+                self._service.users()
+                .messages()
+                .get(
+                    userId=self._userid,
+                    id=message_id,
+                    format=email_format,
+                    metadataHeaders=metadata_headers,
+                )
+                .execute()
             )
-            .execute()
-        )
+        except RefreshError:
+            return {}
 
     def _get_messages_page(
         self,

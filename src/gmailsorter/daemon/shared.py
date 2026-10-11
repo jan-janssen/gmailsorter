@@ -10,12 +10,20 @@ from mailsort.api import (
     get_email_database,
     get_machine_learning_database,
 )
-from sqlalchemy import Column, DateTime, Engine, Integer, String, create_engine
+from sqlalchemy import (
+    Column,
+    DateTime,
+    Engine,
+    Integer,
+    String,
+    Text,
+    create_engine,
+)
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 from gmailsorter.google import GoogleMailBase
+from gmailsorter.google.database import SHORT_STRING_LENGTH, get_token_database
 from gmailsorter.google.database import DatabaseInterface as TokenDatabaseInterface
-from gmailsorter.google.database import get_token_database
 
 # Modifying the labels of emails requires /auth/gmail.modify
 # https://developers.google.com/gmail/api/reference/rest/v1/users.messages/modify
@@ -46,12 +54,12 @@ Base = declarative_base()
 class GoogleToken(Base):
     __tablename__ = "google_token"
     id = Column(Integer, primary_key=True)
-    token = Column(String)
-    refresh_token = Column(String)
-    token_uri = Column(String)
-    client_id = Column(String)
-    client_secret = Column(String)
-    scopes = Column(String)
+    token = Column(Text)
+    refresh_token = Column(Text)
+    token_uri = Column(String(SHORT_STRING_LENGTH))
+    client_id = Column(String(SHORT_STRING_LENGTH))
+    client_secret = Column(String(SHORT_STRING_LENGTH))
+    scopes = Column(Text)
     expiry = Column(DateTime)
     user_id = Column(Integer)
 
@@ -59,18 +67,19 @@ class GoogleToken(Base):
 class SQLUser(Base):
     __tablename__ = "google_user"
     id = Column(Integer, primary_key=True)
-    google_id = Column(String)
-    name = Column(String)
-    email = Column(String)
-    profile_pic = Column(String)
+    google_id = Column(String(SHORT_STRING_LENGTH))
+    name = Column(String(SHORT_STRING_LENGTH))
+    email = Column(String(SHORT_STRING_LENGTH))
+    # The profile picture is a URL, which has no upper bound on its length
+    profile_pic = Column(Text)
 
 
 class Task(Base):
     __tablename__ = "google_task"
     id = Column(Integer, primary_key=True)
-    task_name = Column(String)
+    task_name = Column(String(SHORT_STRING_LENGTH))
     date = Column(DateTime)
-    status = Column(String)
+    status = Column(String(SHORT_STRING_LENGTH))
     user_id = Column(Integer)
 
 

@@ -148,8 +148,12 @@ def reset_status() -> str | flask.Response:
 def oauth2callback() -> flask.Response | tuple[str, int]:
     # Specify the state when creating the flow in the callback so that it can
     # verified in the authorization server response.
-    state = flask.session["state"]
-    code_verifier = flask.session["code_verifier"]
+    state = flask.session.pop("state", None)
+    code_verifier = flask.session.pop("code_verifier", None)
+    if state is None or code_verifier is None:
+        # The callback was reached without starting the login flow in this
+        # session (stale link, reload, crawler or blocked cookies).
+        return flask.redirect(flask.url_for("index"))
 
     credentials_dict = get_google_credentials(
         client_config=CLIENT_SECRETS_CONFIG,

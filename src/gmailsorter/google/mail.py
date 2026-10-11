@@ -1,7 +1,7 @@
 from typing import Any
 
-from googleapiclient.discovery import Resource
 from google.auth.exceptions import RefreshError
+from googleapiclient.discovery import Resource
 from mailsort.api import DatabaseInterface as EmailDatabaseInterface
 from mailsort.api import (
     MachineLearningDatabase,

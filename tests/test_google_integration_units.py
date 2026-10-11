@@ -231,6 +231,16 @@ class TestGoogleMailBase(unittest.TestCase):
             userId="me", id="x", format="full", metadataHeaders=[]
         )
 
+    def test_get_message_detail_handles_refresh_error(self):
+        service = self._create_mock_service_with_labels()
+        get_execute = (
+            service.users.return_value.messages.return_value.get.return_value.execute
+        )
+        get_execute.side_effect = RefreshError("expired token")
+        mail = GoogleMailBase(google_mail_service=service)
+
+        self.assertEqual(mail._get_message_detail(message_id="x"), {})
+
     def test_modify_message_labels_only_when_needed(self):
         service = self._create_mock_service_with_labels()
         mail = GoogleMailBase(google_mail_service=service)

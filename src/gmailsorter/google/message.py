@@ -10,6 +10,8 @@ from mailsort.base.message import (
 
 
 def get_email_dict(message: dict[str, Any]) -> dict[str, Any] | None:
+    if len(message) == 0:  # The message could not be downloaded
+        return None
     try:
         return Message(message_dict=message).to_dict()
     except ValueError as e:

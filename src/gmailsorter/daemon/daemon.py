@@ -1,3 +1,4 @@
+import traceback
 from typing import Any
 
 from google.auth.exceptions import RefreshError
@@ -20,6 +21,17 @@ from gmailsorter.daemon.tasks import (
     get_all_tasks_to_execute,
     update_task_status,
 )
+
+
+def _mark_task_failed(session: Session, user_id: int, task_name: str) -> None:
+    traceback.print_exc()
+    session.rollback()
+    update_task_status(
+        session=session,
+        user_id=user_id,
+        task_name=task_name,
+        status=JOB_STATUS_FAIL,
+    )
 
 
 def load_user_data_from_database(
@@ -101,28 +113,36 @@ def iterate_over_users(
                     task_name="update",
                     status=JOB_STATUS_PROGRESS,
                 )
-                gmail.update_database(quick=False)
-                gmail.fit_machine_learning_model_to_database(
-                    n_estimators=n_estimators,
-                    max_features=max_features,
-                    random_state=random_state,
-                    bootstrap=bootstrap,
-                    include_deleted=include_deleted,
-                    max_workers=max_workers,
-                )
-                if status_start == JOB_STATUS_INIT:
+                try:
+                    gmail.update_database(quick=False)
+                    gmail.fit_machine_learning_model_to_database(
+                        n_estimators=n_estimators,
+                        max_features=max_features,
+                        random_state=random_state,
+                        bootstrap=bootstrap,
+                        include_deleted=include_deleted,
+                        max_workers=max_workers,
+                    )
+                    if status_start == JOB_STATUS_INIT:
+                        update_task_status(
+                            session=session,
+                            user_id=user_database_id,
+                            task_name="fetch",
+                            status=JOB_STATUS_INIT,
+                        )
                     update_task_status(
                         session=session,
                         user_id=user_database_id,
-                        task_name="fetch",
-                        status=JOB_STATUS_INIT,
+                        task_name="update",
+                        status=JOB_STATUS_SUCCESS,
                     )
-                update_task_status(
-                    session=session,
-                    user_id=user_database_id,
-                    task_name="update",
-                    status=JOB_STATUS_SUCCESS,
-                )
+                except Exception:
+                    # Never leave the task in progress, otherwise it is not executed again.
+                    _mark_task_failed(
+                        session=session, user_id=user_database_id, task_name="update"
+                    )
+                finally:
+                    gmail.close_database_connection()
             elif filter_messages:
                 update_task_status(
                     session=session,
@@ -136,20 +156,19 @@ def iterate_over_users(
                         recommendation_ratio=recommendation_ratio,
                         label_prefix="labels_Label_",
                     )
-                except HttpError:
-                    update_task_status(
-                        session=session,
-                        user_id=user_database_id,
-                        task_name="fetch",
-                        status=JOB_STATUS_FAIL,
-                    )
-                else:
                     update_task_status(
                         session=session,
                         user_id=user_database_id,
                         task_name="fetch",
                         status=JOB_STATUS_SUCCESS,
                     )
+                except Exception:
+                    # Never leave the task in progress, otherwise it is not executed again.
+                    _mark_task_failed(
+                        session=session, user_id=user_database_id, task_name="fetch"
+                    )
+                finally:
+                    gmail.close_database_connection()
             else:
                 raise ValueError(
                     "Neither database_update or filter_messages was selected."

@@ -550,6 +550,73 @@ class TestDaemon(unittest.TestCase):
         )
 
     @patch("gmailsorter.daemon.daemon.GoogleMail")
+    def test_iterate_over_users_filter_messages_unexpected_error(self, mail_cls):
+        mail_instance = MagicMock()
+        mail_instance.filter_messages_from_server.side_effect = KeyError("payload")
+        mail_cls.return_value = mail_instance
+        update_task_status(
+            session=self.session, user_id=1, task_name="fetch", status=JOB_STATUS_WAIT
+        )
+
+        iterate_over_users(
+            user_id_lst=[1],
+            token_detail_dict={
+                1: {
+                    "token": "t",
+                    "refresh_token": "r",
+                    "token_uri": "u",
+                    "expiry": datetime.now(timezone.utc),
+                }
+            },
+            scopes=["scope"],
+            engine=self.engine,
+            session=self.session,
+            client_secrets_config={"web": {"client_id": "cid", "client_secret": "sec"}},
+            database_update=False,
+            filter_messages=True,
+        )
+        self.assertEqual(
+            get_task_status_for_user(
+                session=self.session, user_id=1, task_name="fetch"
+            ),
+            JOB_STATUS_FAIL,
+        )
+        mail_instance.close_database_connection.assert_called_once()
+
+    @patch("gmailsorter.daemon.daemon.GoogleMail")
+    def test_iterate_over_users_database_update_unexpected_error(self, mail_cls):
+        mail_instance = MagicMock()
+        mail_instance.fit_machine_learning_model_to_database.side_effect = ValueError(
+            "fit"
+        )
+        mail_cls.return_value = mail_instance
+
+        iterate_over_users(
+            user_id_lst=[1],
+            token_detail_dict={
+                1: {
+                    "token": "t",
+                    "refresh_token": "r",
+                    "token_uri": "u",
+                    "expiry": datetime.now(timezone.utc),
+                }
+            },
+            scopes=["scope"],
+            engine=self.engine,
+            session=self.session,
+            client_secrets_config={"web": {"client_id": "cid", "client_secret": "sec"}},
+            database_update=True,
+            filter_messages=False,
+        )
+        self.assertEqual(
+            get_task_status_for_user(
+                session=self.session, user_id=1, task_name="update"
+            ),
+            JOB_STATUS_FAIL,
+        )
+        mail_instance.close_database_connection.assert_called_once()
+
+    @patch("gmailsorter.daemon.daemon.GoogleMail")
     def test_iterate_over_users_neither_flag_raises(self, mail_cls):
         mail_cls.return_value = MagicMock()
         with self.assertRaises(ValueError):

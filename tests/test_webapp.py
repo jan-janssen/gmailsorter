@@ -744,6 +744,14 @@ class TestWebappApp(unittest.TestCase):
 
         self.assertEqual(response.status_code, 400)
 
+    @patch("gmailsorter.webapp.app.get_google_credentials")
+    def test_oauth2callback_without_session_state_redirects(self, credentials_mock):
+        response = self.client.get("/oauth2callback?state=state123&code=abc")
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response.location.endswith("/"))
+        credentials_mock.assert_not_called()
+
     @patch("gmailsorter.webapp.app.get_flask_user")
     def test_logout_clears_session(self, get_flask_user_mock):
         get_flask_user_mock.return_value = FlaskUser(

@@ -2,21 +2,27 @@ from typing import Any
 
 from google.oauth2.credentials import Credentials
 from mailsort.base.database import DatabaseTemplate
-from sqlalchemy import Column, DateTime, Engine, Integer, String
+from sqlalchemy import Column, DateTime, Engine, Integer, String, Text
 from sqlalchemy.orm import Session, declarative_base
 
 Base = declarative_base()
+
+# MySQL requires a length for VARCHAR columns. Identifiers, URIs and secrets fit
+# in VARCHAR(255), while Google access tokens (up to 2048 bytes), refresh tokens
+# (up to 512 bytes) and the list of scopes can exceed 255 characters and are
+# stored as TEXT.
+SHORT_STRING_LENGTH = 255
 
 
 class GoogleToken(Base):
     __tablename__ = "google_token"
     id = Column(Integer, primary_key=True)
-    token = Column(String)
-    refresh_token = Column(String)
-    token_uri = Column(String)
-    client_id = Column(String)
-    client_secret = Column(String)
-    scopes = Column(String)
+    token = Column(Text)
+    refresh_token = Column(Text)
+    token_uri = Column(String(SHORT_STRING_LENGTH))
+    client_id = Column(String(SHORT_STRING_LENGTH))
+    client_secret = Column(String(SHORT_STRING_LENGTH))
+    scopes = Column(Text)
     expiry = Column(DateTime)
     user_id = Column(Integer)
 

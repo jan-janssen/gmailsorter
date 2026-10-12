@@ -215,6 +215,9 @@ class MessageTest(TestCase):
         }
         self.assertIsNone(get_email_dict(message_dict))
 
+    def test_get_email_dict_empty_message_returns_none(self):
+        self.assertIsNone(get_email_dict({}))
+
     def test_get_email_dict(self):
         self.assertEqual(
             get_email_dict(self._message_dict),

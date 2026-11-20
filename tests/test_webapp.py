@@ -282,8 +282,9 @@ class TestGoogleApi(unittest.TestCase):
             expiry=datetime.now(timezone.utc),
         )
         flow.credentials = credentials
+        flow.oauth2session.token = {"scope": ["scope"]}
 
-        result = googleapi.get_google_credentials(
+        result, error = googleapi.get_google_credentials(
             client_config={"web": {}},
             scopes=["scope"],
             state="state123",
@@ -292,11 +293,51 @@ class TestGoogleApi(unittest.TestCase):
             authorization_response="http://cb?code=abc",
         )
 
+        self.assertIsNone(error)
         self.assertEqual(result["token"], "tok")
         self.assertEqual(result["refresh_token"], "ref")
         flow.fetch_token.assert_called_once_with(
             authorization_response="http://cb?code=abc"
         )
+
+    @patch("gmailsorter.webapp.googleapi.google_auth_oauthlib.flow.Flow")
+    def test_get_google_credentials_additional_scopes_granted(self, flow_cls):
+        flow = flow_cls.from_client_config.return_value
+        flow.oauth2session.token = {"scope": "extra scope openid"}
+
+        result, error = googleapi.get_google_credentials(
+            client_config={"web": {}},
+            scopes=["openid", "scope"],
+            state="state123",
+            code_verifier="verifier123",
+            redirect_uri="http://cb",
+            authorization_response="http://cb?code=abc",
+        )
+
+        self.assertIsNone(error)
+        self.assertIsNotNone(result)
+
+    @patch("gmailsorter.webapp.googleapi.google_auth_oauthlib.flow.Flow")
+    def test_get_google_credentials_missing_scopes(self, flow_cls):
+        flow = flow_cls.from_client_config.return_value
+        flow.oauth2session.token = {"scope": ["openid"]}
+
+        result, error = googleapi.get_google_credentials(
+            client_config={"web": {}},
+            scopes=["openid", "gmail.modify"],
+            state="state123",
+            code_verifier="verifier123",
+            redirect_uri="http://cb",
+            authorization_response="http://cb?code=abc",
+        )
+
+        self.assertIsNone(result)
+        self.assertIn("gmail.modify", error)
+
+    def test_relax_token_scope_enabled(self):
+        # oauthlib raises a Warning on scope changes unless this is set, see
+        # https://github.com/jan-janssen/gmailsorter/issues/516
+        self.assertTrue(os.environ.get("OAUTHLIB_RELAX_TOKEN_SCOPE"))
 
     def test_credentials_to_dict(self):
         credentials = MagicMock(
@@ -685,14 +726,17 @@ class TestWebappApp(unittest.TestCase):
     def test_oauth2callback_success_logs_in_user(
         self, credentials_mock, user_info_mock, get_flask_user_mock
     ):
-        credentials_mock.return_value = {
-            "token": "tok",
-            "refresh_token": "ref",
-            "token_uri": "uri",
-            "client_id": "cid",
-            "client_secret": "csecret",
-            "expiry": datetime.now(timezone.utc),
-        }
+        credentials_mock.return_value = (
+            {
+                "token": "tok",
+                "refresh_token": "ref",
+                "token_uri": "uri",
+                "client_id": "cid",
+                "client_secret": "csecret",
+                "expiry": datetime.now(timezone.utc),
+            },
+            None,
+        )
         user_info_mock.return_value = (
             {
                 "id": "google123",
@@ -730,7 +774,7 @@ class TestWebappApp(unittest.TestCase):
     def test_oauth2callback_unverified_email_returns_400(
         self, credentials_mock, user_info_mock
     ):
-        credentials_mock.return_value = {"token": "tok"}
+        credentials_mock.return_value = ({"token": "tok"}, None)
         user_info_mock.return_value = (
             {"id": "google123", "verified_email": False},
             None,
@@ -743,6 +787,24 @@ class TestWebappApp(unittest.TestCase):
         response = self.client.get("/oauth2callback?state=state123&code=abc")
 
         self.assertEqual(response.status_code, 400)
+
+    @patch("gmailsorter.webapp.app.get_user_info")
+    @patch("gmailsorter.webapp.app.get_google_credentials")
+    def test_oauth2callback_missing_scopes_returns_403(
+        self, credentials_mock, user_info_mock
+    ):
+        credentials_mock.return_value = (None, "Missing permissions: gmail.modify")
+        with self.client.session_transaction() as sess:
+            sess["state"] = "state123"
+            sess["code_verifier"] = "verifier123"
+
+        response = self.client.get("/oauth2callback?state=state123&code=abc")
+
+        self.assertEqual(response.status_code, 403)
+        self.assertIn(b"gmail.modify", response.data)
+        user_info_mock.assert_not_called()
+        with self.client.session_transaction() as sess:
+            self.assertNotIn("credentials", sess)
 
     @patch("gmailsorter.webapp.app.get_google_credentials")
     def test_oauth2callback_without_session_state_redirects(self, credentials_mock):

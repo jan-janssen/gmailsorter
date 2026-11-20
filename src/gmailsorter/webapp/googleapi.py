@@ -1,4 +1,5 @@
 # Based on https://developers.google.com/identity/protocols/oauth2/web-server#python
+import os
 from datetime import datetime
 from typing import Any
 
@@ -7,7 +8,14 @@ import google_auth_oauthlib.flow
 import googleapiclient.discovery
 from google.auth.exceptions import RefreshError
 from googleapiclient.errors import HttpError
+from oauthlib.oauth2.rfc6749.utils import scope_to_list
 from sqlalchemy import Engine
+
+# Google's granular consent screen lets users deselect individual scopes, and
+# include_granted_scopes can add previously granted ones. In both cases the
+# granted scopes differ from the requested ones and oauthlib raises a Warning
+# unless relaxed. The granted scopes are validated in get_google_credentials().
+os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
 
 from gmailsorter.daemon import (
     GoogleMail,
@@ -47,7 +55,7 @@ def get_google_credentials(
     code_verifier: str,
     redirect_uri: str,
     authorization_response: str,
-) -> dict[str, Any]:
+) -> tuple[dict[str, Any] | None, str | None]:
     # Create flow instance to manage the OAuth 2.0 Authorization Grant Flow steps.
     flow = google_auth_oauthlib.flow.Flow.from_client_config(
         client_config=client_config, scopes=scopes, state=state
@@ -58,10 +66,21 @@ def get_google_credentials(
     # Use the authorization server's response to fetch the OAuth 2.0 tokens.
     flow.fetch_token(authorization_response=authorization_response)
 
+    # The user may have deselected some of the requested scopes on the consent
+    # screen, see https://github.com/jan-janssen/gmailsorter/issues/516
+    granted_scopes = scope_to_list(flow.oauth2session.token.get("scope")) or []
+    missing_scopes = [s for s in scopes if s not in granted_scopes]
+    if missing_scopes:
+        return None, (
+            "gmailsorter requires all requested permissions to sort your emails. "
+            "Please log in again and grant the following permissions: "
+            + ", ".join(missing_scopes)
+        )
+
     # Store credentials in the session.
     # ACTION ITEM: In a production app, you likely want to save these
     #              credentials in a persistent database instead.
-    return _credentials_to_dict(credentials=flow.credentials)
+    return _credentials_to_dict(credentials=flow.credentials), None
 
 
 def get_user_status(

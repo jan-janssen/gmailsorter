@@ -155,7 +155,7 @@ def oauth2callback() -> flask.Response | tuple[str, int]:
         # session (stale link, reload, crawler or blocked cookies).
         return flask.redirect(flask.url_for("index"))
 
-    credentials_dict = get_google_credentials(
+    credentials_dict, error_scopes = get_google_credentials(
         client_config=CLIENT_SECRETS_CONFIG,
         scopes=SCOPES,
         state=state,
@@ -163,6 +163,8 @@ def oauth2callback() -> flask.Response | tuple[str, int]:
         authorization_response=flask.request.url,
         code_verifier=code_verifier,
     )
+    if error_scopes is not None:
+        return error_scopes, 403
 
     flask.session["credentials"] = credentials_dict
     user_info_dict, error_user, _ = get_user_info(

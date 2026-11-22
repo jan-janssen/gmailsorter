@@ -86,6 +86,23 @@ class TestMainCommandLineParser(unittest.TestCase):
 
     @patch("gmailsorter.__main__.Gmail")
     @patch("gmailsorter.__main__.load_client_secrets_file")
+    def test_update_uses_provided_label_as_training_folder(
+        self, load_secrets_mock, gmail_cls
+    ):
+        gmail_instance = gmail_cls.return_value
+        gmail_instance.resolve_label_id.return_value = "Label_2"
+        with patch(
+            "sys.argv",
+            ["gmailsorter", "-c", "creds.json", "-u", "-l", "Inbox"],
+        ):
+            command_line_parser()
+
+        gmail_instance.resolve_label_id.assert_called_once_with("Inbox")
+        _, kwargs = gmail_instance.fit_machine_learning_model_to_database.call_args
+        self.assertEqual(kwargs["folder"], "Label_2")
+
+    @patch("gmailsorter.__main__.Gmail")
+    @patch("gmailsorter.__main__.load_client_secrets_file")
     def test_label_flag_triggers_filter(self, load_secrets_mock, gmail_cls):
         load_secrets_mock.return_value = {"installed": {}}
         gmail_instance = MagicMock()

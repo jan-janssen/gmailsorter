@@ -54,20 +54,18 @@ class GoogleMailBase(AbstractMailBox):
             email_download_format=email_download_format,
         )
 
-    def resolve_label_ids(self, labels: list[str] | None) -> list[str] | None:
+    def resolve_label_id(self, label: str) -> str:
         """
-        Translate label names to the label IDs stored in the database. Values which are not a known
-        label name are assumed to be label IDs already and are passed through unchanged.
+        Translate a label name to the label ID stored in the database. A value which is not a known
+        label name is assumed to be a label ID already and is returned unchanged.
 
         Args:
-            labels (list): label names or label IDs, or None
+            label (str): label name or label ID
 
         Returns:
-            list: label IDs, or None if no labels were provided
+            str: label ID
         """
-        if not labels:
-            return None
-        return [self._label_dict.get(label, label) for label in labels]
+        return self._label_dict.get(label, label)
 
     def _get_label_translate_dict(self) -> dict[str, str]:
         results = self._service.users().labels().list(userId=self._userid).execute()

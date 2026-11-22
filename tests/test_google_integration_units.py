@@ -474,7 +474,9 @@ class TestGoogleMailBase(unittest.TestCase):
         encode_mock.return_value = (features, labels)
         fit_mock.return_value = {"LBL_INBOX": MagicMock()}
 
-        mail.fit_machine_learning_model_to_database(n_estimators=5, max_features=2)
+        mail.fit_machine_learning_model_to_database(
+            folder="Label_1", n_estimators=5, max_features=2
+        )
 
         fit_mock.assert_called_once()
         pd.testing.assert_frame_equal(
@@ -521,7 +523,7 @@ class TestGoogleMailBase(unittest.TestCase):
         )
         fit_mock.return_value = {"LBL_INBOX": MagicMock()}
 
-        mail.fit_machine_learning_model_to_database(max_workers=3)
+        mail.fit_machine_learning_model_to_database(folder="Label_1", max_workers=3)
 
         self.assertEqual(fit_mock.call_args.kwargs["max_workers"], 3)
 

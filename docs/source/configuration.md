@@ -161,11 +161,10 @@ gmailsorter-daemon -u -c ${MAILSORT_ENV_CREDENTIALS_FILE} -d ${MAILSORT_ENV_DATA
 Here the command line options refer to the following settings:
 - `-c/--credentials` path to credentials file provided by Google e.g. `credentials.json` .  
 - `-d/--database` connection string to connect to database e.g. `sqlite:///email.db` .
-- `-u/--update` update the local email database and retrain the machine learning model.  
+- `-u/--update` update the local email database and retrain the machine learning model.
+  The `mailsortinbox` label is always ignored during training, since no email is meant to stay in it.
 - `-s/--scheduled` sort emails to email folders using the previously trained machine learning model. 
-- `--ignore-label` email label (name or ID) to exclude from the training, can be given multiple times. Use it for the
-  label which is sorted, e.g. `--ignore-label MailSortInbox`, so messages which were not sorted yet do not teach the
-  model to keep emails in place.
+
 
 With these commands the gmailsorter service can be configured on bare metal without the need for any containerization
 solution. 

@@ -2,6 +2,7 @@ import argparse
 import os
 
 from gmailsorter import Gmail, load_client_secrets_file
+from gmailsorter.daemon.shared import MAILSORT_LABEL
 
 
 def command_line_parser() -> None:
@@ -42,14 +43,6 @@ def command_line_parser() -> None:
         help="Email label to be filtered with machine learning.",
     )
     parser.add_argument(
-        "--ignore-label",
-        action="append",
-        default=None,
-        metavar="LABEL",
-        help="Email label (name or ID) to exclude from the training, e.g. the label which is "
-        "sorted. May be given multiple times.",
-    )
-    parser.add_argument(
         "-t",
         "--tasks",
         help="Number of parallel tasks to use.",
@@ -84,7 +77,7 @@ def command_line_parser() -> None:
                 bootstrap=True,
                 include_deleted=False,
                 max_workers=tasks,
-                exclude_label_lst=gmail.resolve_label_ids(args.ignore_label),
+                folder=gmail.resolve_label_id(args.label or MAILSORT_LABEL),
             )
         elif args.label:
             gmail.filter_messages_from_server(

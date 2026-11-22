@@ -468,6 +468,11 @@ class TestDaemon(unittest.TestCase):
         )
         mail_instance.update_database.assert_called_once_with(quick=False)
         mail_instance.fit_machine_learning_model_to_database.assert_called_once()
+        mail_instance.resolve_label_id.assert_called_once_with("mailsortinbox")
+        _, fit_kwargs = mail_instance.fit_machine_learning_model_to_database.call_args
+        self.assertEqual(
+            fit_kwargs["folder"], mail_instance.resolve_label_id.return_value
+        )
         self.assertEqual(
             get_task_status_for_user(
                 session=self.session, user_id=1, task_name="update"
@@ -807,31 +812,6 @@ class TestDaemonMain(unittest.TestCase):
 
         _, kwargs = update_mock.call_args
         self.assertIsNone(kwargs["max_workers"])
-        self.assertIsNone(kwargs["exclude_label_lst"])
-
-    @patch("gmailsorter.daemon.__main__.update")
-    @patch("gmailsorter.daemon.__main__.get_database_engine", return_value="ENGINE")
-    @patch("gmailsorter.daemon.__main__.load_config_file", return_value={"web": {}})
-    def test_command_line_parser_ignore_label(
-        self, load_config_mock, get_engine_mock, update_mock
-    ):
-        with patch(
-            "sys.argv",
-            [
-                "gmailsortdaemon",
-                "-c",
-                "creds.json",
-                "-d",
-                "sqlite:///:memory:",
-                "-u",
-                "--ignore-label",
-                "MailSortInbox",
-            ],
-        ):
-            command_line_parser()
-
-        _, kwargs = update_mock.call_args
-        self.assertEqual(kwargs["exclude_label_lst"], ["MailSortInbox"])
 
 
 if __name__ == "__main__":

@@ -468,6 +468,11 @@ class TestDaemon(unittest.TestCase):
         )
         mail_instance.update_database.assert_called_once_with(quick=False)
         mail_instance.fit_machine_learning_model_to_database.assert_called_once()
+        mail_instance.resolve_label_id.assert_called_once_with("mailsortinbox")
+        _, fit_kwargs = mail_instance.fit_machine_learning_model_to_database.call_args
+        self.assertEqual(
+            fit_kwargs["folder"], mail_instance.resolve_label_id.return_value
+        )
         self.assertEqual(
             get_task_status_for_user(
                 session=self.session, user_id=1, task_name="update"

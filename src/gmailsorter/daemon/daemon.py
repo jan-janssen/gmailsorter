@@ -122,6 +122,7 @@ def iterate_over_users(
                         bootstrap=bootstrap,
                         include_deleted=include_deleted,
                         max_workers=max_workers,
+                        folder=gmail.resolve_label_id(MAILSORT_LABEL),
                     )
                     if status_start == JOB_STATUS_INIT:
                         update_task_status(

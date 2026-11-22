@@ -69,7 +69,37 @@ class TestMainCommandLineParser(unittest.TestCase):
             bootstrap=True,
             include_deleted=False,
             max_workers=4,
+            folder=gmail_instance.resolve_label_id.return_value,
         )
+
+    @patch("gmailsorter.__main__.Gmail")
+    @patch("gmailsorter.__main__.load_client_secrets_file")
+    def test_update_always_ignores_mailsort_label(self, load_secrets_mock, gmail_cls):
+        gmail_instance = gmail_cls.return_value
+        gmail_instance.resolve_label_id.return_value = "Label_1"
+        with patch("sys.argv", ["gmailsorter", "-c", "creds.json", "-u"]):
+            command_line_parser()
+
+        gmail_instance.resolve_label_id.assert_called_once_with("mailsortinbox")
+        _, kwargs = gmail_instance.fit_machine_learning_model_to_database.call_args
+        self.assertEqual(kwargs["folder"], "Label_1")
+
+    @patch("gmailsorter.__main__.Gmail")
+    @patch("gmailsorter.__main__.load_client_secrets_file")
+    def test_update_uses_provided_label_as_training_folder(
+        self, load_secrets_mock, gmail_cls
+    ):
+        gmail_instance = gmail_cls.return_value
+        gmail_instance.resolve_label_id.return_value = "Label_2"
+        with patch(
+            "sys.argv",
+            ["gmailsorter", "-c", "creds.json", "-u", "-l", "Inbox"],
+        ):
+            command_line_parser()
+
+        gmail_instance.resolve_label_id.assert_called_once_with("Inbox")
+        _, kwargs = gmail_instance.fit_machine_learning_model_to_database.call_args
+        self.assertEqual(kwargs["folder"], "Label_2")
 
     @patch("gmailsorter.__main__.Gmail")
     @patch("gmailsorter.__main__.load_client_secrets_file")

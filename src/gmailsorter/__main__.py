@@ -2,6 +2,7 @@ import argparse
 import os
 
 from gmailsorter import Gmail, load_client_secrets_file
+from gmailsorter.daemon.shared import MAILSORT_LABEL
 
 
 def command_line_parser() -> None:
@@ -76,6 +77,7 @@ def command_line_parser() -> None:
                 bootstrap=True,
                 include_deleted=False,
                 max_workers=tasks,
+                folder=gmail.resolve_label_id(args.label or MAILSORT_LABEL),
             )
         elif args.label:
             gmail.filter_messages_from_server(

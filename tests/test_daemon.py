@@ -807,6 +807,31 @@ class TestDaemonMain(unittest.TestCase):
 
         _, kwargs = update_mock.call_args
         self.assertIsNone(kwargs["max_workers"])
+        self.assertIsNone(kwargs["exclude_label_lst"])
+
+    @patch("gmailsorter.daemon.__main__.update")
+    @patch("gmailsorter.daemon.__main__.get_database_engine", return_value="ENGINE")
+    @patch("gmailsorter.daemon.__main__.load_config_file", return_value={"web": {}})
+    def test_command_line_parser_ignore_label(
+        self, load_config_mock, get_engine_mock, update_mock
+    ):
+        with patch(
+            "sys.argv",
+            [
+                "gmailsortdaemon",
+                "-c",
+                "creds.json",
+                "-d",
+                "sqlite:///:memory:",
+                "-u",
+                "--ignore-label",
+                "MailSortInbox",
+            ],
+        ):
+            command_line_parser()
+
+        _, kwargs = update_mock.call_args
+        self.assertEqual(kwargs["exclude_label_lst"], ["MailSortInbox"])
 
 
 if __name__ == "__main__":

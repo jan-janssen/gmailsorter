@@ -52,6 +52,14 @@ def command_line_parser() -> None:
         help="Filter emails using machine learning and initialize empty databases.",
     )
     parser.add_argument(
+        "--ignore-label",
+        action="append",
+        default=None,
+        metavar="LABEL",
+        help="Email label (name or ID) to exclude from the training, e.g. the label which is "
+        "sorted. May be given multiple times.",
+    )
+    parser.add_argument(
         "-t",
         "--tasks",
         help="Number of parallel tasks to use.",
@@ -86,6 +94,7 @@ def command_line_parser() -> None:
             include_deleted=False,
             recommendation_ratio=0.9,
             max_workers=int(args.tasks) if args.tasks else None,
+            exclude_label_lst=args.ignore_label,
         )
     else:
         parser.print_help()

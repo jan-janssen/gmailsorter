@@ -73,6 +73,7 @@ def iterate_over_users(
     include_deleted: bool = False,
     recommendation_ratio: float = 0.9,
     max_workers: int | None = None,
+    exclude_label_lst: list[str] | None = None,
 ) -> None:
     for user_database_id in user_id_lst:
         token_user_dict = token_detail_dict[user_database_id]
@@ -122,6 +123,7 @@ def iterate_over_users(
                         bootstrap=bootstrap,
                         include_deleted=include_deleted,
                         max_workers=max_workers,
+                        exclude_label_lst=gmail.resolve_label_ids(exclude_label_lst),
                     )
                     if status_start == JOB_STATUS_INIT:
                         update_task_status(
@@ -186,6 +188,7 @@ def update(
     include_deleted: bool = False,
     recommendation_ratio: float = 0.9,
     max_workers: int | None = None,
+    exclude_label_lst: list[str] | None = None,
 ) -> None:
     session = sessionmaker(bind=engine)()
     job_dict, token_detail_dict = load_user_data_from_database(
@@ -214,4 +217,5 @@ def update(
             include_deleted=include_deleted,
             recommendation_ratio=recommendation_ratio,
             max_workers=max_workers,
+            exclude_label_lst=exclude_label_lst,
         )

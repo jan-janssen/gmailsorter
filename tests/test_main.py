@@ -69,7 +69,36 @@ class TestMainCommandLineParser(unittest.TestCase):
             bootstrap=True,
             include_deleted=False,
             max_workers=4,
+            exclude_label_lst=gmail_instance.resolve_label_ids.return_value,
         )
+
+    @patch("gmailsorter.__main__.Gmail")
+    @patch("gmailsorter.__main__.load_client_secrets_file")
+    def test_ignore_label_flag_is_resolved_and_forwarded(
+        self, load_secrets_mock, gmail_cls
+    ):
+        gmail_instance = gmail_cls.return_value
+        gmail_instance.resolve_label_ids.return_value = ["Label_1", "Label_2"]
+        with patch(
+            "sys.argv",
+            [
+                "gmailsorter",
+                "-c",
+                "creds.json",
+                "-u",
+                "--ignore-label",
+                "MailSortInbox",
+                "--ignore-label",
+                "Label_2",
+            ],
+        ):
+            command_line_parser()
+
+        gmail_instance.resolve_label_ids.assert_called_once_with(
+            ["MailSortInbox", "Label_2"]
+        )
+        _, kwargs = gmail_instance.fit_machine_learning_model_to_database.call_args
+        self.assertEqual(kwargs["exclude_label_lst"], ["Label_1", "Label_2"])
 
     @patch("gmailsorter.__main__.Gmail")
     @patch("gmailsorter.__main__.load_client_secrets_file")
